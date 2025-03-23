@@ -19,10 +19,11 @@ namespace StaffApp.Application.DTOs.User
         public DateTime? HireDate { get; set; } = DateTime.Now;
         public DateTime? BirthDate { get; set; } = DateTime.Now;
         //public int MaritalStatus { get; set; }
-
+        public DropDownDTO SelectedEmploymentType { get; set; }
         public DropDownDTO SelectedMaritalStatus { get; set; }
 
-        public int Gender { get; set; }
+        //public int Gender { get; set; }
+        public DropDownDTO SelectedGender { get; set; }
         public bool IsActive { get; set; }
         public IEnumerable<int> DepartmentIds { get; set; } = new HashSet<int>();
         public IEnumerable<DepartmentDTO> Departments { get; set; } = new HashSet<DepartmentDTO>();

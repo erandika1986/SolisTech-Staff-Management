@@ -2,7 +2,7 @@
 
 namespace StaffApp.Domain.Enum
 {
-    public enum EmployeementType
+    public enum EmploymentType
     {
         [Description("Permanent")]
         Permanent = 1,
@@ -14,6 +14,12 @@ namespace StaffApp.Domain.Enum
         Temporary = 3,
 
         [Description("Internship")]
-        Internship = 4
+        Internship = 4,
+
+        [Description("Freelancer")]
+        Freelancer = 5,
+
+        [Description("Probation")]
+        Probation = 6
     }
 }

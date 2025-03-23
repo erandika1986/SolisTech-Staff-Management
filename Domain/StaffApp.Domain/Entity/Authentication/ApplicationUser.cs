@@ -11,6 +11,7 @@ namespace StaffApp.Domain.Entity.Authentication
         public DateTime? HireDate { get; set; }
         public DateTime? BirthDate { get; set; }
         public MaritalStatus MaritalStatus { get; set; }
+        public EmploymentType? EmploymentType { get; set; }
         public Gender? Gender { get; set; }
         public bool IsActive { get; set; }
 

@@ -27,5 +27,8 @@ namespace StaffApp.Application.DTOs.User
 
         [Display(Name = "Hire Date")]
         public string HireDate { get; set; }
+
+        [Display(Name = "Employment Type")]
+        public string EmploymentType { get; set; }
     }
 }

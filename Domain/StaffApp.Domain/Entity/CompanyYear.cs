@@ -7,6 +7,7 @@ namespace StaffApp.Domain.Entity
         public int Year { get; set; }
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
+        public bool IsCurrentYear { get; set; }
 
         public virtual ICollection<EmployeeLeaveBalance> EmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveBalance>();
     }

@@ -42,11 +42,12 @@ namespace StaffApp.Infrastructure.Services
                     PasswordHash = password,
                     PhoneNumber = model.PhoneNumber,
                     BirthDate = model.BirthDate,
-                    Gender = (Gender)model.Gender,
+                    Gender = (Gender)model.SelectedGender.Id,
                     HireDate = model.HireDate,
                     NICNumber = model.NICNumber,
                     LandNumber = model.LandNumber,
                     MaritalStatus = (MaritalStatus)model.SelectedMaritalStatus.Id,
+                    EmploymentType = (EmploymentType)model.SelectedEmploymentType.Id,
                     IsActive = true
                 };
 
@@ -93,7 +94,8 @@ namespace StaffApp.Infrastructure.Services
                 user.NICNumber = model.NICNumber;
                 user.LandNumber = model.LandNumber;
                 user.MaritalStatus = (MaritalStatus)model.SelectedMaritalStatus.Id;
-                user.Gender = (Gender)model.Gender;
+                user.EmploymentType = (EmploymentType)model.SelectedEmploymentType.Id;
+                user.Gender = (Gender)model.SelectedGender.Id;
                 user.IsActive = true;
 
                 await userManager.UpdateAsync(user);
@@ -211,8 +213,7 @@ namespace StaffApp.Infrastructure.Services
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 BirthDate = user.BirthDate ?? DateTime.Now,
-                //DepartmentId = user.DepartmentId,
-                Gender = user.Gender.HasValue ? (int)user.Gender.Value : (int)Gender.Unknown,
+                SelectedGender = new DropDownDTO() { Id = user.Gender.HasValue ? (int)user.Gender.Value : (int)Gender.Unknown, Name = string.Empty },
                 HireDate = user.HireDate ?? DateTime.Now,
                 NICNumber = user.NICNumber,
                 LandNumber = user.LandNumber,
@@ -220,6 +221,10 @@ namespace StaffApp.Infrastructure.Services
                 IsActive = user.IsActive,
                 RoleName = (await userManager.GetRolesAsync(user)).FirstOrDefault(),
                 DepartmentIds = userDepartments.Select(x => x.Id).ToList(),
+                SelectedEmploymentType = new DropDownDTO()
+                {
+                    Id = user.EmploymentType.HasValue ? (int)user.EmploymentType.Value : 0,
+                },
                 Id = user.Id
             };
         }
@@ -332,6 +337,16 @@ namespace StaffApp.Infrastructure.Services
             }).ToList();
 
             return userDto;
+        }
+
+        public List<DropDownDTO> GetAvailableEmploymentTypes()
+        {
+            return EnumHelper.GetDropDownList<EmploymentType>();
+        }
+
+        public List<DropDownDTO> GetAvailableGenderTypes()
+        {
+            return EnumHelper.GetDropDownList<Gender>();
         }
     }
 }

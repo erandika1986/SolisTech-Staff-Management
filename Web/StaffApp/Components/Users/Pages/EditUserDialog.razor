@@ -41,15 +41,15 @@
                             </MudItem>
 
                             <MudItem xs="12" sm="6" md="6" lg="6">
-                                <MudDatePicker xs="12" sm="6" Label="Hire Date" @bind-Date="User.HireDate" />
+                                <MudDatePicker xs="12" sm="6" Label="Hire Date" @bind-Date="User.HireDate" Required="true" RequiredError="Hire date is required!" />
                             </MudItem>
 
                             <MudItem xs="12" sm="6" md="6" lg="6">
-                                <MudDatePicker xs="12" sm="6" Label="Birth Date" @bind-Date="User.BirthDate" />
+                                <MudDatePicker xs="12" sm="6" Label="Birth Date" @bind-Date="User.BirthDate" Required="true" RequiredError="Birthday is required!" />
                             </MudItem>
 
                             <MudItem xs="12" sm="6" md="6" lg="6">
-                                <MudSelect T="string" Label="User Role" MultiSelection="false" @bind-Value="User.RoleName" >
+                                <MudSelect T="string" Label="User Role" MultiSelection="false" @bind-Value="User.RoleName" Required="true" RequiredError="User role is required!">
                                     @foreach (var role in Roles)
                                     {
                                         <MudSelectItem T="string" Value="@role.Name">@role.Name</MudSelectItem>
@@ -58,7 +58,16 @@
                             </MudItem>
 
                             <MudItem xs="12" sm="6" md="6" lg="6">
-                                <MudSelect T="DepartmentDTO" Label="User Departments" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="true" @bind-SelectedValues="User.Departments">
+                                <MudSelect T="DropDownDTO" Label="Employment Type" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="User.SelectedEmploymentType" Required="true" RequiredError="Employment type is required!">
+                                    @foreach (var employmentType in EmploymentTypes)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@employmentType">@employmentType.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudSelect T="DepartmentDTO" Label="User Departments" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="true" @bind-SelectedValues="User.Departments" Required="true" RequiredError="Department is required!">
                                     @foreach (var department in Departments)
                                     {
                                         <MudSelectItem T="DepartmentDTO" Value="@department">@department.Name</MudSelectItem>
@@ -76,13 +85,15 @@
                             </MudItem>
 
                             <MudItem xs="12" sm="6" md="6" lg="6">
-                                <div class="d-flex">
-                                    <MudRadioGroup T="int" @bind-Value="User.Gender" Required="true" RequiredError="Gender is required!">
-                                        <MudRadio Value="1">Male</MudRadio>
-                                        <MudRadio Value="2">Female</MudRadio>
-                                    </MudRadioGroup>
-                                </div>
+                                <MudSelect T="DropDownDTO" Label="Gender" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="User.SelectedGender" Required="true" RequiredError="Gender is required!">
+                                    @foreach (var genderType in GenderTypes)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@genderType">@genderType.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
                             </MudItem>
+
+
 
                         </MudGrid>
 
@@ -100,9 +111,11 @@
             </MudItem>
         </MudGrid>
     </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto">Register</MudButton>
+    <DialogActions >
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto">Register</MudButton>
+        </MudPaper>
     </DialogActions>
 </MudDialog>
 
@@ -123,6 +136,10 @@
 
     public IEnumerable<DropDownDTO> MaritalStatuses { get; set; } = new HashSet<DropDownDTO>();
 
+    public IEnumerable<DropDownDTO> EmploymentTypes { get; set; } = new HashSet<DropDownDTO>();
+
+    public IEnumerable<DropDownDTO> GenderTypes { get; set; } = new HashSet<DropDownDTO>();
+
     bool success;
     string[] errors = { };
     MudForm form;
@@ -132,11 +149,19 @@
         Departments = await DepartmentService.GetAllDepartments(string.Empty);
         Roles = await UserService.GetAvailableRoles();
         MaritalStatuses = EnumHelper.GetDropDownList<MaritalStatus>();
+        EmploymentTypes = UserService.GetAvailableEmploymentTypes();
+        GenderTypes = UserService.GetAvailableGenderTypes();
 
         if (UserId != ApplicationConstants.EmptyGuide)
         {
             User = await UserService.GetUserByIdAsync(UserId);
             User.Departments = Departments.Where(x => User.DepartmentIds.Contains(x.Id)).ToList();
+
+            var employmentType = EmploymentTypes.FirstOrDefault(x => x.Id == User.SelectedEmploymentType.Id);
+            User.SelectedEmploymentType = employmentType is not null ? employmentType : EmploymentTypes.FirstOrDefault();
+
+            var genderType = GenderTypes.FirstOrDefault(x => x.Id == User.SelectedGender.Id);
+            User.SelectedGender = genderType is not null ? genderType : GenderTypes.FirstOrDefault();
         }
     }
 
@@ -159,4 +184,6 @@
     }
 
     private void Cancel() => MudDialog.Cancel();
+
+
 }

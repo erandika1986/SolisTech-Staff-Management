@@ -66,7 +66,8 @@ namespace StaffApp.Infrastructure.Data
                 RoleConstants.SeniorQAEngineer,
                 RoleConstants.QAEngineer,
                 RoleConstants.AssociateQAEngineer,
-                RoleConstants.Intern
+                RoleConstants.TraineeSoftwareEngineer,
+                RoleConstants.TraineeQAEngineer
             };
 
             foreach (var roleName in roles)

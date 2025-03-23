@@ -40,20 +40,29 @@
         </MudGrid>
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="Cancel">Cancel</MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto">Save</MudButton>
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto">Save</MudButton>
+        </MudPaper>
+
     </DialogActions>
 </MudDialog>
 
 @code {
-    [Parameter] public int DepartmentId { get; set; }
+
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; }
 
-    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+    [Parameter] 
+    public int DepartmentId { get; set; }
+
+
+    [Parameter] 
+    public EventCallback<bool> OnDialogClosed { get; set; }
 
     public DepartmentDTO Department { get; set; } = new();
+
     public List<UserDropDownDTO> Managers { get; set; } = new();
 
     bool success;

@@ -14,6 +14,8 @@ namespace StaffApp.Infrastructure.Data.Configurations
 
             builder.HasIndex(p => p.Year).IsUnique();
 
+            builder.Property(p => p.IsCurrentYear).HasDefaultValue(false).IsRequired(true);
+
             builder.Property(p => p.Id).ValueGeneratedNever();
         }
     }

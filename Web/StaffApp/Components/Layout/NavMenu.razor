@@ -10,6 +10,8 @@
             <MudNavGroup Title="Admin" Expanded="true" Icon="@Icons.Material.Filled.AdminPanelSettings">
                 <MudNavLink Href="Users/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SupervisedUserCircle">Users</MudNavLink>
                 <MudNavLink Href="Department/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Workspaces">Department</MudNavLink>
+                <MudNavLink Href="CompanyYear/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">Company Years</MudNavLink>
+                <MudNavLink Href="FinancialYear/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarToday">Financial Years</MudNavLink>
             </MudNavGroup>
 
             <MudNavLink Href="Account/Manage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">@context.User.Identity?.Name</MudNavLink>
