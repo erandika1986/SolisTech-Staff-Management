@@ -1,0 +1,162 @@
+﻿@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.Department
+@using StaffApp.Application.DTOs.User
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Extensions.Helpers
+@using StaffApp.Application.Services
+@using System.Text.RegularExpressions
+@using System.ComponentModel.DataAnnotations
+@using StaffApp.Domain.Enum
+
+@inject IUserService UserService
+@inject IDepartmentService DepartmentService
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-2">
+                    <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                        <MudGrid>
+
+                            <MudItem xs="12" sm="12" md="12" lg="12">
+                                <MudTextField T="string" Label="Full Name" @bind-Value="User.FullName" Required="true" RequiredError="Full name is required!" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="Company Email" @bind-Value="User.Email" Required="true" RequiredError="Email is required!"
+                                Validation="@(new EmailAddressAttribute() {ErrorMessage = "The email address is invalid"})" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField  T="string" Label="NIC Number" @bind-Value="User.NICNumber" Required="true" RequiredError="NIC number is required!" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField  T="string" Label="Phone Number" @bind-Value="User.PhoneNumber" Required="true" RequiredError="Phone number is required!" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField  T="string" Label="Land Number" @bind-Value="User.LandNumber" Required="false" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudDatePicker xs="12" sm="6" Label="Hire Date" @bind-Date="User.HireDate" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudDatePicker xs="12" sm="6" Label="Birth Date" @bind-Date="User.BirthDate" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudSelect T="string" Label="User Role" MultiSelection="false" @bind-Value="User.RoleName" >
+                                    @foreach (var role in Roles)
+                                    {
+                                        <MudSelectItem T="string" Value="@role.Name">@role.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudSelect T="DepartmentDTO" Label="User Departments" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="true" @bind-SelectedValues="User.Departments">
+                                    @foreach (var department in Departments)
+                                    {
+                                        <MudSelectItem T="DepartmentDTO" Value="@department">@department.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudSelect T="DropDownDTO" Label="Marital Status" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="User.SelectedMaritalStatus">
+                                    @foreach (var status in MaritalStatuses)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@status">@status.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <div class="d-flex">
+                                    <MudRadioGroup T="int" @bind-Value="User.Gender" Required="true" RequiredError="Gender is required!">
+                                        <MudRadio Value="1">Male</MudRadio>
+                                        <MudRadio Value="2">Female</MudRadio>
+                                    </MudRadioGroup>
+                                </div>
+                            </MudItem>
+
+                        </MudGrid>
+
+                    </MudForm>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-4 mud-height-full">
+                    <MudText Typo="Typo.subtitle2">@($"Errors ({errors.Length})")</MudText>
+                    @foreach (var error in errors)
+                    {
+                        <MudText Color="@Color.Error">@error</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto">Register</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [Parameter] public string UserId { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
+    public UserDTO User { get; set; } = new();
+
+    public IEnumerable<RoleDTO> Roles { get; set; } = new HashSet<RoleDTO>();
+
+    public IEnumerable<DepartmentDTO> Departments { get; set; } = new HashSet<DepartmentDTO>();
+
+    public IEnumerable<DropDownDTO> MaritalStatuses { get; set; } = new HashSet<DropDownDTO>();
+
+    bool success;
+    string[] errors = { };
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Departments = await DepartmentService.GetAllDepartments(string.Empty);
+        Roles = await UserService.GetAvailableRoles();
+        MaritalStatuses = EnumHelper.GetDropDownList<MaritalStatus>();
+
+        if (UserId != ApplicationConstants.EmptyGuide)
+        {
+            User = await UserService.GetUserByIdAsync(UserId);
+            User.Departments = Departments.Where(x => User.DepartmentIds.Contains(x.Id)).ToList();
+        }
+    }
+
+    private async Task Submit() {
+
+        if (UserId != ApplicationConstants.EmptyGuide)
+        {
+            var result = await UserService.UpdateExistingUserAsync(User);
+        }
+        else
+        {
+            var result = await UserService.CreateNewUserAsync(User);
+            // await DepartmentService
+            // .AddUsersToDepartments(User.Departments.Select(x => x.Id).ToList(), result.UserId);
+
+        }
+
+        await OnDialogClosed.InvokeAsync(true); // Notify parent
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

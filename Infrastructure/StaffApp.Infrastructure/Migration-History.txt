@@ -1,0 +1,16 @@
+﻿Database Migration Command
+====================================================================================================
+Add-Migration 00001 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00002 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00003 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00004 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00005 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00006 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+
+Database Update Command
+====================================================================================================
+Update-Database -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+
+Database Migration Removal Command
+====================================================================================================
+Remove-Migration -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose -Force

@@ -1,0 +1,201 @@
+﻿@page "/Users/List"
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using StaffApp.Application.DTOs.User
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+@using StaffApp.Components.Shared
+@using StaffApp.Domain.Entity.Authentication
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+@using static MudBlazor.CategoryTypes
+
+@inject IUserService UserService
+@inject IDialogService Dialog
+
+@attribute [Authorize]
+<MudGrid>
+@*     <MudItem xs="12" sm="12">
+        <h3>Company Employees</h3>
+    </MudItem> *@
+    <MudItem xs="12" sm="12">
+        <MudIconButton Icon="@Icons.Material.Filled.PersonAddAlt1" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => AddNewUserAsync()"></MudIconButton>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12" lg="12">
+        <MudDataGrid @ref="_dataGrid" T="BasicUserDTO" ServerData="@(LoadData)" Sortable="true"
+             Filterable="false" 
+             Hideable="true"
+             Hover="true"
+             Striped="true"
+             Elevation="25"
+             Loading="@_loading">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Company Employees</MudText>
+                <MudSpacer />
+                <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <Columns>
+                <TemplateColumn CellClass="d-flex justify-center">
+                    <CellTemplate Context="user">
+                        <MudStack Row>
+                            <MudAvatar>
+                                @if (user.Item.Gender == "Male")
+                                {
+                                    <MudImage Src="images/deafult-men.png"></MudImage>
+                                }
+                                @if (user.Item.Gender == "Female")
+                                {
+                                    <MudImage Src="images/default-women.png"></MudImage>
+                                }
+
+                            </MudAvatar>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x=>x.FullName" Title="@GetDisplayName(typeof(BasicUserDTO), nameof(BasicUserDTO.FullName))" />
+                <PropertyColumn Property="x=>x.UserName" Title="@GetDisplayName(typeof(BasicUserDTO), nameof(BasicUserDTO.UserName))" />
+                <PropertyColumn Property="x=>x.NIC" Title="@GetDisplayName(typeof(BasicUserDTO), nameof(BasicUserDTO.NIC))" />
+                <PropertyColumn Property="x=>x.Phone" Title="@GetDisplayName(typeof(BasicUserDTO), nameof(BasicUserDTO.Phone))" />
+                <PropertyColumn Property="x=>x.Gender" Title="@GetDisplayName(typeof(BasicUserDTO), nameof(BasicUserDTO.Gender))" />
+                <PropertyColumn Property="x=>x.HireDate" Title="@GetDisplayName(typeof(BasicUserDTO), nameof(BasicUserDTO.HireDate))" />
+                <TemplateColumn CellClass="d-flex justify-end">
+                    <CellTemplate Context="user">
+                        <MudStack Row>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditUserAsync(user.Item)"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteUserAsync(user.Item)"></MudIconButton>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager T="BasicUserDTO" />
+            </PagerContent>
+        </MudDataGrid>
+    </MudItem>
+</MudGrid>
+
+@code {
+
+    private string _searchString = "";
+    private bool _loading = false;
+    private MudDataGrid<BasicUserDTO> _dataGrid;
+
+    private List<BasicUserDTO> Users { get; set; } = new List<BasicUserDTO>();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+
+    private async Task<GridData<BasicUserDTO>> LoadData(GridState<BasicUserDTO> state)
+    {
+        _loading = true;
+
+        try
+        {
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            // Call the service with parameters
+            var result = await UserService.GetAllUsersAsync(
+                page,
+                pageSize,
+                _searchString,
+                sortBy,
+                sortDirection
+            );
+
+            // Return the result in GridData format
+            return new GridData<BasicUserDTO>
+                {
+                    Items = result.Items,
+                    TotalItems = result.TotalItems
+                };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private Task OnSearch(string text)
+    {
+        _searchString = text;
+        return _dataGrid.ReloadServerData();
+    }
+
+    private async Task EditUserAsync(BasicUserDTO user)
+    {
+        var parameters = new DialogParameters
+        {
+            { "UserId", user.Id },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditUserDialog>($"Edit Employee : {user.FullName}", parameters, _maxWidth);
+    }
+
+    private async Task AddNewUserAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "UserId", ApplicationConstants.EmptyGuide },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditUserDialog>($"Add a new company employee", parameters, _maxWidth);
+    }
+
+    private Task DeleteUserAsync(BasicUserDTO user)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "Id", user.Id },
+            { x => x.ContentText, "Do you really want to delete these records? This process cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error },
+             { "OnDialogClosed", EventCallback.Factory.Create<string>(this, HandleDeleteConfirmationDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        return Dialog.ShowAsync<ConfirmationDialog>("Delete", parameters, options);
+    }
+
+    private async Task HandleEditDialogClosedAsync(bool result)
+    {
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task HandleDeleteConfirmationDialogClosedAsync(string id)
+    {
+        var result = await UserService.DeleteUser(id);
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+
+
+}

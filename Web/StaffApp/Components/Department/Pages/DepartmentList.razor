@@ -1,0 +1,131 @@
+﻿@page "/Department/List"
+@using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.Department
+@using StaffApp.Application.Services
+@using System.ComponentModel.DataAnnotations
+@using System.Reflection
+@using StaffApp.Components.Shared
+
+@inject IDepartmentService DepartmentService
+@inject IDialogService Dialog
+
+@attribute [Authorize]
+<MudGrid>
+    <MudItem xs="12" sm="12">
+        <MudIconButton Icon="@Icons.Material.Filled.AddBusiness" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => AddNewDepartmentAsync()"></MudIconButton>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12" lg="12">
+        <MudDataGrid Items="@Departments" Sortable="true"
+                     Filterable="false"
+                     Hideable="true"
+                     Hover="true"
+                     Striped="true"
+                     Elevation="25">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Company Departments</MudText>
+                <MudSpacer />
+                <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="x=>x.Name" Title="@GetDisplayName(typeof(DepartmentDTO), nameof(DepartmentDTO.Name))" />
+                <PropertyColumn Property="x=>x.DepartmentHeadName" Title="@GetDisplayName(typeof(DepartmentDTO), nameof(DepartmentDTO.DepartmentHeadName))" />
+                <PropertyColumn Property="x=>x.AssignedEmployeeCount" Title="@GetDisplayName(typeof(DepartmentDTO), nameof(DepartmentDTO.AssignedEmployeeCount))" />
+                <TemplateColumn CellClass="d-flex justify-end">
+                    <CellTemplate Context="department">
+                        <MudStack Row>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditDepartmentAsync(department.Item)"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteDepartmentAsync(department.Item)"></MudIconButton>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string _searchString = "";
+
+    private List<DepartmentDTO> Departments { get; set; } = new List<DepartmentDTO>();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDepartments();
+    }
+
+    private async Task LoadDepartments()
+    {
+        Departments = await DepartmentService.GetAllDepartments(_searchString,true);
+    }
+
+
+    private async Task OnSearch(string text)
+    {
+        _searchString = text;
+        await LoadDepartments();
+    }
+
+    private async Task EditDepartmentAsync(DepartmentDTO model)
+    {
+        var parameters = new DialogParameters
+        {
+            { "DepartmentId", model.Id },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditDepartmentDialog>($"Edit Department : {model.Name}", parameters, _maxWidth);
+    }
+
+    private async Task AddNewDepartmentAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "DepartmentId", 0 },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditDepartmentDialog>($"Add a new company department", parameters, _maxWidth);
+    }
+
+    private Task DeleteDepartmentAsync(DepartmentDTO model)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "Id", model.Id.ToString() },
+            { x => x.ContentText, "Do you really want to delete these records? This process cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error },
+             { "OnDialogClosed", EventCallback.Factory.Create<string>(this, HandleDeleteConfirmationDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        return Dialog.ShowAsync<ConfirmationDialog>("Delete", parameters, options);
+    }
+
+    private async Task HandleEditDialogClosedAsync(bool result)
+    {
+        await LoadDepartments();
+    }
+
+    private async Task HandleDeleteConfirmationDialogClosedAsync(string id)
+    {
+        var result = await DepartmentService.DeleteDepartment(int.Parse(id));
+
+        await LoadDepartments();
+    }
+
+    string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+}

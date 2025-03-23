@@ -1,0 +1,85 @@
+﻿@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.Department
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+
+@inject IDepartmentService DepartmentService
+@inject IUserService UserService
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-2">
+                    <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="Department Name" @bind-Value="Department.Name" Required="true" RequiredError="Department name is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudSelect T="UserDropDownDTO" Label="Head of Department" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="Department.DepartmentHead">
+                                    @foreach (var manager in Managers)
+                                    {
+                                        <MudSelectItem T="UserDropDownDTO" Value="@manager">@manager.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                        </MudGrid>
+
+                    </MudForm>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-4 mud-height-full">
+                    <MudText Typo="Typo.subtitle2">@($"Errors ({errors.Length})")</MudText>
+                    @foreach (var error in errors)
+                    {
+                        <MudText Color="@Color.Error">@error</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto">Save</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public int DepartmentId { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
+    public DepartmentDTO Department { get; set; } = new();
+    public List<UserDropDownDTO> Managers { get; set; } = new();
+
+    bool success;
+    string[] errors = { };
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Managers = await UserService.GetManagerJobRoleUsersAsync();
+
+        if (DepartmentId != ApplicationConstants.Zero)
+        {
+            Department = await DepartmentService.GetDepartmentById(DepartmentId);
+            if (Department.DepartmentHead != null)
+            {
+                Department.DepartmentHead = Managers.FirstOrDefault(x => x.Id == Department.DepartmentHead.Id);
+            }
+        }
+    }
+
+    private async Task Submit()
+    {
+        var response = await DepartmentService.SaveDepartment(Department);
+        await OnDialogClosed.InvokeAsync(true);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}
