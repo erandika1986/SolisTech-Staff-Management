@@ -49,10 +49,10 @@
                             </MudItem>
 
                             <MudItem xs="12" sm="6" md="6" lg="6">
-                                <MudSelect T="string" Label="User Role" MultiSelection="false" @bind-Value="User.RoleName" Required="true" RequiredError="User role is required!">
+                                <MudSelect T="RoleDTO" Label="User Role" MultiSelection="false" @bind-Value="User.SelectedRole" Required="true" RequiredError="User role is required!">
                                     @foreach (var role in Roles)
                                     {
-                                        <MudSelectItem T="string" Value="@role.Name">@role.Name</MudSelectItem>
+                                        <MudSelectItem T="RoleDTO" Value="@role">@role.Name</MudSelectItem>
                                     }
                                 </MudSelect>
                             </MudItem>
@@ -162,6 +162,9 @@
 
             var genderType = GenderTypes.FirstOrDefault(x => x.Id == User.SelectedGender.Id);
             User.SelectedGender = genderType is not null ? genderType : GenderTypes.FirstOrDefault();
+
+            var userRole = Roles.FirstOrDefault(x => x.Id == User.SelectedRole.Id);
+            User.SelectedRole = userRole is not null ? userRole : Roles.FirstOrDefault();
         }
     }
 

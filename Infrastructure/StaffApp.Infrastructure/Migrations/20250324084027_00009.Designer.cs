@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StaffApp.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using StaffApp.Infrastructure.Data;
 namespace StaffApp.Infrastructure.Migrations
 {
     [DbContext(typeof(StaffAppDbContext))]
-    partial class StaffAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250324084027_00009")]
+    partial class _00009
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -264,17 +267,8 @@ namespace StaffApp.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasColumnOrder(0);
 
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("IsCurrentYear")
                         .ValueGeneratedOnAdd()
@@ -283,12 +277,6 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedByUserId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Year")
                         .HasColumnType("int");
@@ -307,17 +295,8 @@ namespace StaffApp.Infrastructure.Migrations
                         .HasColumnType("int")
                         .HasColumnOrder(0);
 
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("CreatedDate")
-                        .HasColumnType("datetime2");
-
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
 
                     b.Property<bool>("IsCurrentYear")
                         .ValueGeneratedOnAdd()
@@ -326,12 +305,6 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedByUserId")
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Year")
                         .HasColumnType("int");

@@ -28,14 +28,36 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddDatabaseDeveloperPageExceptionFilter();
 
             services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                    .AddRoles<IdentityRole>()
+                    .AddRoles<ApplicationRole>()
                 .AddEntityFrameworkStores<StaffAppDbContext>()
                 .AddSignInManager()
                 .AddDefaultTokenProviders();
 
+
+            //Register all custom build services
+            var InterfaceAssembly = typeof(IUserService).Assembly;
+            var classAssembly = typeof(UserService).Assembly;
+
+            // Find all interfaces
+            var interfaces = InterfaceAssembly.GetTypes()
+                .Where(t => t.IsInterface && t.Namespace == "StaffApp.Application.Services");
+
+
+
+            foreach (var interfaceType in interfaces)
+            {
+                // Find the implementation(s) of each interface
+                var implementations = classAssembly.GetTypes()
+                    .Where(t => t.IsClass && !t.IsAbstract && interfaceType.IsAssignableFrom(t));
+
+                foreach (var implementationType in implementations)
+                {
+                    // Register as transient service
+                    services.AddTransient(interfaceType, implementationType);
+                }
+            }
+
             services.AddTransient<IDateTime, DateTimeService>();
-            services.AddTransient<IUserService, UserService>();
-            services.AddTransient<IDepartmentService, DepartmentService>();
 
             return services;
         }

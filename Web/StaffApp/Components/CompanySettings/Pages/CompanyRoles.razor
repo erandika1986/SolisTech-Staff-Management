@@ -1,0 +1,132 @@
+﻿@page "/CompanySettings/CompanyRoles"
+
+@using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.User
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+@using StaffApp.Components.Shared
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@inject IRoleService RoleService
+@inject IDialogService Dialog
+
+@attribute [Authorize]
+<MudGrid>
+    <MudItem xs="12" sm="12">
+        <MudIconButton Icon="@Icons.Material.Filled.GroupAdd" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => AddNewRoleAsync()"></MudIconButton>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12" lg="12">
+        <MudDataGrid Items="@Roles" Sortable="true"
+                     Filterable="false"
+                     Hideable="true"
+                     Hover="true"
+                     Striped="true"
+                     Elevation="25">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Company Departments</MudText>
+                <MudSpacer />
+                <MudTextField T="string" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="x=>x.Id" Title="@GetDisplayName(typeof(RoleDTO), nameof(RoleDTO.Id))" />
+                <PropertyColumn Property="x=>x.Name" Title="@GetDisplayName(typeof(RoleDTO), nameof(RoleDTO.Name))" />
+                <PropertyColumn Property="x=>x.ManagerTypeRole" Title="@GetDisplayName(typeof(RoleDTO), nameof(RoleDTO.ManagerTypeRole))" />
+                <TemplateColumn CellClass="d-flex justify-end">
+                    <CellTemplate Context="department">
+                        <MudStack Row>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditRoleAsync(department.Item)"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteRoleAsync(department.Item)"></MudIconButton>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string _searchString = "";
+
+    private IEnumerable<RoleDTO> Roles { get; set; } = new List<RoleDTO>();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUserRoles();
+    }
+
+    private async Task LoadUserRoles()
+    {
+        Roles = await RoleService.GetAllRolesAsync();
+    }
+
+    private async Task OnSearch(string text)
+    {
+        _searchString = text;
+        await LoadUserRoles();
+    }
+
+    private async Task EditRoleAsync(RoleDTO model)
+    {
+        var parameters = new DialogParameters
+        {
+            { "RoleId", model.Id },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditCompanyRoleDialog>($"Edit Role : {model.Name}", parameters, _maxWidth);
+    }
+
+    private async Task AddNewRoleAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "RoleId", ApplicationConstants.EmptyGuide },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditCompanyRoleDialog>($"Add a new company role", parameters, _maxWidth);
+    }
+
+    private Task DeleteRoleAsync(RoleDTO model)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "Id", model.Id.ToString() },
+            { x => x.ContentText, "Do you really want to delete these records? This process cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error },
+             { "OnDialogClosed", EventCallback.Factory.Create<string>(this, HandleDeleteConfirmationDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        return Dialog.ShowAsync<ConfirmationDialog>("Delete", parameters, options);
+    }
+
+    private async Task HandleEditDialogClosedAsync(bool result)
+    {
+        await LoadUserRoles();
+    }
+
+    private async Task HandleDeleteConfirmationDialogClosedAsync(string id)
+    {
+        var result = await RoleService.DeleteRoleAsync(id);
+
+        await LoadUserRoles();
+    }
+
+    string GetDisplayNameByPropertyInfor(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+}

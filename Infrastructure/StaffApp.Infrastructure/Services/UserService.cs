@@ -18,7 +18,7 @@ namespace StaffApp.Infrastructure.Services
     public class UserService(
         IStaffAppDbContext context,
         IDepartmentService departmentService,
-        RoleManager<IdentityRole> roleManager,
+        IRoleService roleService,
         UserManager<ApplicationUser> userManager,
         IConfiguration configuration,
         SignInManager<ApplicationUser> signInManager,
@@ -57,9 +57,9 @@ namespace StaffApp.Infrastructure.Services
                 if (!string.IsNullOrEmpty(error))
                     return new GeneralResponseDTO(false, error);
 
-                if (!string.IsNullOrEmpty(model.RoleName))
+                if (model.SelectedRole.Id != ApplicationConstants.EmptyGuide)
                 {
-                    await AssignUserToRoleAsync(user, new IdentityRole(model.RoleName));
+                    await AssignUserToRoleAsync(user, new ApplicationRole(model.SelectedRole.Name) { IsManagerTypeRole = model.SelectedRole.IsManagerTypeRole });
                 }
 
                 await departmentService.AddUsersToDepartments(model.Departments.Select(x => x.Id).ToList(), user.Id);
@@ -100,7 +100,7 @@ namespace StaffApp.Infrastructure.Services
 
                 await userManager.UpdateAsync(user);
 
-                await ChangeUserRoleAsync(user, new List<string> { model.RoleName });
+                await ChangeUserRoleAsync(user, new List<string> { model.SelectedRole.Name });
 
 
                 var savedDepartments = (await departmentService
@@ -207,6 +207,9 @@ namespace StaffApp.Infrastructure.Services
             var userDepartments = await departmentService
                 .GetDepartmentsByUserId(id, true);
 
+            var userRole = (await userManager.GetRolesAsync(user)).FirstOrDefault();
+            var role = await roleService.GetRoleByNameAsync(userRole);
+
             return new UserDTO()
             {
                 FullName = user.FullName,
@@ -219,7 +222,7 @@ namespace StaffApp.Infrastructure.Services
                 LandNumber = user.LandNumber,
                 SelectedMaritalStatus = user.MaritalStatus > 0 ? new DropDownDTO() { Id = (int)user.MaritalStatus, Name = EnumHelper.GetEnumDescription(user.MaritalStatus) } : new DropDownDTO(),
                 IsActive = user.IsActive,
-                RoleName = (await userManager.GetRolesAsync(user)).FirstOrDefault(),
+                SelectedRole = role is not null ? new RoleDTO() { Id = role.Id, Name = role.Name, IsManagerTypeRole = role.IsManagerTypeRole.Value } : new RoleDTO() { Id = ApplicationConstants.EmptyGuide },
                 DepartmentIds = userDepartments.Select(x => x.Id).ToList(),
                 SelectedEmploymentType = new DropDownDTO()
                 {
@@ -229,8 +232,12 @@ namespace StaffApp.Infrastructure.Services
             };
         }
 
-        public async Task<List<RoleDTO>> GetAvailableRoles() =>
-            (await roleManager.Roles.OrderBy(x => x.Name).ToListAsync()).Adapt<List<RoleDTO>>();
+        public async Task<List<RoleDTO>> GetAvailableRoles()
+        {
+            var allRoles = await roleService.GetAllRolesAsync();
+
+            return allRoles.OrderBy(x => x.Name).Adapt<List<RoleDTO>>();
+        }
 
         public async Task<GeneralResponseDTO> DeleteUser(string id)
         {
@@ -243,8 +250,6 @@ namespace StaffApp.Infrastructure.Services
         }
 
         private async Task<ApplicationUser?> FindUserByEmailAsync(string email) => await userManager.FindByEmailAsync(email);
-
-        private async Task<IdentityRole?> FindRoleByNameAsync(string roleName) => await roleManager.FindByNameAsync(roleName);
 
         private static string CheckResponse(IdentityResult result)
         {
@@ -279,7 +284,8 @@ namespace StaffApp.Infrastructure.Services
 
             foreach (var role in newlyAddedRoles)
             {
-                var result = await AssignUserToRoleAsync(user, new IdentityRole(role));
+                var applicationRole = await roleService.GetRoleByNameAsync(role);
+                var result = await AssignUserToRoleAsync(user, applicationRole);
                 if (!result.Flag)
                     return result;
             }
@@ -287,13 +293,13 @@ namespace StaffApp.Infrastructure.Services
             return new GeneralResponseDTO(true, "User role updated successfully");
         }
 
-        private async Task<GeneralResponseDTO> AssignUserToRoleAsync(ApplicationUser user, IdentityRole role)
+        private async Task<GeneralResponseDTO> AssignUserToRoleAsync(ApplicationUser user, ApplicationRole role)
         {
             if (user is null || role is null)
                 return new GeneralResponseDTO(false, "Model state can't be empty");
 
-            if (await FindRoleByNameAsync(role.Name) is null)
-                await CreateRoleAsync(role.Adapt(new RoleDTO()));
+            if (await roleService.GetRoleByNameAsync(role.Name) is null)
+                await roleService.CreateRoleAsync(role.Name, role.IsManagerTypeRole.Value);
 
             IdentityResult result = await userManager.AddToRoleAsync(user, role.Name);
             string error = CheckResponse(result);
@@ -303,27 +309,13 @@ namespace StaffApp.Infrastructure.Services
                 return new GeneralResponseDTO(true, $"{user.FullName} assigned to {role.Name} successfully");
         }
 
-        private async Task<GeneralResponseDTO> CreateRoleAsync(RoleDTO model)
-        {
-            if ((await FindRoleByNameAsync(model.Name) is not null))
-                return new GeneralResponseDTO(false, "Role already exists");
-
-            var response = await roleManager.CreateAsync(new IdentityRole(model.Name));
-
-            var error = CheckResponse(response);
-            if (!string.IsNullOrEmpty(error))
-                return new GeneralResponseDTO(false, error);
-            else
-                return new GeneralResponseDTO(true, $"{model.Name} role created successfully");
-        }
-
         public async Task<List<UserDropDownDTO>> GetManagerJobRoleUsersAsync()
         {
             var roleNames = new List<string> { RoleConstants.Director, RoleConstants.Manager, RoleConstants.TeamLead };
             var users = new List<ApplicationUser>();
             foreach (var roleName in roleNames)
             {
-                if (await roleManager.RoleExistsAsync(roleName))
+                if (await roleService.RoleExistsAsync(roleName))
                 {
                     var usersInRole = await userManager.GetUsersInRoleAsync(roleName);
                     users.AddRange(usersInRole);

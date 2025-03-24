@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StaffApp.Application.Extensions.Constants;
+using StaffApp.Application.Services;
 using StaffApp.Domain.Entity;
 
 namespace StaffApp.Infrastructure.Data
@@ -9,15 +9,15 @@ namespace StaffApp.Infrastructure.Data
     public class StaffAppDbContextInitializer
     {
         private readonly StaffAppDbContext context;
-        private readonly RoleManager<IdentityRole> roleManager;
+        private readonly IRoleService roleService;
         private readonly ILogger<StaffAppDbContextInitializer> logger;
         public StaffAppDbContextInitializer(StaffAppDbContext context,
-            RoleManager<IdentityRole> roleManager,
+            IRoleService roleService,
             ILogger<StaffAppDbContextInitializer> logger)
         {
             this.context = context;
             this.logger = logger;
-            this.roleManager = roleManager;
+            this.roleService = roleService;
         }
 
         public async Task InitializeAsync()
@@ -72,9 +72,9 @@ namespace StaffApp.Infrastructure.Data
 
             foreach (var roleName in roles)
             {
-                if (!await roleManager.RoleExistsAsync(roleName))
+                if (!await roleService.RoleExistsAsync(roleName))
                 {
-                    await roleManager.CreateAsync(new IdentityRole(roleName));
+                    await roleService.CreateRoleAsync(roleName, false);
                 }
             }
         }

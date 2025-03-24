@@ -23,4 +23,9 @@
     <ProjectReference Include="..\..\Infrastructure\StaffApp.Infrastructure\StaffApp.Infrastructure.csproj" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <Folder Include="Components\FinancialYear\Pages\" />
+  </ItemGroup>
+
 </Project>

@@ -1,7 +1,4 @@
-﻿
-
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using StaffApp.Application.Contracts;
@@ -13,7 +10,7 @@ using System.Reflection;
 
 namespace StaffApp.Infrastructure.Data
 {
-    public class StaffAppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>, IStaffAppDbContext
+    public class StaffAppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>, IStaffAppDbContext
     {
         private readonly AuditableEntitySaveChangesInterceptor _auditableEntitySaveChangesInterceptor;
         private IDbContextTransaction dbContextTransaction;
