@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StaffApp.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using StaffApp.Infrastructure.Data;
 namespace StaffApp.Infrastructure.Migrations
 {
     [DbContext(typeof(StaffAppDbContext))]
-    partial class StaffAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250325190849_00013")]
+    partial class _00013
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -189,7 +192,7 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
-                    b.Property<int?>("EmployeeTypeId")
+                    b.Property<int?>("EmploymentType")
                         .HasColumnType("int");
 
                     b.Property<string>("FullName")
@@ -249,8 +252,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("DepartmentId");
-
-                    b.HasIndex("EmployeeTypeId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -827,12 +828,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.HasOne("StaffApp.Domain.Entity.Department", null)
                         .WithMany("Users")
                         .HasForeignKey("DepartmentId");
-
-                    b.HasOne("StaffApp.Domain.Entity.EmployeeType", "EmployeeType")
-                        .WithMany("Employees")
-                        .HasForeignKey("EmployeeTypeId");
-
-                    b.Navigation("EmployeeType");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.Department", b =>
@@ -1065,8 +1060,6 @@ namespace StaffApp.Infrastructure.Migrations
 
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeType", b =>
                 {
-                    b.Navigation("Employees");
-
                     b.Navigation("LeaveTypeConfigurations");
                 });
 

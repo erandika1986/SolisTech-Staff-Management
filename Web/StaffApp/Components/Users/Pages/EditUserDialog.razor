@@ -93,7 +93,9 @@
                                 </MudSelect>
                             </MudItem>
 
-
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudDatePicker xs="12" sm="6" Label="Confirmation Date" @bind-Date="User.ConfirmationDate" Required="false"/>
+                            </MudItem>
 
                         </MudGrid>
 
@@ -149,7 +151,7 @@
         Departments = await DepartmentService.GetAllDepartments(string.Empty);
         Roles = await UserService.GetAvailableRoles();
         MaritalStatuses = EnumHelper.GetDropDownList<MaritalStatus>();
-        EmploymentTypes = UserService.GetAvailableEmploymentTypes();
+        EmploymentTypes = await UserService.GetAvailableEmploymentTypes();
         GenderTypes = UserService.GetAvailableGenderTypes();
 
         if (UserId != ApplicationConstants.EmptyGuide)

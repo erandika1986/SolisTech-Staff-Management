@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using StaffApp.Application.Extensions.Constants;
+using StaffApp.Application.Extensions.Helpers;
 using StaffApp.Application.Services;
 using StaffApp.Domain.Entity;
+using StaffApp.Domain.Enum;
 
 namespace StaffApp.Infrastructure.Data
 {
@@ -42,6 +44,7 @@ namespace StaffApp.Infrastructure.Data
             {
                 await SeedUserRolesAsync();
                 await SeedDepartmentAsync();
+                await SeedEmployeeTypeAsync();
                 await SeedLeaveTypeAsync();
             }
             catch (Exception ex)
@@ -100,19 +103,30 @@ namespace StaffApp.Infrastructure.Data
             }
         }
 
+        private async Task SeedEmployeeTypeAsync()
+        {
+            var employeeTypes = EnumHelper.GetDropDownList<EmploymentType>();
+
+            foreach (var employeeType in employeeTypes)
+            {
+                if (!context.EmployeeTypes.Any(x => x.Id == employeeType.Id))
+                {
+                    context.EmployeeTypes.Add(new EmployeeType() { Id = employeeType.Id, Name = employeeType.Name });
+                }
+            }
+            await context.SaveChangesAsync();
+        }
+
         private async Task SeedLeaveTypeAsync()
         {
             if (!context.LeaveTypes.Any())
             {
                 var leaveTypes = new List<LeaveType>
                 {
-                    new LeaveType { Name = "Annual Leave",DefaultDays = 14 ,HasLeaveTypeLogic = false},
-                    new LeaveType { Name = "Sick Leave", DefaultDays = 7, HasLeaveTypeLogic = false },
-                    new LeaveType { Name = "Maternity Leave", DefaultDays = 84 , HasLeaveTypeLogic = false},
                     new LeaveType
                     {
-                        Name = "Paternity Leave",
-                        DefaultDays = 0 ,
+                        Name = "Annual Leave",
+                        DefaultDays = 14 ,
                         HasLeaveTypeLogic = true,
                         LeaveTypeLogics =
                         [
@@ -148,7 +162,54 @@ namespace StaffApp.Infrastructure.Data
                                 EndDateOfMonth = 31,
                                 EntitledLeaveCount = 4
                             }
+                        ],
+                        LeaveTypeConfigurations = [
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Permanent, AnnualLeaveAllowance = 14, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Contract, AnnualLeaveAllowance = 14, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Probation, AnnualLeaveAllowance = 7, MinimumServiceMonthsRequired = 6 },
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Temporary, AnnualLeaveAllowance = 14, MinimumServiceMonthsRequired = 3},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Internship, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Freelancer, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0}
                         ]
+                    },
+                    new LeaveType {
+                        Name = "Sick Leave",
+                        DefaultDays = 7,
+                        HasLeaveTypeLogic = false,
+                        LeaveTypeConfigurations = [
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Permanent, AnnualLeaveAllowance = 7, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Contract, AnnualLeaveAllowance = 7, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Probation, AnnualLeaveAllowance = 7, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Temporary, AnnualLeaveAllowance = 7, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Internship, AnnualLeaveAllowance = 7, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Freelancer, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0}
+                        ]
+                    },
+                    new LeaveType {
+                        Name = "Maternity Leave",
+                        DefaultDays = 84 , HasLeaveTypeLogic = false,
+                        LeaveTypeConfigurations = [
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Permanent, AnnualLeaveAllowance = 84, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Contract, AnnualLeaveAllowance = 84, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Probation, AnnualLeaveAllowance = 84, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Temporary, AnnualLeaveAllowance = 84, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Internship, AnnualLeaveAllowance = 7, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Freelancer, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0}
+                        ]
+                    },
+                    new LeaveType {
+                        Name = "Paternity Leave",
+                        DefaultDays = 0 ,
+                        HasLeaveTypeLogic = false,
+                        LeaveTypeConfigurations = [
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Permanent, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Contract, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Probation, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Temporary, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Internship, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Freelancer, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0}
+                        ]
+
                     }
                 };
                 await context.LeaveTypes.AddRangeAsync(leaveTypes);

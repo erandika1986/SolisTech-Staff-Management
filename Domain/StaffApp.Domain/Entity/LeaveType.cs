@@ -9,7 +9,8 @@ namespace StaffApp.Domain.Entity
         public bool HasLeaveTypeLogic { get; set; }
 
         public virtual ICollection<EmployeeLeaveRequest> EmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
-        public virtual ICollection<EmployeeLeaveBalance> EmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveBalance>();
+        public virtual ICollection<EmployeeLeaveAllocation> EmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();
         public virtual ICollection<LeaveTypeLogic> LeaveTypeLogics { get; set; } = new HashSet<LeaveTypeLogic>();
+        public virtual ICollection<LeaveTypeConfig> LeaveTypeConfigurations { get; set; } = new HashSet<LeaveTypeConfig>();
     }
 }

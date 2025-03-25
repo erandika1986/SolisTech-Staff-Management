@@ -11,11 +11,14 @@ namespace StaffApp.Application.Contracts
         DbSet<CompanyYear> CompanyYears { get; }
         DbSet<Department> Departments { get; }
         DbSet<EmployeeDepartment> EmployeeDepartments { get; }
-        DbSet<EmployeeLeaveApproval> EmployeeLeaveApprovals { get; }
-        DbSet<EmployeeLeaveBalance> EmployeeLeaveBalances { get; }
+        DbSet<EmployeeLeaveAllocation> EmployeeLeaveAllocations { get; }
         DbSet<EmployeeLeaveRequest> EmployeeLeaveRequests { get; }
+        DbSet<EmployeeLeaveRequestComment> EmployeeLeaveRequestComments { get; }
         DbSet<EmployeeSalary> EmployeeSalaries { get; }
+        DbSet<EmployeeType> EmployeeTypes { get; }
         DbSet<LeaveType> LeaveTypes { get; }
+        DbSet<LeaveTypeConfig> LeaveTypesConfigs { get; }
+        DbSet<LeaveTypeLogic> LeaveTypesLogics { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
         Task BeginTransactionAsync(CancellationToken cancellationToken);

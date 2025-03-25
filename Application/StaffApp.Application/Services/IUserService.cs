@@ -19,7 +19,7 @@ namespace StaffApp.Application.Services
         Task<GeneralResponseDTO> UpdateExistingUserAsync(UserDTO model);
         Task<List<RoleDTO>> GetAvailableRoles();
         Task<GeneralResponseDTO> DeleteUser(string id);
-        List<DropDownDTO> GetAvailableEmploymentTypes();
+        Task<List<DropDownDTO>> GetAvailableEmploymentTypes();
         List<DropDownDTO> GetAvailableGenderTypes();
     }
 }

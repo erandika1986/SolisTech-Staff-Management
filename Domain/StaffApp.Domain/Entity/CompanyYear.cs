@@ -15,6 +15,6 @@ namespace StaffApp.Domain.Entity
         public string? UpdatedByUserId { get; set; }
         public bool IsActive { get; set; }
 
-        public virtual ICollection<EmployeeLeaveBalance> EmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveBalance>();
+        public virtual ICollection<EmployeeLeaveAllocation> EmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();
     }
 }

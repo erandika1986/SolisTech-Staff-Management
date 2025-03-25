@@ -18,6 +18,7 @@ namespace StaffApp.Application.DTOs.User
         public string? PhoneNumber { get; set; }
         public DateTime? HireDate { get; set; } = DateTime.Now;
         public DateTime? BirthDate { get; set; } = DateTime.Now;
+        public DateTime? ConfirmationDate { get; set; } = null;
 
         public RoleDTO SelectedRole { get; set; }
         public DropDownDTO SelectedEmploymentType { get; set; }

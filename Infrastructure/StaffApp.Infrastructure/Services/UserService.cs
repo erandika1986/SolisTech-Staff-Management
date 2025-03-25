@@ -44,10 +44,11 @@ namespace StaffApp.Infrastructure.Services
                     BirthDate = model.BirthDate,
                     Gender = (Gender)model.SelectedGender.Id,
                     HireDate = model.HireDate,
+                    ConfirmationDate = model.ConfirmationDate,
                     NICNumber = model.NICNumber,
                     LandNumber = model.LandNumber,
                     MaritalStatus = (MaritalStatus)model.SelectedMaritalStatus.Id,
-                    EmploymentType = (EmploymentType)model.SelectedEmploymentType.Id,
+                    EmployeeTypeId = model.SelectedEmploymentType.Id,
                     IsActive = true
                 };
 
@@ -91,10 +92,11 @@ namespace StaffApp.Infrastructure.Services
                 user.PhoneNumber = model.PhoneNumber;
                 user.BirthDate = model.BirthDate;
                 user.HireDate = model.HireDate;
+                user.ConfirmationDate = model.ConfirmationDate;
                 user.NICNumber = model.NICNumber;
                 user.LandNumber = model.LandNumber;
                 user.MaritalStatus = (MaritalStatus)model.SelectedMaritalStatus.Id;
-                user.EmploymentType = (EmploymentType)model.SelectedEmploymentType.Id;
+                user.EmployeeTypeId = model.SelectedEmploymentType.Id;
                 user.Gender = (Gender)model.SelectedGender.Id;
                 user.IsActive = true;
 
@@ -218,6 +220,7 @@ namespace StaffApp.Infrastructure.Services
                 BirthDate = user.BirthDate ?? DateTime.Now,
                 SelectedGender = new DropDownDTO() { Id = user.Gender.HasValue ? (int)user.Gender.Value : (int)Gender.Unknown, Name = string.Empty },
                 HireDate = user.HireDate ?? DateTime.Now,
+                ConfirmationDate = user.ConfirmationDate ?? null,
                 NICNumber = user.NICNumber,
                 LandNumber = user.LandNumber,
                 SelectedMaritalStatus = user.MaritalStatus > 0 ? new DropDownDTO() { Id = (int)user.MaritalStatus, Name = EnumHelper.GetEnumDescription(user.MaritalStatus) } : new DropDownDTO(),
@@ -226,7 +229,7 @@ namespace StaffApp.Infrastructure.Services
                 DepartmentIds = userDepartments.Select(x => x.Id).ToList(),
                 SelectedEmploymentType = new DropDownDTO()
                 {
-                    Id = user.EmploymentType.HasValue ? (int)user.EmploymentType.Value : 0,
+                    Id = user.EmployeeTypeId.HasValue ? (int)user.EmployeeTypeId.Value : 0,
                 },
                 Id = user.Id
             };
@@ -331,9 +334,14 @@ namespace StaffApp.Infrastructure.Services
             return userDto;
         }
 
-        public List<DropDownDTO> GetAvailableEmploymentTypes()
+        public async Task<List<DropDownDTO>> GetAvailableEmploymentTypes()
         {
-            return EnumHelper.GetDropDownList<EmploymentType>();
+            var employmentTypes = await context
+                .EmployeeTypes
+                .Select(x => new DropDownDTO() { Id = x.Id, Name = x.Name })
+                .ToListAsync();
+
+            return employmentTypes;
         }
 
         public List<DropDownDTO> GetAvailableGenderTypes()

@@ -1,0 +1,85 @@
+﻿@using StaffApp.Application.DTOs.CompanyYear
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+
+@inject ICompanyFinancialYearService CompanyFinancialYearService
+
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-2">
+                    <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="int" Label="Company Year" @bind-Value="CompanyYear.Year" Required="true" RequiredError="Company year is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudDatePicker xs="12" sm="6" Label="Start Date" @bind-Date="CompanyYear.StartDate" Required="true" RequiredError="Start date is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudDatePicker xs="12" sm="6" Label="End Date" @bind-Date="CompanyYear.EndDate" Required="true" RequiredError="End date is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudCheckBox Label="Is Current Year" @bind-Value="CompanyYear.IsCurrentYear" Disabled Color="Color.Primary"></MudCheckBox>
+
+                            </MudItem>
+                        </MudGrid>
+
+                    </MudForm>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-4 mud-height-full">
+                    <MudText Typo="Typo.subtitle2">@($"Errors ({errors.Length})")</MudText>
+                    @foreach (var error in errors)
+                    {
+                        <MudText Color="@Color.Error">@error</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto">Save</MudButton>
+        </MudPaper>
+
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int YearId { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnDialogClosed { get; set; }
+
+    public CompanyYearDTO CompanyYear { get; set; } = new();
+
+    bool success;
+    string[] errors = { };
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (YearId != ApplicationConstants.Zero)
+        {
+            CompanyYear = await CompanyFinancialYearService.GetCompanyYearById(YearId);
+        }
+    }
+
+    private async Task Submit()
+    {
+        var response = await CompanyFinancialYearService.SaveCompanyYear(CompanyYear);
+        await OnDialogClosed.InvokeAsync(true);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

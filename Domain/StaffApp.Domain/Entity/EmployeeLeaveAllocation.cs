@@ -3,7 +3,7 @@ using StaffApp.Domain.Entity.Common;
 
 namespace StaffApp.Domain.Entity
 {
-    public class EmployeeLeaveBalance : BaseAuditableEntity
+    public class EmployeeLeaveAllocation : BaseAuditableEntity
     {
         public string EmployeeId { get; set; }
         public int LeaveTypeId { get; set; }

@@ -1,8 +1,132 @@
 ﻿@page "/CompanySettings/CompanyYear/List"
 
 @using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.CompanyYear
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+@using StaffApp.Components.Shared
+
+@inject ICompanyYearService CompanyYearService 
+@inject IDialogService Dialog
+
 @attribute [Authorize]
+
+<MudGrid>
+    <MudItem xs="12" sm="12">
+        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => AddNewCompanyYearAsync()"></MudIconButton>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12" lg="12">
+        <MudDataGrid Items="@CompanyYears" Sortable="true"
+                     Filterable="false"
+                     Hideable="true"
+                     Hover="true"
+                     Striped="true"
+                     Elevation="25">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Company Year</MudText>
+                <MudSpacer />
+
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="x=>x.Id" Title="@GetDisplayName(typeof(CompanyYearDTO), nameof(CompanyYearDTO.Id))" />
+                <PropertyColumn Property="x=>x.Year" Title="@GetDisplayName(typeof(CompanyYearDTO), nameof(CompanyYearDTO.Year))" />
+                <PropertyColumn Property="x=>x.StartDate" Title="@GetDisplayName(typeof(CompanyYearDTO), nameof(CompanyYearDTO.StartDate))" />
+                <PropertyColumn Property="x=>x.EndDate" Title="@GetDisplayName(typeof(CompanyYearDTO), nameof(CompanyYearDTO.EndDate))" />
+                <PropertyColumn Property="x=>x.CurrentYear" Title="@GetDisplayName(typeof(CompanyYearDTO), nameof(CompanyYearDTO.CurrentYear))" />
+                <TemplateColumn CellClass="d-flex justify-end">
+                    <CellTemplate Context="companyYear">                       
+                        <MudStack Row>
+                            <MudIconButton Icon="@Icons.Material.Filled.PlayCircle" Color="Color.Success" Variant="Variant.Filled" OnClick="() => EditCompanyYearAsync(companyYear.Item)"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditCompanyYearAsync(companyYear.Item)"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteCompanyYearAsync(companyYear.Item)"></MudIconButton>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudItem>
+</MudGrid>
 
 @code {
 
+    private IEnumerable<CompanyYearDTO> CompanyYears { get; set; } = new List<CompanyYearDTO>();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCompanyYears();
+    }
+
+    private async Task LoadCompanyYears()
+    {
+        CompanyYears = await CompanyYearService.GetAllCompanyYears();
+    }
+
+    private async Task EditCompanyYearAsync(CompanyYearDTO model)
+    {
+        var parameters = new DialogParameters
+        {
+            { "YearId", model.Id },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditCompanyYearDialog>($"Edit Company Year : {model.Id}", parameters, _maxWidth);
+    }
+
+    private async Task AddNewCompanyYearAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "YearId", ApplicationConstants.Zero },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditCompanyYearDialog>($"Add a new company year", parameters, _maxWidth);
+    }
+
+
+    private async Task HandleEditDialogClosedAsync(bool result)
+    {
+        await LoadCompanyYears();
+    }
+
+
+    private Task DeleteCompanyYearAsync(CompanyYearDTO model)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "Id", model.Id.ToString() },
+            { x => x.ContentText, "Do you really want to delete these records? This process cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error },
+             { "OnDialogClosed", EventCallback.Factory.Create<string>(this, HandleDeleteConfirmationDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        return Dialog.ShowAsync<ConfirmationDialog>("Delete", parameters, options);
+    }
+
+
+    private async Task HandleDeleteConfirmationDialogClosedAsync(string id)
+    {
+        var result = await CompanyYearService.DeleteCompanyYear(int.Parse(id));
+
+        await LoadCompanyYears();
+    }
+
+
+    string GetDisplayNameByPropertyInfor(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
 }

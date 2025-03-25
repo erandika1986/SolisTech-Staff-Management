@@ -68,12 +68,12 @@ namespace StaffApp.Infrastructure.Services
 
         public async Task<GeneralResponseDTO> SaveCompanyYear(CompanyYearDTO model)
         {
-            var companyYear = await context.CompanyYears.FindAsync(model.Id);
+            var companyYear = await context.CompanyYears.FindAsync(model.Year);
             if (companyYear != null)
             {
                 companyYear.Year = model.Year;
-                companyYear.StartDate = model.StartDate;
-                companyYear.EndDate = model.EndDate;
+                companyYear.StartDate = model.StartDate.Value;
+                companyYear.EndDate = model.EndDate.Value;
                 companyYear.UpdateDate = DateTime.Now;
                 companyYear.UpdatedByUserId = currentUserService.UserId;
 
@@ -86,10 +86,10 @@ namespace StaffApp.Infrastructure.Services
             {
                 companyYear = new Domain.Entity.CompanyYear
                 {
-                    Id = model.Id,
+                    Id = model.Year,
                     Year = model.Year,
-                    StartDate = model.StartDate,
-                    EndDate = model.EndDate,
+                    StartDate = model.StartDate.Value,
+                    EndDate = model.EndDate.Value,
                     IsCurrentYear = false,
                     IsActive = true,
                     CreatedDate = DateTime.Now,
