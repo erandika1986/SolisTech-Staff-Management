@@ -35,6 +35,9 @@ namespace StaffApp.Infrastructure.Services
 
         public async Task<ApplicationRole> GetRoleByNameAsync(string roleName)
         {
+            if (string.IsNullOrWhiteSpace(roleName))
+                return null;
+
             return await roleManager.FindByNameAsync(roleName);
         }
 
@@ -51,12 +54,16 @@ namespace StaffApp.Infrastructure.Services
             return await roleManager.CreateAsync(role);
         }
 
-        public async Task<IdentityResult> UpdateRoleAsync(ApplicationRole role)
+        public async Task<IdentityResult> UpdateRoleAsync(RoleDTO role)
         {
             if (role == null)
                 throw new ArgumentNullException(nameof(role));
 
-            return await roleManager.UpdateAsync(role);
+            var savedRole = await roleManager.FindByIdAsync(role.Id);
+            savedRole.Name = role.Name;
+            savedRole.IsManagerTypeRole = role.IsManagerTypeRole;
+
+            return await roleManager.UpdateAsync(savedRole);
         }
 
         public async Task<IdentityResult> DeleteRoleAsync(string roleId)

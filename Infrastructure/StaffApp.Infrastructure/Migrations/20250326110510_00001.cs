@@ -16,6 +16,7 @@ namespace StaffApp.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    IsManagerTypeRole = table.Column<bool>(type: "bit", nullable: true),
                     Name = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     ConcurrencyStamp = table.Column<string>(type: "nvarchar(max)", nullable: true)
@@ -32,7 +33,13 @@ namespace StaffApp.Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false),
                     Year = table.Column<int>(type: "int", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsCurrentYear = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedByUserId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -46,11 +53,29 @@ namespace StaffApp.Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false),
                     Year = table.Column<int>(type: "int", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsCurrentYear = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedByUserId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_CompanyYear", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EmployeeType",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmployeeType", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -60,7 +85,9 @@ namespace StaffApp.Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
-                    DefaultDays = table.Column<int>(type: "int", nullable: false)
+                    DefaultDays = table.Column<int>(type: "int", nullable: false),
+                    HasLeaveTypeLogic = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    AllowGenderType = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -86,6 +113,58 @@ namespace StaffApp.Infrastructure.Migrations
                         principalTable: "AspNetRoles",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LeaveTypeConfig",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EmployeeTypeId = table.Column<int>(type: "int", nullable: false),
+                    LeaveTypeId = table.Column<int>(type: "int", nullable: false),
+                    AnnualLeaveAllowance = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    MinimumServiceMonthsRequired = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LeaveTypeConfig", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LeaveTypeConfig_EmployeeType_EmployeeTypeId",
+                        column: x => x.EmployeeTypeId,
+                        principalTable: "EmployeeType",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_LeaveTypeConfig_LeaveType_LeaveTypeId",
+                        column: x => x.LeaveTypeId,
+                        principalTable: "LeaveType",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LeaveTypeLogic",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    LeaveTypeId = table.Column<int>(type: "int", nullable: false),
+                    StartMonthOfYear = table.Column<int>(type: "int", nullable: false),
+                    StartDateOfMonth = table.Column<int>(type: "int", nullable: false),
+                    EndMonthOfYear = table.Column<int>(type: "int", nullable: false),
+                    EndDateOfMonth = table.Column<int>(type: "int", nullable: false),
+                    EntitledLeaveCount = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_LeaveTypeLogic", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_LeaveTypeLogic_LeaveType_LeaveTypeId",
+                        column: x => x.LeaveTypeId,
+                        principalTable: "LeaveType",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -144,8 +223,10 @@ namespace StaffApp.Infrastructure.Migrations
                     NICNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     LandNumber = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     HireDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ConfirmationDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     BirthDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     MaritalStatus = table.Column<int>(type: "int", nullable: false),
+                    EmployeeTypeId = table.Column<int>(type: "int", nullable: true),
                     Gender = table.Column<int>(type: "int", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     DepartmentId = table.Column<int>(type: "int", nullable: true),
@@ -167,6 +248,11 @@ namespace StaffApp.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AspNetUsers_EmployeeType_EmployeeTypeId",
+                        column: x => x.EmployeeTypeId,
+                        principalTable: "EmployeeType",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -196,7 +282,12 @@ namespace StaffApp.Infrastructure.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
-                    DepartmentHeadId = table.Column<string>(type: "nvarchar(450)", nullable: true)
+                    DepartmentHeadId = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    UpdatedByUserId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
                 },
                 constraints: table =>
                 {
@@ -210,7 +301,7 @@ namespace StaffApp.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "EmployeeLeaveBalance",
+                name: "EmployeeLeaveAllocation",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
@@ -218,43 +309,31 @@ namespace StaffApp.Infrastructure.Migrations
                     EmployeeId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     LeaveTypeId = table.Column<int>(type: "int", nullable: false),
                     CompanyYearId = table.Column<int>(type: "int", nullable: false),
-                    AllocatedLeaveCount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    RemainingLeaveCount = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    AllocatedLeaveCount = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
+                    RemainingLeaveCount = table.Column<decimal>(type: "decimal(5,2)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_EmployeeLeaveBalance", x => x.Id);
+                    table.PrimaryKey("PK_EmployeeLeaveAllocation", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_EmployeeLeaveBalance_AspNetUsers_CreatedByUserId",
-                        column: x => x.CreatedByUserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_EmployeeLeaveBalance_AspNetUsers_EmployeeId",
+                        name: "FK_EmployeeLeaveAllocation_AspNetUsers_EmployeeId",
                         column: x => x.EmployeeId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_EmployeeLeaveBalance_AspNetUsers_UpdatedByUserId",
-                        column: x => x.UpdatedByUserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_EmployeeLeaveBalance_CompanyYear_CompanyYearId",
+                        name: "FK_EmployeeLeaveAllocation_CompanyYear_CompanyYearId",
                         column: x => x.CompanyYearId,
                         principalTable: "CompanyYear",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_EmployeeLeaveBalance_LeaveType_LeaveTypeId",
+                        name: "FK_EmployeeLeaveAllocation_LeaveType_LeaveTypeId",
                         column: x => x.LeaveTypeId,
                         principalTable: "LeaveType",
                         principalColumn: "Id",
@@ -271,31 +350,21 @@ namespace StaffApp.Infrastructure.Migrations
                     LeaveTypeId = table.Column<int>(type: "int", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    NumberOfDays = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    CurrentStatus = table.Column<int>(type: "int", nullable: false),
                     Reason = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_EmployeeLeaveRequest", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_EmployeeLeaveRequest_AspNetUsers_CreatedByUserId",
-                        column: x => x.CreatedByUserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
                         name: "FK_EmployeeLeaveRequest_AspNetUsers_EmployeeId",
                         column: x => x.EmployeeId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_EmployeeLeaveRequest_AspNetUsers_UpdatedByUserId",
-                        column: x => x.UpdatedByUserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
@@ -374,37 +443,22 @@ namespace StaffApp.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "EmployeeLeaveApproval",
+                name: "EmployeeLeaveRequestComment",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     EmployeeLeaveRequestId = table.Column<int>(type: "int", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
-                    Comments = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    UpdateDate = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    UpdatedByUserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false)
+                    CreatedByUserId = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_EmployeeLeaveApproval", x => x.Id);
+                    table.PrimaryKey("PK_EmployeeLeaveRequestComment", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_EmployeeLeaveApproval_AspNetUsers_CreatedByUserId",
-                        column: x => x.CreatedByUserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_EmployeeLeaveApproval_AspNetUsers_UpdatedByUserId",
-                        column: x => x.UpdatedByUserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_EmployeeLeaveApproval_EmployeeLeaveRequest_EmployeeLeaveRequestId",
+                        name: "FK_EmployeeLeaveRequestComment_EmployeeLeaveRequest_EmployeeLeaveRequestId",
                         column: x => x.EmployeeLeaveRequestId,
                         principalTable: "EmployeeLeaveRequest",
                         principalColumn: "Id",
@@ -449,6 +503,11 @@ namespace StaffApp.Infrastructure.Migrations
                 column: "DepartmentId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_EmployeeTypeId",
+                table: "AspNetUsers",
+                column: "EmployeeTypeId");
+
+            migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
@@ -484,49 +543,19 @@ namespace StaffApp.Infrastructure.Migrations
                 column: "DepartmentId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EmployeeLeaveApproval_CreatedByUserId",
-                table: "EmployeeLeaveApproval",
-                column: "CreatedByUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EmployeeLeaveApproval_EmployeeLeaveRequestId",
-                table: "EmployeeLeaveApproval",
-                column: "EmployeeLeaveRequestId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EmployeeLeaveApproval_UpdatedByUserId",
-                table: "EmployeeLeaveApproval",
-                column: "UpdatedByUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EmployeeLeaveBalance_CompanyYearId",
-                table: "EmployeeLeaveBalance",
+                name: "IX_EmployeeLeaveAllocation_CompanyYearId",
+                table: "EmployeeLeaveAllocation",
                 column: "CompanyYearId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EmployeeLeaveBalance_CreatedByUserId",
-                table: "EmployeeLeaveBalance",
-                column: "CreatedByUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EmployeeLeaveBalance_EmployeeId",
-                table: "EmployeeLeaveBalance",
+                name: "IX_EmployeeLeaveAllocation_EmployeeId",
+                table: "EmployeeLeaveAllocation",
                 column: "EmployeeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EmployeeLeaveBalance_LeaveTypeId",
-                table: "EmployeeLeaveBalance",
+                name: "IX_EmployeeLeaveAllocation_LeaveTypeId",
+                table: "EmployeeLeaveAllocation",
                 column: "LeaveTypeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EmployeeLeaveBalance_UpdatedByUserId",
-                table: "EmployeeLeaveBalance",
-                column: "UpdatedByUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_EmployeeLeaveRequest_CreatedByUserId",
-                table: "EmployeeLeaveRequest",
-                column: "CreatedByUserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_EmployeeLeaveRequest_EmployeeId",
@@ -539,9 +568,9 @@ namespace StaffApp.Infrastructure.Migrations
                 column: "LeaveTypeId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_EmployeeLeaveRequest_UpdatedByUserId",
-                table: "EmployeeLeaveRequest",
-                column: "UpdatedByUserId");
+                name: "IX_EmployeeLeaveRequestComment_EmployeeLeaveRequestId",
+                table: "EmployeeLeaveRequestComment",
+                column: "EmployeeLeaveRequestId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_EmployeeSalary_CreatedByUserId",
@@ -559,10 +588,31 @@ namespace StaffApp.Infrastructure.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_EmployeeType_Name",
+                table: "EmployeeType",
+                column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_LeaveType_Name",
                 table: "LeaveType",
                 column: "Name",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LeaveTypeConfig_EmployeeTypeId",
+                table: "LeaveTypeConfig",
+                column: "EmployeeTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LeaveTypeConfig_LeaveTypeId",
+                table: "LeaveTypeConfig",
+                column: "LeaveTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_LeaveTypeLogic_LeaveTypeId",
+                table: "LeaveTypeLogic",
+                column: "LeaveTypeId");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_AspNetUserClaims_AspNetUsers_UserId",
@@ -625,22 +675,28 @@ namespace StaffApp.Infrastructure.Migrations
                 name: "EmployeeDepartment");
 
             migrationBuilder.DropTable(
-                name: "EmployeeLeaveApproval");
+                name: "EmployeeLeaveAllocation");
 
             migrationBuilder.DropTable(
-                name: "EmployeeLeaveBalance");
+                name: "EmployeeLeaveRequestComment");
 
             migrationBuilder.DropTable(
                 name: "EmployeeSalary");
 
             migrationBuilder.DropTable(
+                name: "LeaveTypeConfig");
+
+            migrationBuilder.DropTable(
+                name: "LeaveTypeLogic");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "EmployeeLeaveRequest");
+                name: "CompanyYear");
 
             migrationBuilder.DropTable(
-                name: "CompanyYear");
+                name: "EmployeeLeaveRequest");
 
             migrationBuilder.DropTable(
                 name: "LeaveType");
@@ -650,6 +706,9 @@ namespace StaffApp.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Department");
+
+            migrationBuilder.DropTable(
+                name: "EmployeeType");
         }
     }
 }

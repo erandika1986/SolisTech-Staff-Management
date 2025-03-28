@@ -1,6 +1,7 @@
 ﻿@page "/CompanySettings/CompanyYear/List"
 
 @using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.Common
 @using StaffApp.Application.DTOs.CompanyYear
 @using StaffApp.Application.Extensions.Constants
 @using StaffApp.Application.Services
@@ -9,7 +10,9 @@
 @using StaffApp.Components.Shared
 
 @inject ICompanyYearService CompanyYearService 
+@inject ILeaveAllocationService LeaveAllocationService
 @inject IDialogService Dialog
+@inject ISnackbar Snackbar
 
 @attribute [Authorize]
 
@@ -38,7 +41,8 @@
                 <TemplateColumn CellClass="d-flex justify-end">
                     <CellTemplate Context="companyYear">                       
                         <MudStack Row>
-                            <MudIconButton Icon="@Icons.Material.Filled.PlayCircle" Color="Color.Success" Variant="Variant.Filled" OnClick="() => EditCompanyYearAsync(companyYear.Item)"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Update" Color="Color.Success" Variant="Variant.Filled" OnClick="() => MarkAsCurrentYearAsync(companyYear.Item)"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Sync" Color="Color.Success" Variant="Variant.Filled" OnClick="() => AssignYearlyLeavesAsync(companyYear.Item)"></MudIconButton>
                             <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditCompanyYearAsync(companyYear.Item)"></MudIconButton>
                             <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteCompanyYearAsync(companyYear.Item)"></MudIconButton>
                         </MudStack>
@@ -108,10 +112,71 @@
         return Dialog.ShowAsync<ConfirmationDialog>("Delete", parameters, options);
     }
 
+    private Task MarkAsCurrentYearAsync(CompanyYearDTO model)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "Id", model.Id.ToString() },
+            { x => x.ContentText, "Do you really want to update selected year as current company year?" },
+            { x => x.ButtonText, "Confirm" },
+            { x => x.Color, Color.Error },
+             { "OnDialogClosed", EventCallback.Factory.Create<string>(this, HandleMarkAsCurrentYearDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        return Dialog.ShowAsync<ConfirmationDialog>("Upgrade company year", parameters, options);
+    }
+
+    private Task AssignYearlyLeavesAsync(CompanyYearDTO model)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "Id", model.Id.ToString() },
+            { x => x.ContentText, "Do you really want to assign year leaves to employee?" },
+            { x => x.ButtonText, "Confirm" },
+            { x => x.Color, Color.Error },
+             { "OnDialogClosed", EventCallback.Factory.Create<string>(this, HandleAssignYearlyLeavesDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        return Dialog.ShowAsync<ConfirmationDialog>("Assign Yearly Leaves to Employee", parameters, options);
+    }
+
+
 
     private async Task HandleDeleteConfirmationDialogClosedAsync(string id)
     {
         var result = await CompanyYearService.DeleteCompanyYear(int.Parse(id));
+
+        await ShowSnackbar(result);
+    }
+
+    private async Task HandleMarkAsCurrentYearDialogClosedAsync(string id)
+    {
+        var result = await CompanyYearService.SetAsCurrentCompanyYear(int.Parse(id));
+
+        await ShowSnackbar(result);
+    }
+
+    private async Task HandleAssignYearlyLeavesDialogClosedAsync(string id)
+    {
+        var result = await LeaveAllocationService.AssignYearlyLeavesAsync(int.Parse(id));
+
+        await ShowSnackbar(result);
+    }
+
+    async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
 
         await LoadCompanyYears();
     }

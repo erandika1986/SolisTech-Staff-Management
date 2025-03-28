@@ -448,6 +448,7 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.Property<string>("CreatedByUserId")
                         .IsRequired()
+                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedDate")
@@ -458,7 +459,9 @@ namespace StaffApp.Infrastructure.Migrations
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<int>("LeaveTypeId")
                         .HasColumnType("int");
@@ -466,24 +469,21 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Property<decimal>("RemainingLeaveCount")
                         .HasColumnType("decimal(5, 2)");
 
-                    b.Property<DateTime?>("UpdateDate")
+                    b.Property<DateTime>("UpdateDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UpdatedByUserId")
                         .IsRequired()
+                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CompanyYearId");
 
-                    b.HasIndex("CreatedByUserId");
-
                     b.HasIndex("EmployeeId");
 
                     b.HasIndex("LeaveTypeId");
-
-                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("EmployeeLeaveAllocation", (string)null);
                 });
@@ -499,6 +499,7 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.Property<string>("CreatedByUserId")
                         .IsRequired()
+                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedDate")
@@ -515,7 +516,9 @@ namespace StaffApp.Infrastructure.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<int>("LeaveTypeId")
                         .HasColumnType("int");
@@ -529,22 +532,19 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("UpdateDate")
+                    b.Property<DateTime>("UpdateDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UpdatedByUserId")
                         .IsRequired()
+                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedByUserId");
-
                     b.HasIndex("EmployeeId");
 
                     b.HasIndex("LeaveTypeId");
-
-                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("EmployeeLeaveRequest", (string)null);
                 });
@@ -564,6 +564,7 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.Property<string>("CreatedByUserId")
                         .IsRequired()
+                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<DateTime>("CreatedDate")
@@ -572,26 +573,12 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Property<int>("EmployeeLeaveRequestId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<DateTime?>("UpdateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedByUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedByUserId");
-
                     b.HasIndex("EmployeeLeaveRequestId");
-
-                    b.HasIndex("UpdatedByUserId");
 
                     b.ToTable("EmployeeLeaveRequestComment", (string)null);
                 });
@@ -680,6 +667,9 @@ namespace StaffApp.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("AllowGenderType")
+                        .HasColumnType("int");
+
                     b.Property<int>("DefaultDays")
                         .HasColumnType("int");
 
@@ -687,6 +677,11 @@ namespace StaffApp.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
                         .HasDefaultValue(false);
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -865,12 +860,6 @@ namespace StaffApp.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "CreatedByUser")
-                        .WithMany("CreatedEmployeeLeaveBalances")
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "Employee")
                         .WithMany("EmployeeLeaveBalances")
                         .HasForeignKey("EmployeeId")
@@ -880,34 +869,18 @@ namespace StaffApp.Infrastructure.Migrations
                     b.HasOne("StaffApp.Domain.Entity.LeaveType", "LeaveType")
                         .WithMany("EmployeeLeaveBalances")
                         .HasForeignKey("LeaveTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "UpdatedByUser")
-                        .WithMany("UpdatedEmployeeLeaveBalances")
-                        .HasForeignKey("UpdatedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("CompanyYear");
 
-                    b.Navigation("CreatedByUser");
-
                     b.Navigation("Employee");
 
                     b.Navigation("LeaveType");
-
-                    b.Navigation("UpdatedByUser");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeLeaveRequest", b =>
                 {
-                    b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "CreatedByUser")
-                        .WithMany("CreatedEmployeeLeaveRequests")
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "Employee")
                         .WithMany("EmployeeLeaveRequests")
                         .HasForeignKey("EmployeeId")
@@ -920,46 +893,20 @@ namespace StaffApp.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "UpdatedByUser")
-                        .WithMany("UpdatedEmployeeLeaveRequests")
-                        .HasForeignKey("UpdatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CreatedByUser");
-
                     b.Navigation("Employee");
 
                     b.Navigation("LeaveType");
-
-                    b.Navigation("UpdatedByUser");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeLeaveRequestComment", b =>
                 {
-                    b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "CreatedByUser")
-                        .WithMany("CreatedEmployeeLeaveRequestComments")
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("StaffApp.Domain.Entity.EmployeeLeaveRequest", "EmployeeLeaveRequest")
                         .WithMany("EmployeeLeaveRequestComments")
                         .HasForeignKey("EmployeeLeaveRequestId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "UpdatedByUser")
-                        .WithMany("UpdatedEmployeeLeaveRequestComments")
-                        .HasForeignKey("UpdatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CreatedByUser");
-
                     b.Navigation("EmployeeLeaveRequest");
-
-                    b.Navigation("UpdatedByUser");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalary", b =>
@@ -1021,12 +968,6 @@ namespace StaffApp.Infrastructure.Migrations
 
             modelBuilder.Entity("StaffApp.Domain.Entity.Authentication.ApplicationUser", b =>
                 {
-                    b.Navigation("CreatedEmployeeLeaveBalances");
-
-                    b.Navigation("CreatedEmployeeLeaveRequestComments");
-
-                    b.Navigation("CreatedEmployeeLeaveRequests");
-
                     b.Navigation("CreatedEmployeeSalaries");
 
                     b.Navigation("DepartmentHeads");
@@ -1036,12 +977,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("EmployeeLeaveRequests");
 
                     b.Navigation("EmployeeSalaries");
-
-                    b.Navigation("UpdatedEmployeeLeaveBalances");
-
-                    b.Navigation("UpdatedEmployeeLeaveRequestComments");
-
-                    b.Navigation("UpdatedEmployeeLeaveRequests");
 
                     b.Navigation("UpdatedEmployeeSalaries");
                 });

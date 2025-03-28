@@ -1,52 +1,62 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StaffApp.Application.Contracts;
+using StaffApp.Application.DTOs.Common;
+using StaffApp.Application.Extensions.Constants;
 using StaffApp.Application.Services;
 using StaffApp.Domain.Entity;
 using StaffApp.Domain.Entity.Authentication;
 
 namespace StaffApp.Infrastructure.Services
 {
-    public class LeaveAllocationService(IStaffAppDbContext staffAppDbContext) : ILeaveAllocationService
+    public class LeaveAllocationService(IStaffAppDbContext staffAppDbContext, ICurrentUserService currentUserService) : ILeaveAllocationService
     {
 
-        public async Task<bool> AssignYearlyLeavesAsync(int year)
+        public async Task<GeneralResponseDTO> AssignYearlyLeavesAsync(int year)
         {
-            var employeea = staffAppDbContext.ApplicationUsers.Where(x => x.IsActive == true);
-
-            foreach (var employee in employeea)
+            try
             {
-                var leaveConfigurations = await staffAppDbContext
-                    .LeaveTypesConfigs.Where(x => x.EmployeeTypeId == employee.EmployeeTypeId)
-                    .ToListAsync();
+                var employees = await staffAppDbContext.ApplicationUsers.Where(x => x.IsActive == true).ToListAsync(); ;
 
-                foreach (var leaveConfig in leaveConfigurations)
+                foreach (var employee in employees)
                 {
-                    // Calculate leave days based on service and employee type
-                    decimal leaveDays = CalculateLeaveDays(employee, leaveConfig, year);
+                    var leaveConfigurations = await staffAppDbContext
+                        .LeaveTypesConfigs.Where(x => x.EmployeeTypeId == employee.EmployeeTypeId)
+                        .ToListAsync();
 
-                    if (leaveDays > 0)
+                    foreach (var leaveConfig in leaveConfigurations)
                     {
-                        // Create or update leave allocation
-                        await CreateOrUpdateLeaveAllocation(employee.Id, leaveConfig.LeaveType, year, leaveDays);
+                        // Calculate leave days based on service and employee type
+                        decimal leaveDays = CalculateLeaveDays(employee, leaveConfig, year);
+
+                        if (leaveDays >= 0)
+                        {
+                            // Create or update leave allocation
+                            await CreateOrUpdateLeaveAllocation(employee.Id, leaveConfig.LeaveType, year, leaveDays);
+                        }
                     }
                 }
+
+                return new GeneralResponseDTO() { Flag = true, Message = "All the employees updated with assign yearly leave plan." };
+            }
+            catch (Exception ex)
+            {
+                return new GeneralResponseDTO() { Flag = false, Message = ex.Message };
             }
 
-            return true;
         }
 
-        public async Task<decimal> GetRemainingLeavesAsync(string employeeId, LeaveType leaveType)
+        public async Task<decimal> GetRemainingLeavesAsync(string employeeId, int leaveTypeId)
         {
             var allocation = await staffAppDbContext.EmployeeLeaveAllocations
                 .FirstOrDefaultAsync(la =>
                     la.EmployeeId == employeeId &&
-                    la.LeaveTypeId == leaveType.Id &&
+                    la.LeaveTypeId == leaveTypeId &&
                     la.CompanyYearId == DateTime.Now.Year);
 
             return allocation?.RemainingLeaveCount ?? 0;
         }
 
-        public async Task<bool> AllocateLeaveAsync(string employeeId, LeaveType leaveType, decimal days)
+        public async Task<GeneralResponseDTO> AllocateLeaveAsync(string employeeId, LeaveType leaveType, decimal days)
         {
             var allocation = await staffAppDbContext.EmployeeLeaveAllocations
                 .FirstOrDefaultAsync(la =>
@@ -55,18 +65,23 @@ namespace StaffApp.Infrastructure.Services
                     la.CompanyYearId == DateTime.Now.Year);
 
             if (allocation == null)
-                return false;
+                return new GeneralResponseDTO() { Flag = false, Message = "Not allocation found." };
 
             if (allocation.RemainingLeaveCount < days)
-                return false;
+                return new GeneralResponseDTO() { Flag = false, Message = "Not enough remaining leave count." };
 
             allocation.RemainingLeaveCount -= days;
             await staffAppDbContext.SaveChangesAsync(CancellationToken.None);
-            return true;
+            return new GeneralResponseDTO() { Flag = true, Message = "Leave allocated successfully." };
         }
 
         private decimal CalculateLeaveDays(ApplicationUser employee, LeaveTypeConfig leaveConfig, int year)
         {
+            if (leaveConfig.LeaveType.AllowGenderType != ApplicationConstants.Zero &&
+                leaveConfig.LeaveType.AllowGenderType != (int)employee.Gender)
+            {
+                return 0;
+            }
             // If minimum service months are not met, return 0
             if (leaveConfig.MinimumServiceMonthsRequired.HasValue)
             {
@@ -129,6 +144,8 @@ namespace StaffApp.Infrastructure.Services
                 // Update existing allocation
                 existingAllocation.AllocatedLeaveCount = leaveDays;
                 existingAllocation.RemainingLeaveCount = leaveDays;
+                existingAllocation.UpdateDate = DateTime.Now;
+                existingAllocation.UpdatedByUserId = currentUserService.UserId;
             }
             else
             {
@@ -139,7 +156,12 @@ namespace StaffApp.Infrastructure.Services
                     LeaveType = leaveType,
                     CompanyYearId = year,
                     AllocatedLeaveCount = leaveDays,
-                    RemainingLeaveCount = leaveDays
+                    RemainingLeaveCount = leaveDays,
+                    CreatedByUserId = currentUserService.UserId,
+                    CreatedDate = DateTime.Now,
+                    UpdateDate = DateTime.Now,
+                    UpdatedByUserId = currentUserService.UserId,
+                    IsActive = true
                 };
                 staffAppDbContext.EmployeeLeaveAllocations.Add(newAllocation);
             }

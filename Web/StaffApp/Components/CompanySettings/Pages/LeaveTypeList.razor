@@ -1,0 +1,147 @@
+﻿@page "/CompanySettings/LeaveType/List"
+
+@using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.Leave
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+@using StaffApp.Components.Shared
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@inject ILeaveTypeService LeaveTypeService
+@inject IMasterDataService MasterDataService
+@inject IDialogService Dialog
+@inject ISnackbar Snackbar
+
+@attribute [Authorize]
+
+<MudGrid>
+    <MudItem xs="12" sm="12">
+        <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => AddNewLeaveTypeAsync()"></MudIconButton>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12" lg="12">
+        <MudDataGrid Items="@LeaveTypes" Sortable="true"
+                     Filterable="false"
+                     Hideable="true"
+                     Hover="true"
+                     Striped="true"
+                     Elevation="25">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Leave Types</MudText>
+                <MudSpacer />
+
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="x=>x.Name" Title="@GetDisplayName(typeof(LeaveTypeDTO), nameof(LeaveTypeDTO.Name))" />
+                <PropertyColumn Property="x=>x.DefaultDays" Title="@GetDisplayName(typeof(LeaveTypeDTO), nameof(LeaveTypeDTO.DefaultDays))" />
+                <PropertyColumn Property="x=>x.LeaveTypeLogic" Title="@GetDisplayName(typeof(LeaveTypeDTO), nameof(LeaveTypeDTO.LeaveTypeLogic))" />
+                <PropertyColumn Property="x=>x.AllowGenderTypeName" Title="@GetDisplayName(typeof(LeaveTypeDTO), nameof(LeaveTypeDTO.AllowGenderTypeName))" />
+                <TemplateColumn CellClass="d-flex justify-end">
+                    <CellTemplate Context="leaveType">
+                        <MudStack Row>
+                            <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Success" Variant="Variant.Filled" OnClick="() => EditLeaveTypeConfigurationAsync(leaveType.Item)"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditLeaveTypeAsync(leaveType.Item)"></MudIconButton>
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteLeaveTypeAsync(leaveType.Item)"></MudIconButton>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private IEnumerable<LeaveTypeDTO> LeaveTypes { get; set; } = new List<LeaveTypeDTO>();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLeaveTypes();
+    }
+
+    private async Task LoadLeaveTypes()
+    {
+        LeaveTypes = await LeaveTypeService.GetAllLeaveType();
+    }
+
+    private async Task EditLeaveTypeAsync(LeaveTypeDTO model)
+    {
+        var parameters = new DialogParameters
+        {
+            { "LeaveTypeId", model.Id },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditLeaveTypeDialog>($"Edit company financial year : {model.Id}", parameters, _maxWidth);
+    }
+
+    private async Task AddNewLeaveTypeAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "LeaveTypeId", ApplicationConstants.Zero },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditLeaveTypeDialog>($"Add a new financial company year", parameters, _maxWidth);
+    }
+
+    private async Task EditLeaveTypeConfigurationAsync(LeaveTypeDTO model)
+    {
+        var parameters = new DialogParameters
+        {
+            { "LeaveTypeId", model.Id },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleLeaveConfigurationDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<LeaveConfigurationDialog>($"Update Leave Type Configuration : {model.Name}", parameters, _maxWidth);
+    }
+
+    private async Task HandleLeaveConfigurationDialogClosedAsync(bool result)
+    {
+        await LoadLeaveTypes();
+    }
+
+
+    private async Task HandleEditDialogClosedAsync(bool result)
+    {
+        await LoadLeaveTypes();
+    }
+
+
+    private Task DeleteLeaveTypeAsync(LeaveTypeDTO model)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "Id", model.Id.ToString() },
+            { x => x.ContentText, "Do you really want to delete these records? This process cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error },
+             { "OnDialogClosed", EventCallback.Factory.Create<string>(this, HandleDeleteConfirmationDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        return Dialog.ShowAsync<ConfirmationDialog>("Delete", parameters, options);
+    }
+
+
+    private async Task HandleDeleteConfirmationDialogClosedAsync(string id)
+    {
+        var result = await LeaveTypeService.DeleteLeaveType(int.Parse(id));
+
+        await LoadLeaveTypes();
+    }
+
+
+    string GetDisplayNameByPropertyInfor(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+}

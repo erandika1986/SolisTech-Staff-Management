@@ -24,14 +24,14 @@ namespace StaffApp.Domain.Entity.Authentication
         public virtual ICollection<EmployeeLeaveRequest> EmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
         public virtual ICollection<EmployeeLeaveAllocation> EmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();
 
-        public virtual ICollection<EmployeeLeaveRequest> CreatedEmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
-        public virtual ICollection<EmployeeLeaveRequest> UpdatedEmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
+        //public virtual ICollection<EmployeeLeaveRequest> CreatedEmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
+        //public virtual ICollection<EmployeeLeaveRequest> UpdatedEmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
 
-        public virtual ICollection<EmployeeLeaveRequestComment> CreatedEmployeeLeaveRequestComments { get; set; } = new HashSet<EmployeeLeaveRequestComment>();
-        public virtual ICollection<EmployeeLeaveRequestComment> UpdatedEmployeeLeaveRequestComments { get; set; } = new HashSet<EmployeeLeaveRequestComment>();
+        //public virtual ICollection<EmployeeLeaveRequestComment> CreatedEmployeeLeaveRequestComments { get; set; } = new HashSet<EmployeeLeaveRequestComment>();
+        //public virtual ICollection<EmployeeLeaveRequestComment> UpdatedEmployeeLeaveRequestComments { get; set; } = new HashSet<EmployeeLeaveRequestComment>();
 
-        public virtual ICollection<EmployeeLeaveAllocation> CreatedEmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();
-        public virtual ICollection<EmployeeLeaveAllocation> UpdatedEmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();
+        //public virtual ICollection<EmployeeLeaveAllocation> CreatedEmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();
+        //public virtual ICollection<EmployeeLeaveAllocation> UpdatedEmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();
 
         public virtual ICollection<EmployeeSalary> CreatedEmployeeSalaries { get; set; } = new HashSet<EmployeeSalary>();
         public virtual ICollection<EmployeeSalary> UpdatedEmployeeSalaries { get; set; } = new HashSet<EmployeeSalary>();

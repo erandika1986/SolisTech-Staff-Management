@@ -7,6 +7,8 @@ namespace StaffApp.Domain.Entity
         public string Name { get; set; }
         public int DefaultDays { get; set; }
         public bool HasLeaveTypeLogic { get; set; }
+        public int AllowGenderType { get; set; }
+        public bool IsActive { get; set; }
 
         public virtual ICollection<EmployeeLeaveRequest> EmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
         public virtual ICollection<EmployeeLeaveAllocation> EmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();

@@ -5,24 +5,25 @@
 namespace StaffApp.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class _00007 : Migration
+    public partial class _00002 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "EmploymentType",
-                table: "AspNetUsers",
-                type: "int",
-                nullable: true);
+            migrationBuilder.AddColumn<bool>(
+                name: "IsActive",
+                table: "LeaveType",
+                type: "bit",
+                nullable: false,
+                defaultValue: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "EmploymentType",
-                table: "AspNetUsers");
+                name: "IsActive",
+                table: "LeaveType");
         }
     }
 }

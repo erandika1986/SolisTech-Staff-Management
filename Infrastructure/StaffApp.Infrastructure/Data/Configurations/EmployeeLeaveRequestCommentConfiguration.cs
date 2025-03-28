@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using StaffApp.Domain.Entity;
-using StaffApp.Domain.Entity.Authentication;
 
 namespace StaffApp.Infrastructure.Data.Configurations
 {
@@ -24,19 +23,10 @@ namespace StaffApp.Infrastructure.Data.Configurations
                .OnDelete(DeleteBehavior.Restrict)
                .IsRequired(true);
 
-            builder
-               .HasOne<ApplicationUser>(c => c.CreatedByUser)
-               .WithMany(c => c.CreatedEmployeeLeaveRequestComments)
-               .HasForeignKey(c => c.CreatedByUserId)
-               .OnDelete(DeleteBehavior.Restrict)
-               .IsRequired(true);
 
-            builder
-               .HasOne<ApplicationUser>(c => c.UpdatedByUser)
-               .WithMany(c => c.UpdatedEmployeeLeaveRequestComments)
-               .HasForeignKey(c => c.UpdatedByUserId)
-               .OnDelete(DeleteBehavior.Restrict)
-               .IsRequired(true);
+            builder.Property(p => p.CreatedDate).IsRequired(true);
+
+            builder.Property(p => p.CreatedByUserId).HasMaxLength(450).IsRequired(true);
         }
     }
 }

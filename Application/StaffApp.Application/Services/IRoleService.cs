@@ -10,7 +10,7 @@ namespace StaffApp.Application.Services
         Task<RoleDTO> GetRoleByIdAsync(string roleId);
         Task<ApplicationRole> GetRoleByNameAsync(string roleName);
         Task<IdentityResult> CreateRoleAsync(string roleName, bool isManagerTypeRole);
-        Task<IdentityResult> UpdateRoleAsync(ApplicationRole role);
+        Task<IdentityResult> UpdateRoleAsync(RoleDTO role);
         Task<IdentityResult> DeleteRoleAsync(string roleId);
         Task<bool> RoleExistsAsync(string roleName);
         Task<IEnumerable<string>> GetUsersInRoleAsync(string roleName);

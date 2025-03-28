@@ -7,10 +7,13 @@
 
     <AuthorizeView>
         <Authorized>
+            <MudNavLink Href="EmployeeLeave/MyLeaveList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.WorkOff">My Leaves</MudNavLink>
+            <MudNavLink Href="EmployeeLeave/MyLeaveList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Verified">Approve Leaves</MudNavLink>
             <MudNavGroup Title="Admin" Expanded="true" Icon="@Icons.Material.Filled.AdminPanelSettings">
                 <MudNavLink Href="CompanySettings/CompanyRoles" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Group">Company Roles</MudNavLink>
                 <MudNavLink Href="Users/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SupervisedUserCircle">Users</MudNavLink>
                 <MudNavLink Href="Department/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Workspaces">Department</MudNavLink>
+                <MudNavLink Href="CompanySettings/LeaveType/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Schedule">Leave Type</MudNavLink>
                 <MudNavLink Href="CompanySettings/CompanyYear/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">Company Years</MudNavLink>
                 <MudNavLink Href="CompanySettings/FinancialYear/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarToday">Financial Years</MudNavLink>
                 <MudNavLink Href="CompanySettings/CompanySetting" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings">Company Settings</MudNavLink>

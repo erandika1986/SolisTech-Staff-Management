@@ -88,14 +88,14 @@ namespace StaffApp.Infrastructure.Data
             {
                 var departments = new List<Department>
                 {
-                    new Department { Name = "HR" },
-                    new Department { Name = "IT" },
-                    new Department { Name = "Finance" },
-                    new Department { Name = "Marketing" },
-                    new Department { Name = "Sales" },
-                    new Department { Name = "QA" },
-                    new Department { Name = "Development" },
-                    new Department { Name = "Management" }
+                    new Department { Name = "HR", CreatedDate = DateTime.Now, UpdateDate = DateTime.Now, CreatedByUserId = ApplicationConstants.EmptyGuide, UpdatedByUserId = ApplicationConstants.EmptyGuide,IsActive = true },
+                    new Department { Name = "IT", CreatedDate = DateTime.Now, UpdateDate = DateTime.Now, CreatedByUserId = ApplicationConstants.EmptyGuide, UpdatedByUserId = ApplicationConstants.EmptyGuide,IsActive = true },
+                    new Department { Name = "Finance", CreatedDate = DateTime.Now, UpdateDate = DateTime.Now, CreatedByUserId = ApplicationConstants.EmptyGuide, UpdatedByUserId = ApplicationConstants.EmptyGuide,IsActive = true },
+                    new Department { Name = "Marketing", CreatedDate = DateTime.Now, UpdateDate = DateTime.Now, CreatedByUserId = ApplicationConstants.EmptyGuide, UpdatedByUserId = ApplicationConstants.EmptyGuide,IsActive = true },
+                    new Department { Name = "Sales", CreatedDate = DateTime.Now, UpdateDate = DateTime.Now, CreatedByUserId = ApplicationConstants.EmptyGuide, UpdatedByUserId = ApplicationConstants.EmptyGuide,IsActive = true },
+                    new Department { Name = "QA", CreatedDate = DateTime.Now, UpdateDate = DateTime.Now, CreatedByUserId = ApplicationConstants.EmptyGuide, UpdatedByUserId = ApplicationConstants.EmptyGuide,IsActive = true },
+                    new Department { Name = "Development", CreatedDate = DateTime.Now, UpdateDate = DateTime.Now, CreatedByUserId = ApplicationConstants.EmptyGuide, UpdatedByUserId = ApplicationConstants.EmptyGuide,IsActive = true },
+                    new Department { Name = "Management", CreatedDate = DateTime.Now, UpdateDate = DateTime.Now, CreatedByUserId = ApplicationConstants.EmptyGuide, UpdatedByUserId = ApplicationConstants.EmptyGuide,IsActive = true }
                 };
 
                 await context.Departments.AddRangeAsync(departments);
@@ -128,6 +128,8 @@ namespace StaffApp.Infrastructure.Data
                         Name = "Annual Leave",
                         DefaultDays = 14 ,
                         HasLeaveTypeLogic = true,
+                        //All gender type eligible
+                        AllowGenderType = ApplicationConstants.Zero,
                         LeaveTypeLogics =
                         [
                             new LeaveTypeLogic()
@@ -176,6 +178,8 @@ namespace StaffApp.Infrastructure.Data
                         Name = "Sick Leave",
                         DefaultDays = 7,
                         HasLeaveTypeLogic = false,
+                        //All gender type eligible
+                        AllowGenderType = ApplicationConstants.Zero,
                         LeaveTypeConfigurations = [
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Permanent, AnnualLeaveAllowance = 7, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Contract, AnnualLeaveAllowance = 7, MinimumServiceMonthsRequired = 0},
@@ -188,6 +192,7 @@ namespace StaffApp.Infrastructure.Data
                     new LeaveType {
                         Name = "Maternity Leave",
                         DefaultDays = 84 , HasLeaveTypeLogic = false,
+                        AllowGenderType = (int)Gender.Female,
                         LeaveTypeConfigurations = [
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Permanent, AnnualLeaveAllowance = 84, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Contract, AnnualLeaveAllowance = 84, MinimumServiceMonthsRequired = 0},
@@ -201,6 +206,40 @@ namespace StaffApp.Infrastructure.Data
                         Name = "Paternity Leave",
                         DefaultDays = 0 ,
                         HasLeaveTypeLogic = false,
+                        AllowGenderType = (int)Gender.Male,
+                        LeaveTypeConfigurations = [
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Permanent, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Contract, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Probation, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Temporary, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Internship, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Freelancer, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0}
+                        ]
+
+                    },
+                    new LeaveType {
+                        Name = "NoPay Leave",
+                        DefaultDays = 0 ,
+                        HasLeaveTypeLogic = false,
+                        //All gender type eligible
+                        AllowGenderType = ApplicationConstants.Zero,
+                        LeaveTypeConfigurations = [
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Permanent, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Contract, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Probation, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Temporary, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Internship, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
+                            new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Freelancer, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0}
+                        ]
+
+                    }
+,
+                    new LeaveType {
+                        Name = "Short Leave",
+                        DefaultDays = 0 ,
+                        HasLeaveTypeLogic = true,
+                        //All gender type eligible
+                        AllowGenderType = ApplicationConstants.Zero,
                         LeaveTypeConfigurations = [
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Permanent, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Contract, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},

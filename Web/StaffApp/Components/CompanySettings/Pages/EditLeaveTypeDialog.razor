@@ -1,0 +1,100 @@
+﻿@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.Leave
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+
+@inject ILeaveTypeService LeaveTypeService
+@inject IMasterDataService MasterDataService
+@inject IDialogService Dialog
+@inject ISnackbar Snackbar
+
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-2">
+                    <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="Leave Type Name" @bind-Value="LeaveType.Name" Required="true" RequiredError="Leave Type Name is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="int" Label="Default Leave Allocation Count" @bind-Value="LeaveType.DefaultDays" Required="true" RequiredError="Default Leave Allocation is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudSelect T="DropDownDTO" Label="Allow Gender Type" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="LeaveType.SelectedAllowGenderType" Required="true" RequiredError="Allow Gender Type is required!">
+                                    @foreach (var genderType in AllowGenderTypes)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@genderType">@genderType.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudCheckBox Label="Has Leave Allocation Logic" @bind-Value="LeaveType.HasLeaveTypeLogic" Color="Color.Primary"></MudCheckBox>
+                            </MudItem>
+                        </MudGrid>
+
+                    </MudForm>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-4 mud-height-full">
+                    <MudText Typo="Typo.subtitle2">@($"Errors ({errors.Length})")</MudText>
+                    @foreach (var error in errors)
+                    {
+                        <MudText Color="@Color.Error">@error</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto">Save</MudButton>
+        </MudPaper>
+
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int LeaveTypeId { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnDialogClosed { get; set; }
+
+    public LeaveTypeDTO LeaveType { get; set; } = new();
+
+    public IEnumerable<DropDownDTO> AllowGenderTypes { get; set; } = new List<DropDownDTO>();
+
+    bool success;
+    string[] errors = { };
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AllowGenderTypes = MasterDataService.GetAllowGenderTypes();
+
+        if (LeaveTypeId != ApplicationConstants.Zero)
+        {
+            LeaveType = await LeaveTypeService.GetLeaveTypeId(LeaveTypeId);
+
+            var allowGenderType = AllowGenderTypes.FirstOrDefault(x => x.Id == LeaveType.SelectedAllowGenderType.Id);
+            LeaveType.SelectedAllowGenderType = allowGenderType != null ? allowGenderType : AllowGenderTypes.FirstOrDefault();
+        }
+    }
+
+    private async Task Submit()
+    {
+        var response = await LeaveTypeService.SaveLeaveType(LeaveType);
+        await OnDialogClosed.InvokeAsync(true);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

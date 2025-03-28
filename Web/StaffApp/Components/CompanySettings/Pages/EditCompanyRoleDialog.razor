@@ -71,7 +71,15 @@
 
     private async Task Submit()
     {
-        var response = await RoleService.CreateRoleAsync(Role.Name, Role.IsManagerTypeRole);
+        if(RoleId == ApplicationConstants.EmptyGuide)
+        {
+            var response = await RoleService.CreateRoleAsync(Role.Name, Role.IsManagerTypeRole);
+        }
+        else
+        {
+            var response = await RoleService.UpdateRoleAsync(Role);
+        }
+
         await OnDialogClosed.InvokeAsync(true);
         MudDialog.Close(DialogResult.Ok(true));
     }

@@ -1,11 +1,12 @@
-﻿using StaffApp.Domain.Entity;
+﻿using StaffApp.Application.DTOs.Common;
+using StaffApp.Domain.Entity;
 
 namespace StaffApp.Application.Services
 {
     public interface ILeaveAllocationService
     {
-        Task<bool> AssignYearlyLeavesAsync(int year);
-        Task<decimal> GetRemainingLeavesAsync(string employeeId, LeaveType leaveType);
-        Task<bool> AllocateLeaveAsync(string employeeId, LeaveType leaveType, decimal days);
+        Task<GeneralResponseDTO> AssignYearlyLeavesAsync(int year);
+        Task<decimal> GetRemainingLeavesAsync(string employeeId, int leaveTypeId);
+        Task<GeneralResponseDTO> AllocateLeaveAsync(string employeeId, LeaveType leaveType, decimal days);
     }
 }

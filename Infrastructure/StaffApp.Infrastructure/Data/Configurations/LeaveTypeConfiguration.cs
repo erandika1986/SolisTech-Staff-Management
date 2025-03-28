@@ -21,6 +21,8 @@ namespace StaffApp.Infrastructure.Data.Configurations
             builder.HasIndex(p => p.Name).IsUnique();
 
             builder.Property(p => p.Id).ValueGeneratedOnAdd();
+
+            builder.Property(p => p.IsActive).HasDefaultValue(true).IsRequired(true);
         }
     }
 }

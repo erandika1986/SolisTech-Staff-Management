@@ -1,0 +1,133 @@
+﻿@using StaffApp.Application.DTOs.Leave
+@using StaffApp.Application.Services
+
+@inject ILeaveTypeService LeaveTypeService
+@inject IDialogService Dialog
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+@*         <MudDataGrid Items="@LeaveTypeConfigs" >
+            <TemplateColumn Title="Leave Type">
+                <CellTemplate>
+                    @context.Item.LeaveTypeName
+                </CellTemplate>
+                <EditTemplate>
+                    <MudTextField @bind-Value="@context.Item.LeaveTypeName"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="First name is required!" />
+                </EditTemplate>
+            </TemplateColumn>
+            <TemplateColumn Title="Employee Type">
+                <CellTemplate>
+                    @context.Item.EmployeeTypeName
+                </CellTemplate>
+                <EditTemplate>
+                    <MudTextField @bind-Value="@context.Item.EmployeeTypeName"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Employee TypeName name is required!" />
+                </EditTemplate>
+            </TemplateColumn>
+            <TemplateColumn Title="Annual Leave Allowance">
+                <CellTemplate>
+                    @context.Item.AnnualLeaveAllowance
+                </CellTemplate>
+                <EditTemplate>
+                    <MudTextField @bind-Value="@context.Item.AnnualLeaveAllowance"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Annual Leave Allowance is required!" />
+                </EditTemplate>
+            </TemplateColumn>
+            <TemplateColumn Title="Minimum Service Months">
+                <CellTemplate>
+                    @context.Item.MinimumServiceMonthsRequired
+                </CellTemplate>
+                <EditTemplate>
+                    <MudTextField @bind-Value="@context.Item.MinimumServiceMonthsRequired"
+                                  Variant="Variant.Outlined"
+                                  Required="true"
+                                  RequiredError="Minimum Service Months is required!" />
+                </EditTemplate>
+            </TemplateColumn>
+        </MudDataGrid> *@
+
+        <MudDataGrid Items="@LeaveTypeConfigs" Filterable="false" SortMode="@SortMode.None" Groupable="false">
+            <Columns>
+                <PropertyColumn Property="x => x.LeaveTypeName" />
+                <PropertyColumn Property="x => x.EmployeeTypeName" />
+@*                 <PropertyColumn Property="x => x.AnnualLeaveAllowance" Title="Years Employed" />
+                <PropertyColumn Property="x => x.MinimumServiceMonthsRequired"  /> *@
+                <TemplateColumn Title="Annual Leave Allowance">
+                    <CellTemplate>
+                        <MudTextField @bind-Value="@context.Item.AnnualLeaveAllowance"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      Size="Size.Small"
+                                      RequiredError="Annual Leave Allowance is required!" />
+                    </CellTemplate>
+                </TemplateColumn> 
+                <TemplateColumn Title="Minimum Service Months">
+                    <CellTemplate>
+                        <MudTextField @bind-Value="@context.Item.MinimumServiceMonthsRequired"
+                                      Variant="Variant.Outlined"
+                                      Required="true"
+                                      RequiredError="Minimum Service Months is required!" />
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+
+    </DialogContent>
+    <DialogActions>
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit"  Class="ml-auto">Save</MudButton>
+        </MudPaper>
+
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public int LeaveTypeId { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnDialogClosed { get; set; }
+
+    public IEnumerable<LeaveTypeConfigurationDTO> LeaveTypeConfigs { get; set; } = new List<LeaveTypeConfigurationDTO>();
+
+
+    bool success;
+    string[] errors = { };
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LeaveTypeConfigs = await LeaveTypeService.GetLeaveTypeConfigurationId(LeaveTypeId);
+
+    }
+
+    private async Task Submit()
+    {
+        var response = await LeaveTypeService.SaveLeaveTypeConfiguration(LeaveTypeConfigs.ToList());
+        if (response.Flag)
+        {
+            Snackbar.Add(response.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(response.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+        await OnDialogClosed.InvokeAsync(true);
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

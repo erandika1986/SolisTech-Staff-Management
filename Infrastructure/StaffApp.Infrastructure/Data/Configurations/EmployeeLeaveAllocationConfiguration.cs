@@ -19,6 +19,17 @@ namespace StaffApp.Infrastructure.Data.Configurations
 
             builder.Property(p => p.RemainingLeaveCount).HasColumnType("decimal(5, 2)");
 
+
+            builder.Property(p => p.CreatedDate).IsRequired(true);
+
+            builder.Property(p => p.CreatedByUserId).HasMaxLength(450).IsRequired(true);
+
+            builder.Property(p => p.UpdateDate).IsRequired(true);
+
+            builder.Property(p => p.UpdatedByUserId).HasMaxLength(450).IsRequired(true);
+
+            builder.Property(p => p.IsActive).HasDefaultValue(true).IsRequired(true);
+
             builder
                .HasOne<ApplicationUser>(c => c.Employee)
                .WithMany(c => c.EmployeeLeaveBalances)
@@ -40,19 +51,19 @@ namespace StaffApp.Infrastructure.Data.Configurations
                .OnDelete(DeleteBehavior.Restrict)
                .IsRequired(true);
 
-            builder
-               .HasOne<ApplicationUser>(c => c.CreatedByUser)
-               .WithMany(c => c.CreatedEmployeeLeaveBalances)
-               .HasForeignKey(c => c.CreatedByUserId)
-               .OnDelete(DeleteBehavior.Restrict)
-               .IsRequired(true);
+            //builder
+            //   .HasOne<ApplicationUser>(c => c.CreatedByUser)
+            //   .WithMany(c => c.CreatedEmployeeLeaveBalances)
+            //   .HasForeignKey(c => c.CreatedByUserId)
+            //   .OnDelete(DeleteBehavior.Restrict)
+            //   .IsRequired(true);
 
-            builder
-               .HasOne<ApplicationUser>(c => c.UpdatedByUser)
-               .WithMany(c => c.UpdatedEmployeeLeaveBalances)
-               .HasForeignKey(c => c.UpdatedByUserId)
-               .OnDelete(DeleteBehavior.Restrict)
-               .IsRequired(true);
+            //builder
+            //   .HasOne<ApplicationUser>(c => c.UpdatedByUser)
+            //   .WithMany(c => c.UpdatedEmployeeLeaveBalances)
+            //   .HasForeignKey(c => c.UpdatedByUserId)
+            //   .OnDelete(DeleteBehavior.Restrict)
+            //   .IsRequired(true);
         }
     }
 }

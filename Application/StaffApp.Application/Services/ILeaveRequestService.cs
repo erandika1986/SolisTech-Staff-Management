@@ -1,11 +1,18 @@
-﻿using StaffApp.Domain.Entity;
+﻿using StaffApp.Application.DTOs.Common;
+using StaffApp.Application.DTOs.EmploymentLeave;
 
 namespace StaffApp.Application.Services
 {
     public interface ILeaveRequestService
     {
-        Task<bool> CreateLeaveRequestAsync(EmployeeLeaveRequest leaveRequest);
-        Task<bool> ApproveLeaveRequestAsync(int leaveRequestId);
-        Task<bool> RejectLeaveRequestAsync(int leaveRequestId);
+        Task<GeneralResponseDTO> CreateLeaveRequestAsync(EmployeeLeaveRequestDTO leaveRequest);
+        Task<GeneralResponseDTO> ApproveLeaveRequestAsync(int leaveRequestId);
+        Task<GeneralResponseDTO> RejectLeaveRequestAsync(int leaveRequestId);
+        Task<PaginatedResultDTO<EmployeeLeaveRequestDTO>> GetMyLeaveRequests(
+            int pageNumber,
+            int pageSize,
+            int companyYear,
+            int leaveTypeId,
+            int leaveStatus);
     }
 }
