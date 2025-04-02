@@ -8,11 +8,15 @@ namespace StaffApp.Application.Services
         Task<GeneralResponseDTO> CreateLeaveRequestAsync(EmployeeLeaveRequestDTO leaveRequest);
         Task<GeneralResponseDTO> ApproveLeaveRequestAsync(int leaveRequestId);
         Task<GeneralResponseDTO> RejectLeaveRequestAsync(int leaveRequestId);
-        Task<PaginatedResultDTO<EmployeeLeaveRequestDTO>> GetMyLeaveRequests(
+        Task<GeneralResponseDTO> RemoveSavedSupportFile(EmployeeLeaveRequestSupportFileDTO file);
+        Task<EmployeeLeaveRequestDTO> GetLeaveRequestById(int leaveRequestId);
+        Task<List<UserDropDownDTO>> GetMyReportingManagers();
+        Task<PaginatedResultDTO<BasicEmployeeLeaveRequestDTO>> GetMyLeaveRequests(
             int pageNumber,
             int pageSize,
             int companyYear,
             int leaveTypeId,
-            int leaveStatus);
+            int leaveStatus,
+            DateTime? startDate, DateTime? endDate);
     }
 }

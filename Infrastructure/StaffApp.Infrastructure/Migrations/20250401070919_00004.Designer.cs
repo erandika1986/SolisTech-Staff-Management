@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StaffApp.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using StaffApp.Infrastructure.Data;
 namespace StaffApp.Infrastructure.Migrations
 {
     [DbContext(typeof(StaffAppDbContext))]
-    partial class StaffAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250401070919_00004")]
+    partial class _00004
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -525,9 +528,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Property<TimeSpan?>("EndTime")
                         .HasColumnType("time");
 
-                    b.Property<int?>("HalfDaySessionType")
-                        .HasColumnType("int");
-
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -544,9 +544,6 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.Property<string>("Reason")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("ShortLeaveSessionType")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
@@ -607,58 +604,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.HasIndex("EmployeeLeaveRequestId");
 
                     b.ToTable("EmployeeLeaveRequestComment", (string)null);
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeLeaveRequestSupportFile", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("CreatedByUserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EmployeeLeaveRequestId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("OriginalFileName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SaveFileURL")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SavedFileName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("UpdateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedByUserId")
-                        .IsRequired()
-                        .HasMaxLength(450)
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeLeaveRequestId");
-
-                    b.ToTable("EmployeeLeaveRequestSupportFile", (string)null);
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalary", b =>
@@ -772,28 +717,6 @@ namespace StaffApp.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("LeaveType", (string)null);
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.LeaveTypeAllowDuration", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("LeaveDuration")
-                        .HasColumnType("int");
-
-                    b.Property<int>("LeaveTypeId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("LeaveTypeId");
-
-                    b.ToTable("LeaveTypeAllowDuration", (string)null);
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.LeaveTypeConfig", b =>
@@ -1025,17 +948,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("EmployeeLeaveRequest");
                 });
 
-            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeLeaveRequestSupportFile", b =>
-                {
-                    b.HasOne("StaffApp.Domain.Entity.EmployeeLeaveRequest", "EmployeeLeaveRequest")
-                        .WithMany("EmployeeLeaveRequestSupportFiles")
-                        .HasForeignKey("EmployeeLeaveRequestId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("EmployeeLeaveRequest");
-                });
-
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalary", b =>
                 {
                     b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "CreatedByUser")
@@ -1061,17 +973,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("UpdatedByUser");
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.LeaveTypeAllowDuration", b =>
-                {
-                    b.HasOne("StaffApp.Domain.Entity.LeaveType", "LeaveType")
-                        .WithMany("LeaveTypeAllowDurations")
-                        .HasForeignKey("LeaveTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("LeaveType");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.LeaveTypeConfig", b =>
@@ -1138,8 +1039,6 @@ namespace StaffApp.Infrastructure.Migrations
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeLeaveRequest", b =>
                 {
                     b.Navigation("EmployeeLeaveRequestComments");
-
-                    b.Navigation("EmployeeLeaveRequestSupportFiles");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeType", b =>
@@ -1154,8 +1053,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("EmployeeLeaveBalances");
 
                     b.Navigation("EmployeeLeaveRequests");
-
-                    b.Navigation("LeaveTypeAllowDurations");
 
                     b.Navigation("LeaveTypeConfigurations");
 

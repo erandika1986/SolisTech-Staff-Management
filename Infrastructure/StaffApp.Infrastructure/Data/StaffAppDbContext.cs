@@ -117,5 +117,7 @@ namespace StaffApp.Infrastructure.Data
         public DbSet<EmployeeType> EmployeeTypes => Set<EmployeeType>();
         public DbSet<LeaveTypeConfig> LeaveTypesConfigs => Set<LeaveTypeConfig>();
         public DbSet<LeaveTypeLogic> LeaveTypesLogics => Set<LeaveTypeLogic>();
+        public DbSet<EmployeeLeaveRequestSupportFile> EmployeeLeaveRequestSupportFiles => Set<EmployeeLeaveRequestSupportFile>();
+        public DbSet<LeaveTypeAllowDuration> LeaveTypeAllowDurations => Set<LeaveTypeAllowDuration>();
     }
 }

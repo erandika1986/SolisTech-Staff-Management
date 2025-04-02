@@ -23,12 +23,23 @@ namespace StaffApp.Infrastructure.Data.Configurations
                .IsRequired(true);
 
             builder
+               .HasOne<ApplicationUser>(c => c.AssignReportingManager)
+               .WithMany(c => c.LeaveRequestReportingManagers)
+               .HasForeignKey(c => c.AssignReportingManagerId)
+               .OnDelete(DeleteBehavior.Restrict)
+               .IsRequired(true);
+
+            builder
                .HasOne<LeaveType>(c => c.LeaveType)
                .WithMany(c => c.EmployeeLeaveRequests)
                .HasForeignKey(c => c.LeaveTypeId)
                .OnDelete(DeleteBehavior.Restrict)
                .IsRequired(true);
 
+
+            builder.Property(p => p.HalfDaySessionType).IsRequired(false);
+
+            builder.Property(p => p.ShortLeaveSessionType).IsRequired(false);
 
             builder.Property(p => p.CreatedDate).IsRequired(true);
 

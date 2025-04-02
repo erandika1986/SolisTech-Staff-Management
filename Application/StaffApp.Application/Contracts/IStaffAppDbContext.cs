@@ -13,10 +13,12 @@ namespace StaffApp.Application.Contracts
         DbSet<EmployeeDepartment> EmployeeDepartments { get; }
         DbSet<EmployeeLeaveAllocation> EmployeeLeaveAllocations { get; }
         DbSet<EmployeeLeaveRequest> EmployeeLeaveRequests { get; }
+        DbSet<EmployeeLeaveRequestSupportFile> EmployeeLeaveRequestSupportFiles { get; }
         DbSet<EmployeeLeaveRequestComment> EmployeeLeaveRequestComments { get; }
         DbSet<EmployeeSalary> EmployeeSalaries { get; }
         DbSet<EmployeeType> EmployeeTypes { get; }
         DbSet<LeaveType> LeaveTypes { get; }
+        DbSet<LeaveTypeAllowDuration> LeaveTypeAllowDurations { get; }
         DbSet<LeaveTypeConfig> LeaveTypesConfigs { get; }
         DbSet<LeaveTypeLogic> LeaveTypesLogics { get; }
 

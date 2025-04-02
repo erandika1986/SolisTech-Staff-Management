@@ -1,5 +1,378 @@
-﻿<h3>EditLeaveRequestDialog</h3>
+﻿@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.EmploymentLeave
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+@using StaffApp.Domain.Enum
+@using Microsoft.JSInterop
+
+@inject ILeaveRequestService LeaveRequestService
+@inject IMasterDataService MasterDataService
+@inject IAzureBlobService AzureBlobService
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudPaper class="pa-2">
+                    <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="Leave Request By" @bind-Value="LeaveRequest.EmployeeName" Disabled />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudSelect T="UserDropDownDTO" Label="Reporting Manager" MultiSelection="false" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" @bind-Value="LeaveRequest.SelectedReportingManager" Required="true" RequiredError="Reporting Manager is required!" Disabled="IsDisabled">
+                                    @foreach (var reportingManager in ReportingManagers)
+                                    {
+                                        <MudSelectItem T="UserDropDownDTO" Value="@reportingManager">@reportingManager.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudSelect T="DropDownDTO" Label="Leave Type" MultiSelection="false" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" Value="LeaveRequest.SelectedLeaveType" ValueChanged="@LeaveTypeChanged" Required="true" RequiredError="Leave type is required!" Disabled="IsDisabled">
+                                    @foreach (var leaveType in LeaveTypes)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@leaveType">@leaveType.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudSelect T="DropDownDTO" Label="Leave Duration" MultiSelection="false" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" Value="LeaveRequest.SelectedLeaveDuration" Required="true" RequiredError="Leave duration is required!" Disabled="IsDisabled">
+                                    @foreach (var leaveDuration in LeaveDurations)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@leaveDuration">@leaveDuration.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            @if (LeaveRequest.SelectedLeaveDuration != null && (LeaveDuration)LeaveRequest.SelectedLeaveDuration.Id == LeaveDuration.HalfDay)
+                            {
+                                <MudItem xs="12" sm="6" md="6" lg="6">
+                                    <MudSelect T="DropDownDTO" Label="Half Day Session Type" MultiSelection="false" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" @bind-Value="LeaveRequest.SelectedHalfDaySessionType" Required="true" RequiredError="Half Day Session Type is required!" Disabled="IsDisabled">
+                                        @foreach (var halfDaySessionType in HalfDaySessionTypes)
+                                        {
+                                            <MudSelectItem T="DropDownDTO" Value="@halfDaySessionType">@halfDaySessionType.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                            }
+                            @if (LeaveRequest.SelectedLeaveDuration != null &&  (LeaveDuration)LeaveRequest.SelectedLeaveDuration.Id == LeaveDuration.ShortLeave)
+                            {
+                                <MudItem xs="12" sm="6" md="6" lg="6">
+                                    <MudSelect T="DropDownDTO" Label="Short Leave Session Type" MultiSelection="false" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" @bind-Value="LeaveRequest.SelectedShortLeaveSessionType" Required="true" RequiredError="Short Leave Session Type is required!" Disabled="IsDisabled">
+                                        @foreach (var shortLeaveSessionType in ShortLeaveSessionTypes)
+                                        {
+                                            <MudSelectItem T="DropDownDTO" Value="@shortLeaveSessionType">@shortLeaveSessionType.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                            }
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudSelect T="DropDownDTO" Label="Year" MultiSelection="false" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" @bind-Value="LeaveRequest.SelectedCompanyYear" Required="true" RequiredError="Year is required!" Disabled="IsDisabled">
+                                    @foreach (var companyYear in CompanyYears)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@companyYear">@companyYear.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudDatePicker xs="12" sm="6" Label="From Date" @bind-Date="LeaveRequest.StartDate" Required="true" RequiredError="From date is required!" Disabled="IsDisabled" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudDatePicker xs="12" sm="6" Label="To Date" @bind-Date="LeaveRequest.EndDate" Required="true" RequiredError="To date is required!" Disabled="IsDisabled" />
+                            </MudItem>
+                            <MudItem xs="12" sm="12" md="12" lg="12">
+                                <MudTextField @bind-Value="LeaveRequest.Reason" Label="Reason for Leave" Lines="4" Required="true" RequiredError="Leave reason is required!" Disabled="IsDisabled" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudText>Supporting Documents</MudText>
+                                @*                                 <InputFile id="fileInput" OnChange="OnFileChange" hidden multiple />
+                                <div class="d-flex align-center">
+                                    <MudButton 
+                                    HtmlTag="label"
+                                    Variant="Variant.Filled"
+                                    Color="Color.Primary"
+                                    StartIcon="@Icons.Material.Filled.CloudUpload"
+                                    for="fileInput">
+                                        Upload Files
+                                    </MudButton>
+                                    <MudText Class="ml-3">@GetUploadSummary()</MudText>
+                                </div> *@
+                                @if (!IsDisabled)
+                                {
+                                    <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFiles">
+                                        <ActivatorContent>
+                                            <MudButton Variant="Variant.Filled"
+                                            Color="Color.Primary"
+                                            StartIcon="@Icons.Material.Filled.CloudUpload">
+                                                Upload Support Files
+                                            </MudButton>
+                                        </ActivatorContent>
+                                    </MudFileUpload>
+                                }
+
+                                @if (FileNames.Count > 0)
+                                {
+                                    <MudList T="string">
+                                        @foreach (var file in FileNames)
+                                        {
+                                            <MudListItem Icon="@Icons.Material.Filled.Inbox">
+                                                <MudGrid>
+                                                    <MudItem xs="6" sm="6" md="6" lg="6">
+                                                        <MudText>@file</MudText>
+                                                    </MudItem>
+                                                    <MudItem xs="6" sm="6" md="6" lg="6" class="d-flex justify-end">
+                                                        <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Warning" Variant="Variant.Filled" Size="Size.Small" OnClick="@(() => RemoveFile(file))" Class="mr-1" />
+                                                        <MudIconButton Icon="@Icons.Material.Filled.CloudDownload" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small" Disabled />
+                                                    </MudItem>
+                                                </MudGrid>
+                                            </MudListItem>
+                                        }
+                                    </MudList>
+                                }
+                                @if (UploadErrors.Count > 0)
+                                {
+                                    <MudAlert Severity="Severity.Error" Class="mt-2">
+                                        <MudText>The following errors occurred:</MudText>
+                                        <MudList T="string">
+                                            @foreach (var error in UploadErrors)
+                                            {
+                                                <MudListItem>@error</MudListItem>
+                                            }
+                                        </MudList>
+                                    </MudAlert>
+                                }
+                                @if(LeaveRequest.SavedSupportFiles.Count>0)
+                                {
+                                    <MudList T="string">
+                                        @foreach (var file in LeaveRequest.SavedSupportFiles)
+                                        {
+                                            <MudListItem Icon="@Icons.Material.Filled.Inbox">
+                                                <MudGrid>
+                                                    <MudItem xs="6" sm="6" md="6" lg="6">
+                                                        <MudText >@file.OriginalFileName</MudText>
+                                                    </MudItem>
+                                                    <MudItem xs="6" sm="6" md="6" lg="6" class="d-flex justify-end">
+                                                        <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Warning" Variant="Variant.Filled" Size="Size.Small" OnClick="@(() => RemoveSavedFile(file))" Class="mr-1" />
+
+                                                        <MudIconButton Icon="@Icons.Material.Filled.CloudDownload" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small" OnClick="@(() => DownloadFile(file))" />
+                                                    </MudItem>
+                                                </MudGrid>
+                                            </MudListItem>
+                                        }
+                                    </MudList>
+                                }
+                            </MudItem>
+                        </MudGrid>
+                    </MudForm>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            @if (LeaveRequestId == ApplicationConstants.Zero)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto"> Submit</MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto">Update</MudButton>
+            }
+
+        </MudPaper>
+    </DialogActions>
+</MudDialog>
 
 @code {
+    [Parameter] 
+    public int LeaveRequestId { get; set; }
 
+    [Parameter]
+    public bool IsDisabled { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] 
+    public EventCallback<bool> OnDialogClosed { get; set; }
+
+    private EmployeeLeaveRequestDTO LeaveRequest { get; set; } = new();
+    public List<IBrowserFile> Files { get; set; } = new List<IBrowserFile> { };
+    public List<string> FileNames { get; set; } = new List<string>();
+    private List<string> UploadErrors = new List<string>();
+    private long MaxFileSize = 10 * 1024 * 1024; // 10MB
+
+    private IEnumerable<UserDropDownDTO> ReportingManagers = new List<UserDropDownDTO>();
+    private IEnumerable<DropDownDTO> LeaveTypes = new List<DropDownDTO>();
+    private IEnumerable<DropDownDTO> LeaveDurations = new List<DropDownDTO>();
+    private IEnumerable<DropDownDTO> CompanyYears = new List<DropDownDTO>();
+    private IEnumerable<DropDownDTO> HalfDaySessionTypes = new List<DropDownDTO>();
+    private IEnumerable<DropDownDTO> ShortLeaveSessionTypes = new List<DropDownDTO>();
+
+    bool success;
+    string[] errors = { };
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ReportingManagers = await LeaveRequestService.GetMyReportingManagers();
+        LeaveTypes = await MasterDataService.GetLeaveTypes();
+        CompanyYears = await MasterDataService.GetAvailableCompanyYears();
+        HalfDaySessionTypes = MasterDataService.GetHalfDaySessionTypes();
+        ShortLeaveSessionTypes = MasterDataService.GetShortLeaveSessionTypes();
+
+        LeaveRequest = await LeaveRequestService.GetLeaveRequestById(LeaveRequestId);
+        if (LeaveRequestId != ApplicationConstants.Zero)
+        {
+            var reportingManager = ReportingManagers.FirstOrDefault(x => x.Id == LeaveRequest.SelectedReportingManager.Id);
+            LeaveRequest.SelectedReportingManager = reportingManager;
+
+            var leaveType = LeaveTypes.FirstOrDefault(x => x.Id == LeaveRequest.SelectedLeaveType.Id);
+            LeaveRequest.SelectedLeaveType = leaveType;
+
+            await LoadLeaveDurations();
+
+            var leaveDuration = LeaveDurations.FirstOrDefault(x => x.Id == LeaveRequest.SelectedLeaveDuration.Id);
+            LeaveRequest.SelectedLeaveDuration = leaveDuration;
+
+            var selectedCompanyYear = CompanyYears.FirstOrDefault(x => x.Id == LeaveRequest.SelectedCompanyYear.Id );
+            LeaveRequest.SelectedCompanyYear = selectedCompanyYear;
+
+            if ((LeaveDuration)LeaveRequest.SelectedLeaveDuration.Id == LeaveDuration.HalfDay)
+            {
+                var selectedHalfDaySession = HalfDaySessionTypes.FirstOrDefault(x => x.Id == LeaveRequest.SelectedHalfDaySessionType.Id);
+                LeaveRequest.SelectedHalfDaySessionType = selectedHalfDaySession;
+            }
+
+            if ((LeaveDuration)LeaveRequest.SelectedLeaveDuration.Id == LeaveDuration.ShortLeave)
+            {
+                var selectedShortLeaveSession = ShortLeaveSessionTypes.FirstOrDefault(x => x.Id == LeaveRequest.SelectedShortLeaveSessionType.Id);
+                LeaveRequest.SelectedShortLeaveSessionType = selectedShortLeaveSession;
+            }
+        }
+        else
+        {
+            LeaveRequest.SelectedReportingManager = ReportingManagers.FirstOrDefault();
+            LeaveRequest.SelectedLeaveType = LeaveTypes.FirstOrDefault();
+
+            await LoadLeaveDurations();
+            LeaveRequest.SelectedLeaveDuration = LeaveDurations.FirstOrDefault();
+
+            LeaveRequest.SelectedCompanyYear = CompanyYears.FirstOrDefault();
+            LeaveRequest.SelectedHalfDaySessionType = HalfDaySessionTypes.FirstOrDefault();
+            LeaveRequest.SelectedShortLeaveSessionType = ShortLeaveSessionTypes.FirstOrDefault();
+        }
+    }
+
+    private void UploadFiles(IReadOnlyList<IBrowserFile> files)
+    {
+        foreach (var file in files)
+        {
+            if (file.Size > MaxFileSize)
+            {
+                UploadErrors.Add($"{file.Name} exceeds the maximum file size (10MB).");
+                continue;
+            }
+            try
+            {
+                Files.Add(file);
+                FileNames.Add(file.Name);
+            }
+            catch(Exception ex)
+            {
+                UploadErrors.Add($"Error uploading {file.Name}: {ex.Message}");
+            }
+        }
+    }
+
+    private async void LeaveTypeChanged(DropDownDTO changedValue)
+    {
+        LeaveRequest.SelectedLeaveType = changedValue;
+        await LoadLeaveDurations();
+    }
+
+    private async Task LoadLeaveDurations()
+    {
+        LeaveDurations = await MasterDataService
+        .GetLeaveDurations(LeaveRequest.SelectedLeaveType.Id);
+        LeaveRequest.SelectedLeaveDuration = LeaveDurations.FirstOrDefault();
+    }
+
+    private async Task RemoveSavedFile(EmployeeLeaveRequestSupportFileDTO file)
+    {
+        var result = await LeaveRequestService.RemoveSavedSupportFile(file);
+        if(result.Flag)
+        {
+            var index = LeaveRequest.SavedSupportFiles.IndexOf(file);
+            if (index >= 0)
+            {
+                LeaveRequest.SavedSupportFiles.RemoveAt(index);
+            }
+        }
+
+        await ShowSnackbar(result);
+    }
+
+    private async Task DownloadFile(EmployeeLeaveRequestSupportFileDTO file)
+    {
+        var sasUrl = await AzureBlobService.GenerateSasTokenForBlobAsync(file.SavedFileName, ApplicationConstants.AzureBlobStorageName, DateTimeOffset.UtcNow.AddMinutes(5));
+
+        await JSRuntime.InvokeVoidAsync("open", sasUrl, "_blank");
+    }
+
+    private void RemoveFile(string fileName)
+    {
+        var index = FileNames.IndexOf(fileName);
+        if (index >= 0)
+        {
+            FileNames.RemoveAt(index);
+            Files.RemoveAt(index);
+        }
+    }
+
+    private string GetUploadSummary()
+    {
+        if (FileNames.Count == 0)
+            return "No files selected";
+
+        return $"{FileNames.Count} file(s) selected";
+    }
+
+    private async Task Submit()
+    {
+        if (LeaveRequestId == ApplicationConstants.Zero)
+        {
+            LeaveRequest.Files = Files.ToList();
+
+            var response = await LeaveRequestService.CreateLeaveRequestAsync(LeaveRequest);
+
+            await ShowSnackbar(response);
+        }
+        else
+        {
+        
+        }
+
+        await OnDialogClosed.InvokeAsync(true); // Notify parent
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+
+    }
 }

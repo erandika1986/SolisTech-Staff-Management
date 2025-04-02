@@ -22,6 +22,7 @@ namespace StaffApp.Domain.Entity.Authentication
 
         public virtual ICollection<EmployeeSalary> EmployeeSalaries { get; set; } = new HashSet<EmployeeSalary>();
         public virtual ICollection<EmployeeLeaveRequest> EmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
+        public virtual ICollection<EmployeeLeaveRequest> LeaveRequestReportingManagers { get; set; } = new HashSet<EmployeeLeaveRequest>();
         public virtual ICollection<EmployeeLeaveAllocation> EmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();
 
         //public virtual ICollection<EmployeeLeaveRequest> CreatedEmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();

@@ -130,6 +130,7 @@ namespace StaffApp.Infrastructure.Data
                         HasLeaveTypeLogic = true,
                         //All gender type eligible
                         AllowGenderType = ApplicationConstants.Zero,
+                        IsActive = true,
                         LeaveTypeLogics =
                         [
                             new LeaveTypeLogic()
@@ -172,12 +173,17 @@ namespace StaffApp.Infrastructure.Data
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Temporary, AnnualLeaveAllowance = 14, MinimumServiceMonthsRequired = 3},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Internship, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Freelancer, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0}
+                        ],
+                        LeaveTypeAllowDurations =[
+                            new LeaveTypeAllowDuration() { LeaveDuration = LeaveDuration.FullDay },
+                            new LeaveTypeAllowDuration() { LeaveDuration = LeaveDuration.HalfDay }
                         ]
                     },
                     new LeaveType {
                         Name = "Sick Leave",
                         DefaultDays = 7,
                         HasLeaveTypeLogic = false,
+                        IsActive = true,
                         //All gender type eligible
                         AllowGenderType = ApplicationConstants.Zero,
                         LeaveTypeConfigurations = [
@@ -187,12 +193,17 @@ namespace StaffApp.Infrastructure.Data
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Temporary, AnnualLeaveAllowance = 7, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Internship, AnnualLeaveAllowance = 7, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Freelancer, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0}
+                        ],
+                        LeaveTypeAllowDurations =[
+                            new LeaveTypeAllowDuration() { LeaveDuration = LeaveDuration.FullDay },
+                            new LeaveTypeAllowDuration() { LeaveDuration = LeaveDuration.HalfDay }
                         ]
                     },
                     new LeaveType {
                         Name = "Maternity Leave",
                         DefaultDays = 84 , HasLeaveTypeLogic = false,
                         AllowGenderType = (int)Gender.Female,
+                        IsActive = true,
                         LeaveTypeConfigurations = [
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Permanent, AnnualLeaveAllowance = 84, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Contract, AnnualLeaveAllowance = 84, MinimumServiceMonthsRequired = 0},
@@ -200,6 +211,9 @@ namespace StaffApp.Infrastructure.Data
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Temporary, AnnualLeaveAllowance = 84, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Internship, AnnualLeaveAllowance = 7, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Freelancer, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0}
+                        ],
+                        LeaveTypeAllowDurations =[
+                            new LeaveTypeAllowDuration() { LeaveDuration = LeaveDuration.FullDay }
                         ]
                     },
                     new LeaveType {
@@ -207,6 +221,7 @@ namespace StaffApp.Infrastructure.Data
                         DefaultDays = 0 ,
                         HasLeaveTypeLogic = false,
                         AllowGenderType = (int)Gender.Male,
+                        IsActive = true,
                         LeaveTypeConfigurations = [
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Permanent, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Contract, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
@@ -214,8 +229,10 @@ namespace StaffApp.Infrastructure.Data
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Temporary, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Internship, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Freelancer, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0}
+                        ],
+                        LeaveTypeAllowDurations =[
+                            new LeaveTypeAllowDuration() { LeaveDuration = LeaveDuration.FullDay }
                         ]
-
                     },
                     new LeaveType {
                         Name = "NoPay Leave",
@@ -223,6 +240,7 @@ namespace StaffApp.Infrastructure.Data
                         HasLeaveTypeLogic = false,
                         //All gender type eligible
                         AllowGenderType = ApplicationConstants.Zero,
+                        IsActive = true,
                         LeaveTypeConfigurations = [
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Permanent, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Contract, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
@@ -230,14 +248,18 @@ namespace StaffApp.Infrastructure.Data
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Temporary, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Internship, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Freelancer, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0}
+                        ],
+                        LeaveTypeAllowDurations =[
+                            new LeaveTypeAllowDuration() { LeaveDuration = LeaveDuration.FullDay },
+                            new LeaveTypeAllowDuration() { LeaveDuration = LeaveDuration.HalfDay }
                         ]
-
                     }
 ,
                     new LeaveType {
                         Name = "Short Leave",
                         DefaultDays = 0 ,
                         HasLeaveTypeLogic = true,
+                        IsActive = true,
                         //All gender type eligible
                         AllowGenderType = ApplicationConstants.Zero,
                         LeaveTypeConfigurations = [
@@ -247,6 +269,9 @@ namespace StaffApp.Infrastructure.Data
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Temporary, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Internship, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0},
                             new LeaveTypeConfig(){ EmployeeTypeId = (int)EmploymentType.Freelancer, AnnualLeaveAllowance = 0, MinimumServiceMonthsRequired = 0}
+                        ],
+                        LeaveTypeAllowDurations =[
+                            new LeaveTypeAllowDuration() { LeaveDuration = LeaveDuration.ShortLeave }
                         ]
 
                     }

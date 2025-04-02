@@ -45,5 +45,96 @@ namespace StaffApp.Infrastructure.Services
 
             return allRoles.OrderBy(x => x.Name).Adapt<List<RoleDTO>>();
         }
+
+        public async Task<List<DropDownDTO>> GetLeaveTypes(bool hasDefaultValue = false)
+        {
+            var response = new List<DropDownDTO>();
+            if (hasDefaultValue)
+                response.Add(new DropDownDTO() { Id = 0, Name = "All" });
+
+            var leaveTypes = await context
+                .LeaveTypes
+                .Where(x => x.IsActive)
+                .Select(x => new DropDownDTO()
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                })
+                .ToListAsync();
+
+            response.AddRange(leaveTypes);
+
+            return response;
+        }
+
+        public async Task<List<DropDownDTO>> GetAvailableCompanyYears()
+        {
+            var response = new List<DropDownDTO>();
+            try
+            {
+                var companyCurrentYear = await context.CompanyYears.FirstOrDefaultAsync(x => x.IsCurrentYear);
+                var currentYearId = 0;
+                if (companyCurrentYear is not null)
+                {
+                    currentYearId = companyCurrentYear.Id;
+                    response.Add(new DropDownDTO() { Id = companyCurrentYear.Id, Name = companyCurrentYear.Year.ToString() });
+                }
+
+                var otherRegisteredYears = await context
+                    .CompanyYears
+                    .Where(x => x.Id != currentYearId).OrderBy(x => x.Id)
+                    .Select(x => new DropDownDTO()
+                    {
+                        Id = x.Id,
+                        Name = x.Year.ToString()
+                    }).ToListAsync();
+
+                if (otherRegisteredYears.Any())
+                    response.AddRange(otherRegisteredYears);
+            }
+            catch (Exception ex)
+            {
+            }
+
+
+            return response;
+        }
+
+        public List<DropDownDTO> GetLeaveStatuses(bool hasDefaultValue = false)
+        {
+            var response = new List<DropDownDTO>();
+            if (hasDefaultValue)
+                response.Add(new DropDownDTO() { Id = 0, Name = "All" });
+
+            response.AddRange(EnumHelper.GetDropDownList<LeaveStatus>());
+
+            return response;
+        }
+
+        public async Task<List<DropDownDTO>> GetLeaveDurations(int leaveTypeId)
+        {
+            var response = new List<DropDownDTO>();
+
+            var leaveDurations = await context.LeaveTypeAllowDurations
+                .Where(x => x.LeaveTypeId == leaveTypeId)
+                .ToListAsync();
+
+            foreach (var leaveDuration in leaveDurations)
+            {
+                response.Add(new DropDownDTO() { Id = (int)leaveDuration.LeaveDuration, Name = EnumHelper.GetEnumDescription(leaveDuration.LeaveDuration) });
+            }
+
+            return response;
+        }
+
+        public List<DropDownDTO> GetHalfDaySessionTypes()
+        {
+            return EnumHelper.GetDropDownList<HalfDaySessionType>();
+        }
+
+        public List<DropDownDTO> GetShortLeaveSessionTypes()
+        {
+            return EnumHelper.GetDropDownList<ShortLeaveSessionType>();
+        }
     }
 }

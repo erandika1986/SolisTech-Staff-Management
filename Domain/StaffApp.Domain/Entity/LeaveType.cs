@@ -14,5 +14,6 @@ namespace StaffApp.Domain.Entity
         public virtual ICollection<EmployeeLeaveAllocation> EmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();
         public virtual ICollection<LeaveTypeLogic> LeaveTypeLogics { get; set; } = new HashSet<LeaveTypeLogic>();
         public virtual ICollection<LeaveTypeConfig> LeaveTypeConfigurations { get; set; } = new HashSet<LeaveTypeConfig>();
+        public virtual ICollection<LeaveTypeAllowDuration> LeaveTypeAllowDurations { get; set; } = new HashSet<LeaveTypeAllowDuration>();
     }
 }
