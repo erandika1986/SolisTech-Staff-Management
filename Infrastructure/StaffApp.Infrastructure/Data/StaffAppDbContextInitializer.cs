@@ -46,6 +46,7 @@ namespace StaffApp.Infrastructure.Data
                 await SeedDepartmentAsync();
                 await SeedEmployeeTypeAsync();
                 await SeedLeaveTypeAsync();
+                await SeedCompanyLocationsAsync();
             }
             catch (Exception ex)
             {
@@ -277,6 +278,19 @@ namespace StaffApp.Infrastructure.Data
                     }
                 };
                 await context.LeaveTypes.AddRangeAsync(leaveTypes);
+                await context.SaveChangesAsync();
+            }
+        }
+        private async Task SeedCompanyLocationsAsync()
+        {
+            if (!context.CompanyLocations.Any())
+            {
+                await context.CompanyLocations.AddRangeAsync(new List<CompanyLocation>()
+               {
+                   new CompanyLocation(){ Name = "Sri Lanka Office", Country="Sri Lanka",Address="No 59-2/1, Sunethradevi rd,Kohuwala, Sri Lanka",TimeZone = "India Standard Time", CreatedDate=DateTime.Now,UpdateDate = DateTime.Now, IsActive = true },
+                   new CompanyLocation(){ Name = "USA Office", Country="United State",Address="3725 Wexford Hollow Rd E Jacksonville, Florida, USA",TimeZone ="Eastern Daylight Time", CreatedDate=DateTime.Now,UpdateDate = DateTime.Now, IsActive = true },
+               });
+
                 await context.SaveChangesAsync();
             }
         }

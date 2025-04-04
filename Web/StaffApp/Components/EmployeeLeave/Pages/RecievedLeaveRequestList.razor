@@ -1,5 +1,328 @@
-﻿<h3>RecievedLeaveRequestList</h3>
+﻿@page "/EmployeeLeave/ManageEmployeeLeave"
 
+@using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.EmploymentLeave
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+@using StaffApp.Components.Shared
+
+@inject ILeaveRequestService LeaveRequestService
+@inject IMasterDataService MasterDataService
+@inject IDialogService Dialog
+@inject ISnackbar Snackbar
+
+@attribute [Authorize]
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Manage Employee Leave Submissions</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12" md="12" lg="12">
+                @if (!_isMasterDataLoaded)
+                {
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                    <MudText>Loading master data...</MudText>
+                }
+                else
+                {
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="12" lg="12">
+                            <MudGrid>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudSelect T="DropDownDTO" Label="Year" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedCompanyYear" ValueChanged="@CompanyYearChanged">
+                                        @foreach (var companyYear in CompanyYears)
+                                        {
+                                            <MudSelectItem T="DropDownDTO" Value="@companyYear">@companyYear.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudDatePicker xs="12" sm="6" Label="From Date" Date="StartDate" DateChanged="FromDateChanged" />
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudDatePicker xs="12" sm="6" Label="To Date" Date="EndDate" DateChanged="ToDataChanged" />
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudSelect T="DropDownDTO" Label="Leave Type" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedLeaveType" ValueChanged="@LeaveTypeChanged">
+                                        @foreach (var leaveType in LeaveTypes)
+                                        {
+                                            <MudSelectItem T="DropDownDTO" Value="@leaveType">@leaveType.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudSelect T="DropDownDTO" Label="Leave Status" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedLeaveStatus" ValueChanged="@LeaveStatusChanged">
+                                        @foreach (var eaveStatus in LeaveStatuses)
+                                        {
+                                            <MudSelectItem T="DropDownDTO" Value="@eaveStatus">@eaveStatus.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                            </MudGrid>
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="12" lg="12">
+                            <MudDataGrid @ref="_dataGrid" T="BasicEmployeeLeaveRequestDTO" ServerData="@(LoadData)" Sortable="true"
+                            Filterable="false"
+                            Hideable="true"
+                            Hover="true"
+                            Striped="true"
+                            Elevation="25"
+                            Loading="@_loading">
+                                <Columns>
+                                    <PropertyColumn Property="x=>x.LeaveType" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.LeaveType))" />
+                                    <PropertyColumn Property="x=>x.StartDate" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.StartDate))" />
+                                    <PropertyColumn Property="x=>x.EndDate" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.EndDate))" />
+                                    <PropertyColumn Property="x=>x.NumberOfDays" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.NumberOfDays))" />
+                                    <PropertyColumn Property="x=>x.LeaveDuration" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.LeaveDuration))" />
+                                    <PropertyColumn Property="x=>x.CurrentStatus" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.CurrentStatus))" />
+                                    <TemplateColumn CellClass="d-flex justify-end">
+                                        <CellTemplate Context="leave">
+                                            <MudStack Row>
+                                                <MudTooltip Text="View Leave Request" Color="Color.Info" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled" OnClick="() => ViewLeaveRequestAsync(leave.Item)"></MudIconButton>
+                                                </MudTooltip>
+                                                <MudTooltip Text="Approve Leave" Color="Color.Success" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Variant="Variant.Filled" OnClick="() => ApproveLeaveRequestAsync(leave.Item)"></MudIconButton>
+                                                </MudTooltip>
+                                                <MudTooltip Text="Reject Leave" Color="Color.Warning" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.NotInterested" Color="Color.Warning" Variant="Variant.Filled" OnClick="() => RejectLeaveRequestAsync(leave.Item)"></MudIconButton>
+                                                </MudTooltip>
+                                                <MudTooltip Text="Delete Leave Request" Color="Color.Error" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() =>DeleteLeaveRequestAsync(leave.Item)"></MudIconButton>
+                                                </MudTooltip>
+                                            </MudStack>
+                                        </CellTemplate>
+                                    </TemplateColumn>
+                                </Columns>
+                                <PagerContent>
+                                    <MudDataGridPager T="BasicEmployeeLeaveRequestDTO" />
+                                </PagerContent>
+                            </MudDataGrid>
+                        </MudItem>
+                    </MudGrid>
+
+                }
+
+            </MudItem>
+        </MudGrid>
+    </MudCardContent>
+</MudCard>
+
+@attribute [Authorize(Roles = "Admin,Director,Manager,Team Lead")]
 @code {
+    private string _searchString = "";
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = false;
+    private MudDataGrid<BasicEmployeeLeaveRequestDTO> _dataGrid;
 
+    private List<BasicEmployeeLeaveRequestDTO> LeaveRequests { get; set; } = new List<BasicEmployeeLeaveRequestDTO>();
+
+    private DateTime? StartDate = DateTime.Now.AddDays(-14);
+    private DateTime? EndDate = DateTime.Now;
+
+    private IEnumerable<DropDownDTO> LeaveTypes = new List<DropDownDTO>();
+    private DropDownDTO SelectedLeaveType = new DropDownDTO();
+
+    private IEnumerable<DropDownDTO> CompanyYears = new List<DropDownDTO>();
+    private DropDownDTO SelectedCompanyYear = new DropDownDTO();
+
+    private IEnumerable<DropDownDTO> LeaveStatuses = new List<DropDownDTO>();
+    private DropDownDTO SelectedLeaveStatus = new DropDownDTO();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMasterDataAsync();
+    }
+
+    private async Task LoadMasterDataAsync()
+    {
+        try
+        {
+            // Load your master data
+            LeaveTypes = await MasterDataService.GetLeaveTypes(true);
+            SelectedLeaveType = LeaveTypes.FirstOrDefault();
+
+            CompanyYears = await MasterDataService.GetAvailableCompanyYears();
+            SelectedCompanyYear = CompanyYears.FirstOrDefault();
+
+            LeaveStatuses = MasterDataService.GetLeaveStatuses(true);
+            SelectedLeaveStatus = LeaveStatuses.FirstOrDefault();
+
+            _isMasterDataLoaded = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine($"Error loading master data: {ex.Message}");
+        }
+    }
+
+    private void CompanyYearChanged(DropDownDTO changedValue)
+    {
+        SelectedCompanyYear = changedValue;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private void LeaveTypeChanged(DropDownDTO changedValue)
+    {
+        SelectedLeaveType = changedValue;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private void LeaveStatusChanged(DropDownDTO changedValue)
+    {
+        SelectedLeaveStatus = changedValue;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private void FromDateChanged(DateTime? fromDate)
+    {
+
+        StartDate = fromDate;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private void ToDataChanged(DateTime? toDate)
+    {
+        EndDate = toDate;
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+
+    private async Task<GridData<BasicEmployeeLeaveRequestDTO>> LoadData(GridState<BasicEmployeeLeaveRequestDTO> state)
+    {
+        _loading = true;
+
+        try
+        {
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            var result = await LeaveRequestService.GetMyLeaveRequests(
+                                    page,
+                                    pageSize,
+                                    SelectedCompanyYear.Id,
+                                    SelectedLeaveType.Id,
+                                    SelectedLeaveStatus.Id,
+                                    StartDate,
+                                    EndDate);
+
+            return new GridData<BasicEmployeeLeaveRequestDTO>
+                {
+                    Items = result.Items,
+                    TotalItems = result.TotalItems
+                };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ViewLeaveRequestAsync(BasicEmployeeLeaveRequestDTO request)
+    {
+        var parameters = new DialogParameters
+        {
+            { "LeaveRequestId", request.Id },
+            { "IsDisabled", true},
+            { "IsApprovalView", true},
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditLeaveRequestDialog>($"Manage Leave Request From : {request.EmployeeName}", parameters, _maxWidth);
+    }
+
+    private async Task ApproveLeaveRequestAsync(BasicEmployeeLeaveRequestDTO request)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Approve Leave Request from {request.EmployeeName}" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Approve" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Success },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var response = await LeaveRequestService.ApproveLeaveRequestAsync(request.Id, comment);
+            await ShowSnackbar(response);
+
+            _dataGrid?.ReloadServerData();
+            StateHasChanged();
+
+        }
+    }
+
+    private async Task RejectLeaveRequestAsync(BasicEmployeeLeaveRequestDTO request)
+    {
+
+    }
+
+    private async Task DeleteLeaveRequestAsync(BasicEmployeeLeaveRequestDTO request)
+    {
+
+    }
+
+    async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
+
+    private async Task HandleEditDialogClosedAsync(bool result)
+    {
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
 }

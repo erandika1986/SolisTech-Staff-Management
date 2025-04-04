@@ -136,5 +136,17 @@ namespace StaffApp.Infrastructure.Services
         {
             return EnumHelper.GetDropDownList<ShortLeaveSessionType>();
         }
+
+        public async Task<List<DropDownDTO>> GetOfficeLocations()
+        {
+            var locations = await context.CompanyLocations.Where(x => x.IsActive)
+                .Select(x => new DropDownDTO()
+                {
+                    Id = x.Id,
+                    Name = x.Name
+                }).ToListAsync();
+
+            return locations;
+        }
     }
 }

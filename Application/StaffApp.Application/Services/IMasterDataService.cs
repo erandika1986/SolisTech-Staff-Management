@@ -15,5 +15,6 @@ namespace StaffApp.Application.Services
         Task<List<DropDownDTO>> GetLeaveDurations(int leaveTypeId);
         List<DropDownDTO> GetHalfDaySessionTypes();
         List<DropDownDTO> GetShortLeaveSessionTypes();
+        Task<List<DropDownDTO>> GetOfficeLocations();
     }
 }

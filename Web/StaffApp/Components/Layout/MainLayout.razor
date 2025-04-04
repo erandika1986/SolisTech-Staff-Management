@@ -1,4 +1,5 @@
-﻿@inherits LayoutComponentBase
+﻿@using StaffApp.Components.Shared
+@inherits LayoutComponentBase
 
 <MudThemeProvider />
 <MudPopoverProvider />
@@ -7,7 +8,7 @@
 <MudLayout>
     <MudAppBar Elevation="1">
         <MudStaticNavDrawerToggle DrawerId="nav-drawer" Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" />
-        <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
+        <MudText Typo="Typo.h5" Class="ml-3">Staffy - SolisTech</MudText>
         <MudSpacer />
         <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
     </MudAppBar>
@@ -17,6 +18,7 @@
     <MudMainContent Class="mt-16 pa-4">
         @Body
     </MudMainContent>
+    <LoadingScreen />
 </MudLayout>
 
 

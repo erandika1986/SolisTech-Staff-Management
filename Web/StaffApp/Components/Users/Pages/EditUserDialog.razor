@@ -7,9 +7,12 @@
 @using System.Text.RegularExpressions
 @using System.ComponentModel.DataAnnotations
 @using StaffApp.Domain.Enum
+@using StaffApp.Infrastructure.Services
 
 @inject IUserService UserService
 @inject IDepartmentService DepartmentService
+@inject IMasterDataService MasterDateService
+@inject LoadingService LoadingService
 
 <MudDialog>
     <DialogContent>
@@ -94,6 +97,15 @@
                             </MudItem>
 
                             <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudSelect T="DropDownDTO" Label="Company Location" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="User.SelectedCompanyLocation" Required="true" RequiredError="COmpany location is required!">
+                                    @foreach (var companyLocation in CompanyLocations)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@companyLocation">@companyLocation.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
                                 <MudDatePicker xs="12" sm="6" Label="Confirmation Date" @bind-Date="User.ConfirmationDate" Required="false"/>
                             </MudItem>
 
@@ -142,17 +154,21 @@
 
     public IEnumerable<DropDownDTO> GenderTypes { get; set; } = new HashSet<DropDownDTO>();
 
+    public IEnumerable<DropDownDTO> CompanyLocations { get; set; } = new HashSet<DropDownDTO>();
+
     bool success;
     string[] errors = { };
     MudForm form;
 
     protected override async Task OnInitializedAsync()
     {
+        LoadingService.Show();
         Departments = await DepartmentService.GetAllDepartments(string.Empty);
         Roles = await UserService.GetAvailableRoles();
         MaritalStatuses = EnumHelper.GetDropDownList<MaritalStatus>();
         EmploymentTypes = await UserService.GetAvailableEmploymentTypes();
         GenderTypes = UserService.GetAvailableGenderTypes();
+        CompanyLocations = await MasterDateService.GetOfficeLocations();
 
         if (UserId != ApplicationConstants.EmptyGuide)
         {
@@ -167,11 +183,17 @@
 
             var userRole = Roles.FirstOrDefault(x => x.Id == User.SelectedRole.Id);
             User.SelectedRole = userRole is not null ? userRole : Roles.FirstOrDefault();
+
+            var companyLocation = CompanyLocations.FirstOrDefault(x => x.Id == User.SelectedCompanyLocation.Id);
+            User.SelectedCompanyLocation = companyLocation is not null ? companyLocation : CompanyLocations.FirstOrDefault();
         }
+
+        LoadingService.Hide();
     }
 
     private async Task Submit() {
 
+        LoadingService.Show();
         if (UserId != ApplicationConstants.EmptyGuide)
         {
             var result = await UserService.UpdateExistingUserAsync(User);
@@ -183,6 +205,8 @@
             // .AddUsersToDepartments(User.Departments.Select(x => x.Id).ToList(), result.UserId);
 
         }
+
+        LoadingService.Hide();
 
         await OnDialogClosed.InvokeAsync(true); // Notify parent
         MudDialog.Close(DialogResult.Ok(true));

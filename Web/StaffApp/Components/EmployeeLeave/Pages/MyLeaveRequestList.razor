@@ -31,60 +31,76 @@
                 }
                 else
                 {
-                    <MudDataGrid @ref="_dataGrid" T="BasicEmployeeLeaveRequestDTO" ServerData="@(LoadData)" Sortable="true"
-                                 Filterable="false"
-                                 Hideable="true"
-                                 Hover="true"
-                                 Striped="true"
-                                 Elevation="25"
-                                 Loading="@_loading">
-                        <ToolBarContent>
-                            <MudSelect T="DropDownDTO" Label="Year" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedCompanyYear" ValueChanged="@CompanyYearChanged">
-                                @foreach (var companyYear in CompanyYears)
-                                {
-                                    <MudSelectItem T="DropDownDTO" Value="@companyYear">@companyYear.Name</MudSelectItem>
-                                }
-                            </MudSelect>
-                            <MudSpacer />
-                            <MudDatePicker xs="12" sm="6" Label="From Date" Date="StartDate" DateChanged="FromDateChanged" />
-                            <MudSpacer />
-                            <MudDatePicker xs="12" sm="6" Label="To Date" Date="EndDate" DateChanged="ToDataChanged" />
-                            <MudSpacer />
-                            <MudSelect T="DropDownDTO" Label="Leave Type" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedLeaveType" ValueChanged="@LeaveTypeChanged">
-                                @foreach (var leaveType in LeaveTypes)
-                                {
-                                    <MudSelectItem T="DropDownDTO" Value="@leaveType">@leaveType.Name</MudSelectItem>
-                                }
-                            </MudSelect>
-                            <MudSpacer />
-                            <MudSelect T="DropDownDTO" Label="Leave Status" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedLeaveStatus" ValueChanged="@LeaveStatusChanged">
-                                @foreach (var eaveStatus in LeaveStatuses)
-                                {
-                                    <MudSelectItem T="DropDownDTO" Value="@eaveStatus">@eaveStatus.Name</MudSelectItem>
-                                }
-                            </MudSelect>
-                            <MudSpacer />
-                        </ToolBarContent>
-                        <Columns>
-                            <PropertyColumn Property="x=>x.LeaveType" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.LeaveType))" />
-                            <PropertyColumn Property="x=>x.StartDate" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.StartDate))" />
-                            <PropertyColumn Property="x=>x.EndDate" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.EndDate))" />
-                            <PropertyColumn Property="x=>x.NumberOfDays" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.NumberOfDays))" />
-                            <PropertyColumn Property="x=>x.LeaveDuration" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.LeaveDuration))" />
-                            <PropertyColumn Property="x=>x.CurrentStatus" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.CurrentStatus))" />
-                            <TemplateColumn CellClass="d-flex justify-end">
-                                <CellTemplate Context="leave">
-                                    <MudStack Row>
-                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditLeaveRequestAsync(leave.Item)"></MudIconButton>
-                                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled"></MudIconButton>
-                                    </MudStack>
-                                </CellTemplate>
-                            </TemplateColumn>
-                        </Columns>
-                        <PagerContent>
-                            <MudDataGridPager T="BasicEmployeeLeaveRequestDTO" />
-                        </PagerContent>
-                    </MudDataGrid>
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="12" lg="12">
+                            <MudGrid>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudSelect T="DropDownDTO" Label="Year" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedCompanyYear" ValueChanged="@CompanyYearChanged">
+                                        @foreach (var companyYear in CompanyYears)
+                                        {
+                                            <MudSelectItem T="DropDownDTO" Value="@companyYear">@companyYear.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudDatePicker xs="12" sm="6" Label="From Date" Date="StartDate" DateChanged="FromDateChanged" />
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudDatePicker xs="12" sm="6" Label="To Date" Date="EndDate" DateChanged="ToDataChanged" />
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudSelect T="DropDownDTO" Label="Leave Type" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedLeaveType" ValueChanged="@LeaveTypeChanged">
+                                        @foreach (var leaveType in LeaveTypes)
+                                        {
+                                            <MudSelectItem T="DropDownDTO" Value="@leaveType">@leaveType.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudSelect T="DropDownDTO" Label="Leave Status" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedLeaveStatus" ValueChanged="@LeaveStatusChanged">
+                                        @foreach (var eaveStatus in LeaveStatuses)
+                                        {
+                                            <MudSelectItem T="DropDownDTO" Value="@eaveStatus">@eaveStatus.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                            </MudGrid>
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="12" lg="12">
+                            <MudDataGrid @ref="_dataGrid" T="BasicEmployeeLeaveRequestDTO" ServerData="@(LoadData)" Sortable="true"
+                                         Filterable="false"
+                                         Hideable="true"
+                                         Hover="true"
+                                         Striped="true"
+                                         Elevation="25"
+                                         Loading="@_loading">
+                                <Columns>
+                                    <PropertyColumn Property="x=>x.LeaveType" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.LeaveType))" />
+                                    <PropertyColumn Property="x=>x.StartDate" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.StartDate))" />
+                                    <PropertyColumn Property="x=>x.EndDate" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.EndDate))" />
+                                    <PropertyColumn Property="x=>x.NumberOfDays" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.NumberOfDays))" />
+                                    <PropertyColumn Property="x=>x.LeaveDuration" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.LeaveDuration))" />
+                                    <PropertyColumn Property="x=>x.CurrentStatus" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.CurrentStatus))" />
+                                    <TemplateColumn CellClass="d-flex justify-end">
+                                        <CellTemplate Context="leave">
+                                            <MudStack Row>
+                                                <MudTooltip Text="Edit Leave" Color="Color.Primary" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditLeaveRequestAsync(leave.Item)"></MudIconButton>
+                                                </MudTooltip>
+                                                <MudTooltip Text="Delete Leave" Color="Color.Error" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled"></MudIconButton>
+                                                </MudTooltip>
+                                            </MudStack>
+                                        </CellTemplate>
+                                    </TemplateColumn>
+                                </Columns>
+                                <PagerContent>
+                                    <MudDataGridPager T="BasicEmployeeLeaveRequestDTO" />
+                                </PagerContent>
+                            </MudDataGrid>
+                        </MudItem>
+                    </MudGrid>
+
                 }
 
             </MudItem>
@@ -225,6 +241,7 @@
         {
             { "LeaveRequestId", request.Id },
             { "IsDisabled", false},
+            { "IsApprovalView", false},
             { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
         };
         await Dialog.ShowAsync<EditLeaveRequestDialog>($"Edit My Leave Request", parameters, _maxWidth);
@@ -236,6 +253,7 @@
         {
             { "LeaveRequestId", ApplicationConstants.Zero },
             { "IsDisabled", false},
+            { "IsApprovalView", false},
             { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
         };
         await Dialog.ShowAsync<EditLeaveRequestDialog>($"Apply Leave Request", parameters, _maxWidth);

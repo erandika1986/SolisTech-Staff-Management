@@ -155,7 +155,7 @@
                                                         <MudText >@file.OriginalFileName</MudText>
                                                     </MudItem>
                                                     <MudItem xs="6" sm="6" md="6" lg="6" class="d-flex justify-end">
-                                                        <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Warning" Variant="Variant.Filled" Size="Size.Small" OnClick="@(() => RemoveSavedFile(file))" Class="mr-1" />
+                                                        <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Warning" Variant="Variant.Filled" Size="Size.Small" OnClick="@(() => RemoveSavedFile(file))" Class="mr-1" Disabled="IsDisabled" />
 
                                                         <MudIconButton Icon="@Icons.Material.Filled.CloudDownload" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small" OnClick="@(() => DownloadFile(file))" />
                                                     </MudItem>
@@ -174,11 +174,11 @@
     <DialogActions>
         <MudPaper Class="pa-2">
             <MudButton OnClick="Cancel">Cancel</MudButton>
-            @if (LeaveRequestId == ApplicationConstants.Zero)
+            @if (LeaveRequestId == ApplicationConstants.Zero && !IsApprovalView)
             {
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto"> Submit</MudButton>
             }
-            else
+            else if (!IsApprovalView)
             {
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto">Update</MudButton>
             }
@@ -193,6 +193,9 @@
 
     [Parameter]
     public bool IsDisabled { get; set; }
+
+    [Parameter]
+    public bool IsApprovalView{ get; set; }
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; }
@@ -373,6 +376,5 @@
         {
             Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
         }
-
     }
 }

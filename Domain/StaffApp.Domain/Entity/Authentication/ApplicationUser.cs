@@ -13,10 +13,12 @@ namespace StaffApp.Domain.Entity.Authentication
         public DateTime? BirthDate { get; set; }
         public MaritalStatus MaritalStatus { get; set; }
         public int? EmployeeTypeId { get; set; }
+        public int? CompanyLocationId { get; set; }
         public Gender? Gender { get; set; }
         public bool IsActive { get; set; }
 
         public virtual EmployeeType EmployeeType { get; set; }
+        public virtual CompanyLocation CompanyLocation { get; set; }
 
         public virtual ICollection<Department> DepartmentHeads { get; set; } = new HashSet<Department>();
 

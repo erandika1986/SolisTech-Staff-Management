@@ -8,6 +8,7 @@ namespace StaffApp.Application.Contracts
     {
         DbSet<ApplicationUser> ApplicationUsers { get; }
         DbSet<CompanyFinancialYear> CompanyFinancialYears { get; }
+        DbSet<CompanyLocation> CompanyLocations { get; }
         DbSet<CompanyYear> CompanyYears { get; }
         DbSet<Department> Departments { get; }
         DbSet<EmployeeDepartment> EmployeeDepartments { get; }

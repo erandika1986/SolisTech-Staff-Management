@@ -105,6 +105,7 @@ namespace StaffApp.Infrastructure.Data
         }
 
         public DbSet<CompanyFinancialYear> CompanyFinancialYears => Set<CompanyFinancialYear>();
+        public DbSet<CompanyLocation> CompanyLocations => Set<CompanyLocation>();
         public DbSet<CompanyYear> CompanyYears => Set<CompanyYear>();
         public DbSet<Department> Departments => Set<Department>();
         public DbSet<EmployeeLeaveAllocation> EmployeeLeaveAllocations => Set<EmployeeLeaveAllocation>();
@@ -119,5 +120,6 @@ namespace StaffApp.Infrastructure.Data
         public DbSet<LeaveTypeLogic> LeaveTypesLogics => Set<LeaveTypeLogic>();
         public DbSet<EmployeeLeaveRequestSupportFile> EmployeeLeaveRequestSupportFiles => Set<EmployeeLeaveRequestSupportFile>();
         public DbSet<LeaveTypeAllowDuration> LeaveTypeAllowDurations => Set<LeaveTypeAllowDuration>();
+
     }
 }

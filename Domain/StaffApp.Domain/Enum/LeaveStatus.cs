@@ -11,6 +11,9 @@ namespace StaffApp.Domain.Enum
         Approved = 2,
 
         [Description("Rejected")]
-        Rejected = 3
+        Rejected = 3,
+
+        [Description("Deleted")]
+        Deleted = 4
     }
 }

@@ -49,6 +49,7 @@ namespace StaffApp.Infrastructure.Services
                     LandNumber = model.LandNumber,
                     MaritalStatus = (MaritalStatus)model.SelectedMaritalStatus.Id,
                     EmployeeTypeId = model.SelectedEmploymentType.Id,
+                    CompanyLocationId = model.SelectedCompanyLocation.Id,
                     IsActive = true
                 };
 
@@ -97,6 +98,7 @@ namespace StaffApp.Infrastructure.Services
                 user.LandNumber = model.LandNumber;
                 user.MaritalStatus = (MaritalStatus)model.SelectedMaritalStatus.Id;
                 user.EmployeeTypeId = model.SelectedEmploymentType.Id;
+                user.CompanyLocationId = model.SelectedCompanyLocation.Id;
                 user.Gender = (Gender)model.SelectedGender.Id;
                 user.IsActive = true;
 
@@ -231,6 +233,7 @@ namespace StaffApp.Infrastructure.Services
                 {
                     Id = user.EmployeeTypeId.HasValue ? (int)user.EmployeeTypeId.Value : 0,
                 },
+                SelectedCompanyLocation = user.CompanyLocationId.HasValue ? new DropDownDTO() { Id = user.CompanyLocationId.Value } : new DropDownDTO(),
                 Id = user.Id
             };
         }
@@ -347,6 +350,18 @@ namespace StaffApp.Infrastructure.Services
         public List<DropDownDTO> GetAvailableGenderTypes()
         {
             return EnumHelper.GetDropDownList<Gender>();
+        }
+
+        public async Task<List<string>> GetLoggedInUserAssignedRoles(string id)
+        {
+            var user = await userManager.FindByIdAsync(id);
+
+            if (user is null)
+                return new List<string>();
+
+            var roles = await userManager.GetRolesAsync(user);
+
+            return roles.ToList();
         }
     }
 }

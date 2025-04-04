@@ -23,8 +23,8 @@ namespace StaffApp.Application.DTOs.User
         public RoleDTO SelectedRole { get; set; }
         public DropDownDTO SelectedEmploymentType { get; set; }
         public DropDownDTO SelectedMaritalStatus { get; set; }
-
         public DropDownDTO SelectedGender { get; set; }
+        public DropDownDTO SelectedCompanyLocation { get; set; }
         public bool IsActive { get; set; }
         public IEnumerable<int> DepartmentIds { get; set; } = new HashSet<int>();
         public IEnumerable<DepartmentDTO> Departments { get; set; } = new HashSet<DepartmentDTO>();

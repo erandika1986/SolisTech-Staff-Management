@@ -21,5 +21,6 @@ namespace StaffApp.Application.Services
         Task<GeneralResponseDTO> DeleteUser(string id);
         Task<List<DropDownDTO>> GetAvailableEmploymentTypes();
         List<DropDownDTO> GetAvailableGenderTypes();
+        Task<List<string>> GetLoggedInUserAssignedRoles(string id);
     }
 }

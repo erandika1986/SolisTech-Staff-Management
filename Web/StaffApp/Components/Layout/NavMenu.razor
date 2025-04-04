@@ -5,10 +5,8 @@
 <MudNavMenu>
     <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
 
-    <AuthorizeView>
+    <AuthorizeView Roles="Admin,Director">
         <Authorized>
-            <MudNavLink Href="EmployeeLeave/MyLeaveList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.WorkOff">My Leaves</MudNavLink>
-            <MudNavLink Href="EmployeeLeave/MyLeaveList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Verified">Approve Leaves</MudNavLink>
             <MudNavGroup Title="Admin" Expanded="true" Icon="@Icons.Material.Filled.AdminPanelSettings">
                 <MudNavLink Href="CompanySettings/CompanyRoles" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Group">Company Roles</MudNavLink>
                 <MudNavLink Href="Users/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.SupervisedUserCircle">Users</MudNavLink>
@@ -18,6 +16,18 @@
                 <MudNavLink Href="CompanySettings/FinancialYear/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarToday">Financial Years</MudNavLink>
                 <MudNavLink Href="CompanySettings/CompanySetting" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings">Company Settings</MudNavLink>
             </MudNavGroup>
+        </Authorized>
+    </AuthorizeView>
+
+    <AuthorizeView Roles="Admin,Director,Manager,Team Lead">
+        <Authorized>
+            <MudNavLink Href="EmployeeLeave/ManageEmployeeLeave" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Verified">Manage Employee Leaves</MudNavLink>
+        </Authorized>
+    </AuthorizeView>
+
+    <AuthorizeView>
+        <Authorized>
+            <MudNavLink Href="EmployeeLeave/MyLeaveList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.WorkOff">My Leaves</MudNavLink>
 
             <MudNavLink Href="Account/Manage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">@context.User.Identity?.Name</MudNavLink>
             <form action="Account/Logout" method="post">

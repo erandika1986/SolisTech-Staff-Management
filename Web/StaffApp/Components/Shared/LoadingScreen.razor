@@ -1,0 +1,35 @@
+﻿@using StaffApp.Infrastructure.Services
+@inject LoadingService LoadingService
+@implements IDisposable
+
+@if (isLoading)
+{
+    <MudOverlay Visible="true"
+                DarkBackground="true"
+                ZIndex="9999"
+                AutoClose="false">
+        <MudProgressCircular Color="Color.Primary"
+                             Indeterminate="true"
+                             Size="Size.Large" />
+    </MudOverlay>
+}
+
+@code {
+    private bool isLoading = false;
+
+    protected override void OnInitialized()
+    {
+        LoadingService.OnLoadingChanged += HandleLoadingChanged;
+    }
+
+    private void HandleLoadingChanged(bool loading)
+    {
+        isLoading = loading;
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        LoadingService.OnLoadingChanged -= HandleLoadingChanged;
+    }
+}
