@@ -28,4 +28,11 @@
     <Folder Include="Components\FinancialYear\Pages\" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <Content Update="client_secret_file.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

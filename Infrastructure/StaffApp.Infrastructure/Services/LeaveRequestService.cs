@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using StaffApp.Application.Contracts;
 using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.EmploymentLeave;
+using StaffApp.Application.DTOs.Google;
 using StaffApp.Application.Extensions.Constants;
 using StaffApp.Application.Extensions.Helpers;
 using StaffApp.Application.Services;
@@ -18,6 +19,7 @@ namespace StaffApp.Infrastructure.Services
         ILeaveAllocationService leaveAllocationService,
         ICurrentUserService currentUserService,
         IAzureBlobService azureBlobService,
+        GoogleService googleService,
         IConfiguration configuration) : ILeaveRequestService
     {
         public async Task<GeneralResponseDTO> ApproveLeaveRequestAsync(
@@ -50,6 +52,23 @@ namespace StaffApp.Infrastructure.Services
             });
 
             await staffAppDbContext.SaveChangesAsync(CancellationToken.None);
+
+
+
+            var appointment = new AppointmentDTO()
+            {
+                Description = leaveRequest.Reason,
+                StartTime = leaveRequest.StartDate,
+                EndTime = leaveRequest.EndDate,
+                Location = leaveRequest.Employee.CompanyLocationId.HasValue ? leaveRequest.Employee.CompanyLocation.Name : "Default Company Location",
+                StartTimezone = leaveRequest.Employee.CompanyLocationId.HasValue ? leaveRequest.Employee.CompanyLocation.TimeZone : "Etc/UTC",
+                EndTimezone = leaveRequest.Employee.CompanyLocationId.HasValue ? leaveRequest.Employee.CompanyLocation.TimeZone : "Etc/UTC",
+                Subject = $"Leave Request : {leaveRequest.Employee.FullName}",
+                EventAttendees = new List<string> { leaveRequest.Employee.Email },
+                IsAllDay = leaveRequest.LeaveDuration == LeaveDuration.FullDay ? true : false
+            };
+
+            googleService.InsertEvent(appointment);
 
             return new GeneralResponseDTO() { Flag = true, Message = "Leave has been approved successfully." };
         }
@@ -230,6 +249,11 @@ namespace StaffApp.Infrastructure.Services
             return new GeneralResponseDTO() { Flag = true, Message = "Leave request has been rejected." };
         }
 
+        public Task<GeneralResponseDTO> DeleteLeaveRequestAsync(int leaveRequestId, string comment)
+        {
+            throw new NotImplementedException();
+        }
+
         public async Task<PaginatedResultDTO<BasicEmployeeLeaveRequestDTO>> GetMyLeaveRequests(
             int pageNumber,
             int pageSize,
@@ -268,6 +292,7 @@ namespace StaffApp.Infrastructure.Services
                     EndDate = x.LeaveDuration == LeaveDuration.FullDay ? String.Format("{0:MM/dd/yyyy}", x.EndDate) : String.Format("{0:MM/dd/yyyy}", x.EndDate),
                     NumberOfDays = x.NumberOfDays,
                     CurrentStatus = EnumHelper.GetEnumDescription((LeaveStatus)x.CurrentStatus),
+                    Status = x.CurrentStatus,
                     LeaveDuration = EnumHelper.GetEnumDescription(x.LeaveDuration),
 
                 }).ToListAsync();
@@ -508,6 +533,7 @@ namespace StaffApp.Infrastructure.Services
                     EndDate = x.LeaveDuration == LeaveDuration.FullDay ? String.Format("{0:MM/dd/yyyy}", x.EndDate) : String.Format("{0:MM/dd/yyyy}", x.EndDate),
                     NumberOfDays = x.NumberOfDays,
                     CurrentStatus = EnumHelper.GetEnumDescription((LeaveStatus)x.CurrentStatus),
+                    Status = x.CurrentStatus,
                     LeaveDuration = EnumHelper.GetEnumDescription(x.LeaveDuration),
 
                 }).ToListAsync();
@@ -523,9 +549,6 @@ namespace StaffApp.Infrastructure.Services
             return newResult;
         }
 
-        public Task<GeneralResponseDTO> DeleteLeaveRequestAsync(int leaveRequestId, string comment)
-        {
-            throw new NotImplementedException();
-        }
+
     }
 }
