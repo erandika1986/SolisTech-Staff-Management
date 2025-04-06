@@ -1,5 +1,4 @@
-﻿using Google.Apis.Calendar.v3;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using StaffApp.Application.Contracts;
@@ -22,9 +21,9 @@ namespace Microsoft.Extensions.DependencyInjection
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
             });
 
-            services.AddScoped<LoadingService>();
+            services.AddSingleton<GoogleService>();
 
-            services.AddTransient<CalendarService>();
+            services.AddScoped<LoadingService>();
 
             services.AddTransient<IStaffAppDbContext>(provider => provider.GetRequiredService<StaffAppDbContext>());
 

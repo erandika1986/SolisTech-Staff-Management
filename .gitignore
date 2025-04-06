@@ -362,3 +362,4 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /Web/StaffApp/client_secret_file.json
+/Web/StaffApp/token.json/Google.Apis.Auth.OAuth2.Responses.TokenResponse-admin

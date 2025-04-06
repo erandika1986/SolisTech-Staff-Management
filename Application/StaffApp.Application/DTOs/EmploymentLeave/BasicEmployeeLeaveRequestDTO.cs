@@ -1,4 +1,5 @@
 ﻿using StaffApp.Application.DTOs.Common;
+using StaffApp.Domain.Enum;
 using System.ComponentModel.DataAnnotations;
 
 namespace StaffApp.Application.DTOs.EmploymentLeave
@@ -31,6 +32,7 @@ namespace StaffApp.Application.DTOs.EmploymentLeave
 
         [Display(Name = "Current Status")]
         public string CurrentStatus { get; set; }
+        public LeaveStatus Status { get; set; }
 
         [Display(Name = "Leave Duration")]
         public string LeaveDuration { get; set; }

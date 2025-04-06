@@ -1,3 +1,4 @@
+﻿using Google.Apis.Calendar.v3;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using MudBlazor.Services;
@@ -33,10 +34,17 @@ builder.Services.AddAuthentication().AddGoogle(options =>
 {
     options.ClientId = builder.Configuration["Authentication:Google:ClientId"];
     options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+    options.Scope.Add("profile");
+    options.Scope.Add("email");
+    options.Scope.Add(CalendarService.Scope.Calendar);
+    options.SaveTokens = true;
 });
+
+//builder.Services.AddAuthorization();
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<ICurrentUserService, CurrentUserService>();
+
 
 // Add services to the container.
 builder.Services.AddApplicationService();
@@ -44,6 +52,8 @@ builder.Services.AddApplicationService();
 builder.Services.AddInfrastructureService(builder.Configuration);
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+
 
 var app = builder.Build();
 

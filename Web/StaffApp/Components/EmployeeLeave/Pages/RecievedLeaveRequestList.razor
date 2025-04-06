@@ -1,5 +1,6 @@
 ﻿@page "/EmployeeLeave/ManageEmployeeLeave"
 
+@using Google.Apis.Auth.AspNetCore3
 @using Microsoft.AspNetCore.Authorization
 @using StaffApp.Application.DTOs.Common
 @using StaffApp.Application.DTOs.EmploymentLeave
@@ -8,6 +9,7 @@
 @using StaffApp.Application.Extensions.Constants
 @using StaffApp.Application.Services
 @using StaffApp.Components.Shared
+@using StaffApp.Services
 
 @inject ILeaveRequestService LeaveRequestService
 @inject IMasterDataService MasterDataService
@@ -88,13 +90,13 @@
                                                     <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled" OnClick="() => ViewLeaveRequestAsync(leave.Item)"></MudIconButton>
                                                 </MudTooltip>
                                                 <MudTooltip Text="Approve Leave" Color="Color.Success" Placement="Placement.Top">
-                                                    <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Variant="Variant.Filled" OnClick="() => ApproveLeaveRequestAsync(leave.Item)"></MudIconButton>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Variant="Variant.Filled" Disabled="leave.Item.Status == Domain.Enum.LeaveStatus.Approved || leave.Item.Status == Domain.Enum.LeaveStatus.Rejected || leave.Item.Status == Domain.Enum.LeaveStatus.Deleted" OnClick="() => ApproveLeaveRequestAsync(leave.Item)"></MudIconButton>
                                                 </MudTooltip>
                                                 <MudTooltip Text="Reject Leave" Color="Color.Warning" Placement="Placement.Top">
-                                                    <MudIconButton Icon="@Icons.Material.Filled.NotInterested" Color="Color.Warning" Variant="Variant.Filled" OnClick="() => RejectLeaveRequestAsync(leave.Item)"></MudIconButton>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.NotInterested" Color="Color.Warning" Variant="Variant.Filled" Disabled="leave.Item.Status == Domain.Enum.LeaveStatus.Approved || leave.Item.Status == Domain.Enum.LeaveStatus.Rejected || leave.Item.Status == Domain.Enum.LeaveStatus.Deleted" OnClick="() => RejectLeaveRequestAsync(leave.Item)"></MudIconButton>
                                                 </MudTooltip>
                                                 <MudTooltip Text="Delete Leave Request" Color="Color.Error" Placement="Placement.Top">
-                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() =>DeleteLeaveRequestAsync(leave.Item)"></MudIconButton>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" Disabled="leave.Item.Status == Domain.Enum.LeaveStatus.Deleted" OnClick="() =>DeleteLeaveRequestAsync(leave.Item)"></MudIconButton>
                                                 </MudTooltip>
                                             </MudStack>
                                         </CellTemplate>
@@ -139,6 +141,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+
         await LoadMasterDataAsync();
     }
 
@@ -221,7 +224,7 @@
             var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
             var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
 
-            var result = await LeaveRequestService.GetMyLeaveRequests(
+            var result = await LeaveRequestService.GetMyAssignedLeaveRequests(
                                     page,
                                     pageSize,
                                     SelectedCompanyYear.Id,
@@ -275,8 +278,9 @@
         if (!result.Canceled)
         {
             var comment = result.Data as string;
-
+ 
             var response = await LeaveRequestService.ApproveLeaveRequestAsync(request.Id, comment);
+
             await ShowSnackbar(response);
 
             _dataGrid?.ReloadServerData();
@@ -287,7 +291,33 @@
 
     private async Task RejectLeaveRequestAsync(BasicEmployeeLeaveRequestDTO request)
     {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Reject Leave Request from {request.EmployeeName}" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Reject" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Error },
+            { "Icon", Icons.Material.Filled.Delete },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
 
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var response = await LeaveRequestService.RejectLeaveRequestAsync(request.Id, comment);
+
+            await ShowSnackbar(response);
+
+            _dataGrid?.ReloadServerData();
+            StateHasChanged();
+
+        }
     }
 
     private async Task DeleteLeaveRequestAsync(BasicEmployeeLeaveRequestDTO request)
