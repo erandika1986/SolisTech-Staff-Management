@@ -120,6 +120,7 @@ namespace StaffApp.Infrastructure.Data
         public DbSet<LeaveTypeLogic> LeaveTypesLogics => Set<LeaveTypeLogic>();
         public DbSet<EmployeeLeaveRequestSupportFile> EmployeeLeaveRequestSupportFiles => Set<EmployeeLeaveRequestSupportFile>();
         public DbSet<LeaveTypeAllowDuration> LeaveTypeAllowDurations => Set<LeaveTypeAllowDuration>();
+        public DbSet<AppSetting> AppSettings => Set<AppSetting>();
 
     }
 }

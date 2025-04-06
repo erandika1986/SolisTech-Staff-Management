@@ -9,6 +9,7 @@ Add-Migration 00006 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00007 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00008 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00009 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00010 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 
 Database Update Command
 ====================================================================================================

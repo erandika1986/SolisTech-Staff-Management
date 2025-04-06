@@ -6,6 +6,7 @@ namespace StaffApp.Application.Contracts
 {
     public interface IStaffAppDbContext
     {
+        DbSet<AppSetting> AppSettings { get; }
         DbSet<ApplicationUser> ApplicationUsers { get; }
         DbSet<CompanyFinancialYear> CompanyFinancialYears { get; }
         DbSet<CompanyLocation> CompanyLocations { get; }

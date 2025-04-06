@@ -294,6 +294,7 @@ namespace StaffApp.Infrastructure.Services
                     CurrentStatus = EnumHelper.GetEnumDescription((LeaveStatus)x.CurrentStatus),
                     Status = x.CurrentStatus,
                     LeaveDuration = EnumHelper.GetEnumDescription(x.LeaveDuration),
+                    CancelLeaveAllows = x.StartDate + x.StartTime > DateTime.Now
 
                 }).ToListAsync();
             var newResult = new PaginatedResultDTO<BasicEmployeeLeaveRequestDTO>
@@ -348,7 +349,8 @@ namespace StaffApp.Infrastructure.Services
                                             OriginalFileName = x.OriginalFileName,
                                             SavedFileName = x.SavedFileName,
                                             SaveFileURL = x.SaveFileURL,
-                                        }).ToList()
+                                        }).ToList(),
+                CancelLeaveAllows = leaveRequest.StartDate + leaveRequest.StartTime > DateTime.Now
             };
         }
 
@@ -535,6 +537,7 @@ namespace StaffApp.Infrastructure.Services
                     CurrentStatus = EnumHelper.GetEnumDescription((LeaveStatus)x.CurrentStatus),
                     Status = x.CurrentStatus,
                     LeaveDuration = EnumHelper.GetEnumDescription(x.LeaveDuration),
+                    CancelLeaveAllows = x.StartDate + x.StartTime > DateTime.Now
 
                 }).ToListAsync();
 

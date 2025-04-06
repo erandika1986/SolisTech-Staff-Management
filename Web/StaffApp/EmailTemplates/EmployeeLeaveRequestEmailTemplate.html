@@ -1,0 +1,143 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Leave Request</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background-color: #0056b3;
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 20px;
+            background-color: #f9f9f9;
+            border: 1px solid #dddddd;
+        }
+
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666666;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+            table td {
+                padding: 8px;
+                border-bottom: 1px solid #dddddd;
+            }
+
+        .label {
+            font-weight: bold;
+            width: 40%;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            margin: 10px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            color: #ffffff;
+        }
+
+        .approve {
+            background-color: #28a745;
+        }
+
+        .reject {
+            background-color: #dc3545;
+        }
+
+        .actions {
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Employee Leave Request</h1>
+        </div>
+        <div class="content">
+            <p>Dear {ManagerName},</p>
+
+            <p>A new leave request has been submitted by {EmployeeName} that requires your approval:</p>
+
+            <table>
+                <tr>
+                    <td class="label">Employee Name:</td>
+                    <td>{EmployeeName}</td>
+                </tr>
+                <tr>
+                    <td class="label">Employee ID:</td>
+                    <td>{EmployeeID}</td>
+                </tr>
+                <tr>
+                    <td class="label">Department:</td>
+                    <td>{Department}</td>
+                </tr>
+                <tr>
+                    <td class="label">Leave Type:</td>
+                    <td>{LeaveType}</td>
+                </tr>
+                <tr>
+                    <td class="label">Start Date:</td>
+                    <td>{StartDate}</td>
+                </tr>
+                <tr>
+                    <td class="label">End Date:</td>
+                    <td>{EndDate}</td>
+                </tr>
+                <tr>
+                    <td class="label">Total Days:</td>
+                    <td>{TotalDays}</td>
+                </tr>
+                <tr>
+                    <td class="label">Reason:</td>
+                    <td>{Reason}</td>
+                </tr>
+            </table>
+
+            <div class="actions">
+                <p>Please review this request and take appropriate action:</p>
+                <a href="{ApproveLink}" class="button approve">Approve</a>
+                <a href="{RejectLink}" class="button reject">Reject</a>
+            </div>
+
+            <p>Alternatively, you can log in to the HR portal to manage this request.</p>
+
+            <p>Thank you,<br>HR Department</p>
+        </div>
+        <div class="footer">
+            <p>This is an automated message. Please do not reply to this email.</p>
+            <p>&copy; {CurrentYear} {CompanyName}. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

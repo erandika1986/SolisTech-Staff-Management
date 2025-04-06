@@ -1,10 +1,148 @@
 ﻿@page "/CompanySettings/CompanySetting"
 
 @using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.CompanySettings
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+
+@inject ICompanySettingService CompanySettingService
+@inject LoadingService LoadingService
+@inject ISnackbar Snackbar
+
 @attribute [Authorize]
 
-<h3>CompanySetting</h3>
+<MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+    <MudTabPanel Text="Company Details" Icon="@Icons.Material.Filled.Home">
+        <MudGrid>
+             <MudItem xs="12" sm="12">
+               <MudPaper Class="pa-2">
+                    <MudForm @ref="formCompanyDetail" @bind-IsValid="@companyDetailSuccess" @bind-Errors="@companyDetailErrors">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="Company Name" @bind-Value="CompanyDetail.CompanyName" Required="true" RequiredError="Company name is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="Company Address" @bind-Value="CompanyDetail.CompanyAddress" Required="true" RequiredError="Company address is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="Company Logo Url" @bind-Value="CompanyDetail.CompanyLogoUrl" Required="true" RequiredError="Company Logo Url is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="Application Url" @bind-Value="CompanyDetail.ApplicationUrl" Required="true" RequiredError="Application Url is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="Leave Request CC List" @bind-Value ="CompanyDetail.LeaveRequestCCList" Required="true" RequiredError="Leave Request CC is required!" />
+                            </MudItem>
+                        </MudGrid>
+                     </MudForm>
+               </MudPaper>
+                <MudPaper Class="pa-2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveComapnyDetail" Disabled="@(!companyDetailSuccess)" Class="ml-auto">Save</MudButton>
+                </MudPaper>
+             </MudItem>
+        </MudGrid>
+    </MudTabPanel>
+    <MudTabPanel Text="Email Settings" Icon="@Icons.Material.Filled.Settings">
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-2">
+                    <MudForm @ref="formSmtpSetting" @bind-IsValid="@smtpSettingsuccess" @bind-Errors="@smtpSettingErrors">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="SMTP Server" @bind-Value="CompanySMTPSetting.SMTPServer" Required="true" RequiredError="SMTP server is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="SMTP Username" @bind-Value="CompanySMTPSetting.SMTPUsername" Required="true" RequiredError="SMTP username is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="SMTP Password" @bind-Value="CompanySMTPSetting.SMTPPassword" Required="true" RequiredError="SMTP password is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="SMTP Port" @bind-Value="CompanySMTPSetting.SMTPPort" Required="true" RequiredError="SMTP port is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="SMTP Enable Ssl" @bind-Value="CompanySMTPSetting.SMTPEnableSsl" Required="true" RequiredError="SMTP enable SSL Value is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="SMTP Sender Email" @bind-Value="CompanySMTPSetting.SMTPSenderEmail" Required="true" RequiredError="SMTP sender emai is required!" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudForm>
+                </MudPaper>
+                <MudPaper Class="pa-2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveSMTPDetail" Disabled="@(!smtpSettingsuccess)" Class="ml-auto">Save</MudButton>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudTabPanel>
+</MudTabs>
 
 @code {
 
+    bool companyDetailSuccess;
+    string[] companyDetailErrors = { };
+    MudForm formCompanyDetail;
+    private CompanyDetailDTO CompanyDetail { get; set; }
+
+    bool smtpSettingsuccess;
+    string[] smtpSettingErrors = { };
+    MudForm formSmtpSetting;
+    private CompanySMTPSettingDTO CompanySMTPSetting { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            LoadingService.Show();
+            CompanyDetail = await CompanySettingService.GetCompanyDetail();
+            CompanySMTPSetting = await CompanySettingService.GetCompanySMTPSetting();
+        }
+        finally{
+            LoadingService.Hide();
+        }
+
+    }
+
+    private async Task SaveComapnyDetail()
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = await CompanySettingService.SaveCompanyDetailAsync(CompanyDetail);
+            ShowSnackbar(response);
+
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    private async Task SaveSMTPDetail()
+    {
+        try
+        {
+            LoadingService.Show();
+            var response = await CompanySettingService.SaveCompanySMTPSettingAsync(CompanySMTPSetting);
+            ShowSnackbar(response);
+
+        }
+        finally
+        {
+            LoadingService.Hide();
+        }
+    }
+
+    async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
 }

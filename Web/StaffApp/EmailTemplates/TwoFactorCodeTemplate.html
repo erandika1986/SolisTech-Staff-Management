@@ -1,0 +1,155 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Your Two-Factor Authentication Code</title>
+    <style type="text/css">
+        /* Base styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #333333;
+            background-color: #f7f7f7;
+        }
+
+        /* Container */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+        }
+
+        /* Header */
+        .header {
+            padding: 25px 0;
+            text-align: center;
+            border-bottom: 1px solid #eeeeee;
+        }
+
+            .header img {
+                max-height: 60px;
+                width: auto;
+            }
+
+        /* Content */
+        .content {
+            padding: 35px 25px;
+        }
+
+        h1 {
+            color: #5c2d91; /* Microsoft purple for Blazor/ASP.NET branding */
+            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        /* 2FA Code */
+        .code-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .verification-code {
+            font-size: 32px;
+            font-weight: bold;
+            letter-spacing: 5px;
+            padding: 15px 20px;
+            background-color: #f0ebf8;
+            border: 1px solid #d8c9f0;
+            border-radius: 6px;
+            color: #5c2d91;
+            display: inline-block;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #666666;
+            border-top: 1px solid #eeeeee;
+        }
+
+        /* Decorative elements */
+        .decorative-icon {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 48px;
+        }
+
+        /* Alert box */
+        .alert {
+            background-color: #fff8e1;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        /* Responsive */
+        @media screen and (max-width: 600px) {
+            .container {
+                width: 100% !important;
+                border-radius: 0;
+            }
+
+            .content {
+                padding: 25px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <!-- Replace with your logo -->
+            <img src="https://your-app-url.com/images/logo.png" alt="Your App Logo" />
+        </div>
+
+        <div class="content">
+            <div class="decorative-icon">
+                🔐
+            </div>
+
+            <h1>Your Two-Factor Authentication Code</h1>
+
+            <p>Hello @Model.Name,</p>
+
+            <p>You are receiving this email because you (or someone else) is attempting to sign in to your account and two-factor authentication is enabled.</p>
+
+            <p>Please use the verification code below to complete your sign-in:</p>
+
+            <div class="code-container">
+                <div class="verification-code">@Model.TwoFactorCode</div>
+            </div>
+
+            <div class="alert">
+                <strong>Important:</strong> This code will expire in @Model.ExpirationTime minutes.
+            </div>
+
+            <p>If you didn't attempt to sign in, please change your password immediately and contact our support team.</p>
+
+            <p>
+                Thank you,<br>
+                The @Model.ApplicationName Team
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>&copy; @DateTime.Now.Year @Model.CompanyName. All rights reserved.</p>
+            <p>@Model.CompanyAddress</p>
+        </div>
+    </div>
+</body>
+</html>

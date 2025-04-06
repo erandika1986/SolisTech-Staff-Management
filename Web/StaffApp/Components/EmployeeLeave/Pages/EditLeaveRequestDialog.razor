@@ -88,18 +88,6 @@
                             </MudItem>
                             <MudItem xs="12">
                                 <MudText>Supporting Documents</MudText>
-                                @*                                 <InputFile id="fileInput" OnChange="OnFileChange" hidden multiple />
-                                <div class="d-flex align-center">
-                                    <MudButton 
-                                    HtmlTag="label"
-                                    Variant="Variant.Filled"
-                                    Color="Color.Primary"
-                                    StartIcon="@Icons.Material.Filled.CloudUpload"
-                                    for="fileInput">
-                                        Upload Files
-                                    </MudButton>
-                                    <MudText Class="ml-3">@GetUploadSummary()</MudText>
-                                </div> *@
                                 @if (!IsDisabled)
                                 {
                                     <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFiles">
@@ -173,14 +161,24 @@
     </DialogContent>
     <DialogActions>
         <MudPaper Class="pa-2">
-            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" OnClick="Cancel" Class="mr-1">Close</MudButton>
             @if (LeaveRequestId == ApplicationConstants.Zero && !IsApprovalView)
             {
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto"> Submit</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" StartIcon="@Icons.Material.Filled.Save"
+                           Disabled="@(!success || (LeaveRequest.CurrentStatus == LeaveStatus.Approved || LeaveRequest.CurrentStatus == LeaveStatus.Rejected || LeaveRequest.CurrentStatus == LeaveStatus.Deleted))" Class="mr-1"> Apply</MudButton>
             }
             else if (!IsApprovalView)
             {
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto">Update</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" StartIcon="@Icons.Material.Filled.Save"
+                           Disabled="@(!success || (LeaveRequest.CurrentStatus == LeaveStatus.Approved || LeaveRequest.CurrentStatus == LeaveStatus.Rejected || LeaveRequest.CurrentStatus == LeaveStatus.Deleted))" Class="mr-1">Update</MudButton>
+            }
+            else if(IsApprovalView)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" Disabled="LeaveRequest.CurrentStatus != LeaveStatus.Pending" Class="mr-1">Approve</MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.NotInterested" Disabled="LeaveRequest.CurrentStatus != LeaveStatus.Pending" Class="mr-1">Reject</MudButton>
+
+                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Disabled="LeaveRequest.CancelLeaveAllows" Class="mr-1">Delete</MudButton>
             }
 
         </MudPaper>

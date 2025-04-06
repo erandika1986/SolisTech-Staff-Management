@@ -21,7 +21,9 @@
     <MudCardContent>
         <MudGrid>
             <MudItem xs="12" sm="12">
-                <MudIconButton Icon="@Icons.Material.Filled.AddTask" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => AddNewLeaveRequestAsync()"></MudIconButton>
+                <MudTooltip Text="Apply For New Leave Request" Color="Color.Primary" Placement="Placement.Top">
+                    <MudIconButton Icon="@Icons.Material.Filled.AddTask" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => AddNewLeaveRequestAsync()"></MudIconButton>
+                </MudTooltip>
             </MudItem>
             <MudItem xs="12" sm="12" md="12" lg="12">
                 @if (!_isMasterDataLoaded)
@@ -84,14 +86,14 @@
                                     <TemplateColumn CellClass="d-flex justify-end">
                                         <CellTemplate Context="leave">
                                             <MudStack Row>
-                                                <MudTooltip Text="View Leave Request" Color="Color.Info" Placement="Placement.Top">
+                                                <MudTooltip Text="View My Leave Request" Color="Color.Info" Placement="Placement.Top">
                                                     <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled" OnClick="() => ViewLeaveRequestAsync(leave.Item)"></MudIconButton>
                                                 </MudTooltip>
-                                                <MudTooltip Text="Edit Leave" Color="Color.Primary" Placement="Placement.Top">
-                                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditLeaveRequestAsync(leave.Item)"></MudIconButton>
+                                                <MudTooltip Text="Edit My Leave" Color="Color.Primary" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" Disabled="leave.Item.Status!=Domain.Enum.LeaveStatus.Pending" OnClick="() => EditLeaveRequestAsync(leave.Item)"></MudIconButton>
                                                 </MudTooltip>
-                                                <MudTooltip Text="Delete Leave" Color="Color.Error" Placement="Placement.Top">
-                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled"></MudIconButton>
+                                                <MudTooltip Text="Cancel My Leave Request" Color="Color.Error" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" Disabled="leave.Item.CancelLeaveAllows"></MudIconButton>
                                                 </MudTooltip>
                                             </MudStack>
                                         </CellTemplate>
@@ -268,7 +270,7 @@
         {
             { "LeaveRequestId", request.Id },
             { "IsDisabled", true},
-            { "IsApprovalView", true},
+            { "IsApprovalView", false},
             { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
         };
         await Dialog.ShowAsync<EditLeaveRequestDialog>($"Manage Leave Request From : {request.EmployeeName}", parameters, _maxWidth);

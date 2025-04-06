@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using StaffApp.Application.Contracts;
@@ -31,11 +32,15 @@ namespace Microsoft.Extensions.DependencyInjection
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
-            services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
-                    .AddRoles<ApplicationRole>()
-                .AddEntityFrameworkStores<StaffAppDbContext>()
-                .AddSignInManager()
-                .AddDefaultTokenProviders();
+            services.AddIdentityCore<ApplicationUser>(options =>
+            {
+                options.SignIn.RequireConfirmedAccount = true;
+                options.SignIn.RequireConfirmedEmail = true;
+            })
+            .AddRoles<ApplicationRole>()
+            .AddEntityFrameworkStores<StaffAppDbContext>()
+            .AddSignInManager()
+             .AddDefaultTokenProviders();
 
 
             //Register all custom build services
@@ -62,6 +67,11 @@ namespace Microsoft.Extensions.DependencyInjection
             }
 
             services.AddTransient<IDateTime, DateTimeService>();
+
+            // Register the email sender
+            services.AddSingleton<IEmailService, SmtpEmailService>();
+            services.AddScoped<LeaveRequestEmailService>();
+            services.AddTransient<IEmailSender, IdentityEmailSenderService>();
 
             return services;
         }

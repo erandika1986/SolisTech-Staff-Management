@@ -21,5 +21,6 @@ namespace StaffApp.Application.DTOs.EmploymentLeave
         public string? Reason { get; set; }
         public List<Microsoft.AspNetCore.Components.Forms.IBrowserFile> Files { get; set; } = new List<Microsoft.AspNetCore.Components.Forms.IBrowserFile> { };
         public List<EmployeeLeaveRequestSupportFileDTO> SavedSupportFiles { get; set; } = new List<EmployeeLeaveRequestSupportFileDTO>();
+        public bool CancelLeaveAllows { get; set; }
     }
 }

@@ -47,6 +47,7 @@ namespace StaffApp.Infrastructure.Data
                 await SeedEmployeeTypeAsync();
                 await SeedLeaveTypeAsync();
                 await SeedCompanyLocationsAsync();
+                await SeedAppSettingsAsync();
             }
             catch (Exception ex)
             {
@@ -54,6 +55,7 @@ namespace StaffApp.Infrastructure.Data
                 throw;
             }
         }
+
 
         private async Task SeedUserRolesAsync()
         {
@@ -290,6 +292,31 @@ namespace StaffApp.Infrastructure.Data
                    new CompanyLocation(){ Name = "Solistech - Sri Lanka Office", Country="Sri Lanka",Address="No 59-2/1, Sunethradevi rd,Kohuwala, Sri Lanka",TimeZone = "Asia/Colombo", CreatedDate=DateTime.Now,UpdateDate = DateTime.Now, IsActive = true },
                    new CompanyLocation(){ Name = "Solistech - USA Office", Country="United State",Address="3725 Wexford Hollow Rd E Jacksonville, Florida, USA",TimeZone ="Eastern Daylight Time", CreatedDate=DateTime.Now,UpdateDate = DateTime.Now, IsActive = true },
                });
+
+                await context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SeedAppSettingsAsync()
+        {
+            if (!context.AppSettings.Any())
+            {
+                var appSettings = new List<AppSetting>
+                {
+                    new AppSetting() { Name = "SMTPServer", Value = "" },
+                    new AppSetting() { Name = "SMTPPort", Value = "" },
+                    new AppSetting() { Name = "SMTPUsername", Value = "" },
+                    new AppSetting() { Name = "SMTPPassword", Value = "" },
+                    new AppSetting() { Name = "SMTPEnableSsl", Value = "" },
+                    new AppSetting() { Name = "SMTPSenderEmail", Value = "" },
+                    new AppSetting() { Name = "ApplicationUrl", Value = "" },
+                    new AppSetting() { Name = "CompanyName", Value = "" },
+                    new AppSetting() { Name = "CompanyLogoUrl", Value = "" },
+                    new AppSetting() { Name = "CompanyAddress", Value = "" },
+                    new AppSetting() { Name = "LeaveRequestCCList", Value = "" }
+
+                };
+                await context.AppSettings.AddRangeAsync(appSettings);
 
                 await context.SaveChangesAsync();
             }

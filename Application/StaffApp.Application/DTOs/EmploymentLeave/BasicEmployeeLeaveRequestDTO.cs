@@ -39,6 +39,7 @@ namespace StaffApp.Application.DTOs.EmploymentLeave
 
         [Display(Name = "Reason")]
         public string? Reason { get; set; }
+        public bool CancelLeaveAllows { get; set; }
         public List<EmployeeLeaveRequestCommentDTO> Comments { get; set; } = new List<EmployeeLeaveRequestCommentDTO>();
     }
 }
