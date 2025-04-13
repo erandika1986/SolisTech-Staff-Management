@@ -50,6 +50,8 @@ namespace StaffApp.Infrastructure.Data.Configurations
             builder.Property(p => p.UpdatedByUserId).HasMaxLength(450).IsRequired(true);
 
             builder.Property(p => p.IsActive).HasDefaultValue(true).IsRequired(true);
+
+            builder.Property(p => p.GoogleCalenderEventId).IsRequired(false);
         }
     }
 }

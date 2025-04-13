@@ -38,9 +38,15 @@
                 <TemplateColumn CellClass="d-flex justify-end">
                     <CellTemplate Context="companyYear">
                         <MudStack Row>
-                            <MudIconButton Icon="@Icons.Material.Filled.PlayCircle" Color="Color.Success" Variant="Variant.Filled" OnClick="() => EditCompanyYearAsync(companyYear.Item)"></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditCompanyYearAsync(companyYear.Item)"></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteCompanyYearAsync(companyYear.Item)"></MudIconButton>
+                            <MudTooltip Text="Mark As Current Year" Color="Color.Success" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.PlayCircle" Color="Color.Success" Variant="Variant.Filled" OnClick="() => EditCompanyYearAsync(companyYear.Item)"></MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Edit Year" Color="Color.Primary" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditCompanyYearAsync(companyYear.Item)"></MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Company Financial Year" Color="Color.Error" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteCompanyYearAsync(companyYear.Item)"></MudIconButton>
+                            </MudTooltip>
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
@@ -64,6 +70,7 @@
         CompanyYears = await CompanyFinancialYearService.GetAllCompanyYears();
     }
 
+
     private async Task EditCompanyYearAsync(CompanyYearDTO model)
     {
         var parameters = new DialogParameters
@@ -73,6 +80,7 @@
         };
         await Dialog.ShowAsync<EditFinancialYearDialog>($"Edit company financial year : {model.Id}", parameters, _maxWidth);
     }
+
 
     private async Task AddNewCompanyYearAsync()
     {
@@ -121,6 +129,7 @@
         var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
         return displayAttribute?.Name ?? prop.Name;
     }
+
 
     string GetDisplayName(Type type, string propertyName)
     {

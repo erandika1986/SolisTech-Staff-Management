@@ -39,9 +39,18 @@
                 <TemplateColumn CellClass="d-flex justify-end">
                     <CellTemplate Context="leaveType">
                         <MudStack Row>
-                            <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Success" Variant="Variant.Filled" OnClick="() => EditLeaveTypeConfigurationAsync(leaveType.Item)"></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditLeaveTypeAsync(leaveType.Item)"></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteLeaveTypeAsync(leaveType.Item)"></MudIconButton>
+                            <MudTooltip Text="Configure Leave Type Settings" Color="Color.Success" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Success" Variant="Variant.Filled" OnClick="() => EditLeaveTypeConfigurationAsync(leaveType.Item)"></MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Edit Leave Type" Color="Color.Primary" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditLeaveTypeAsync(leaveType.Item)"></MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Leave Type" Color="Color.Error" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteLeaveTypeAsync(leaveType.Item)"></MudIconButton>
+                            </MudTooltip>
+
+                            
+
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>

@@ -41,10 +41,18 @@
                 <TemplateColumn CellClass="d-flex justify-end">
                     <CellTemplate Context="companyYear">                       
                         <MudStack Row>
-                            <MudIconButton Icon="@Icons.Material.Filled.Update" Color="Color.Success" Variant="Variant.Filled" OnClick="() => MarkAsCurrentYearAsync(companyYear.Item)"></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.Sync" Color="Color.Success" Variant="Variant.Filled" OnClick="() => AssignYearlyLeavesAsync(companyYear.Item)"></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditCompanyYearAsync(companyYear.Item)"></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteCompanyYearAsync(companyYear.Item)"></MudIconButton>
+                            <MudTooltip Text="Mark As Current Year" Color="Color.Success" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Update" Color="Color.Success" Variant="Variant.Filled" OnClick="() => MarkAsCurrentYearAsync(companyYear.Item)"></MudIconButton>
+                           </MudTooltip>
+                            <MudTooltip Text="Populate Yearly Leaves For All" Color="Color.Primary" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Sync" Color="Color.Success" Variant="Variant.Filled" OnClick="() => AssignYearlyLeavesAsync(companyYear.Item)"></MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Edit Company Year" Color="Color.Primary" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditCompanyYearAsync(companyYear.Item)"></MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Company Year" Color="Color.Error" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteCompanyYearAsync(companyYear.Item)"></MudIconButton>
+                            </MudTooltip>
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>

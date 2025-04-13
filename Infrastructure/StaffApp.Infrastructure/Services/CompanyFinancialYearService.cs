@@ -104,5 +104,35 @@ namespace StaffApp.Infrastructure.Services
                 return new GeneralResponseDTO { Flag = true, Message = "A company financial year added successfully" };
             }
         }
+
+        public async Task<GeneralResponseDTO> SetAsCurrentCompanyYear(int year)
+        {
+            try
+            {
+                var otherYears = await context.CompanyFinancialYears.Where(x => x.Year != year && x.IsCurrentYear).ToListAsync();
+                foreach (var item in otherYears)
+                {
+                    item.IsCurrentYear = false;
+                    item.UpdateDate = DateTime.Now;
+                    item.UpdatedByUserId = currentUserService.UserId;
+
+                    context.CompanyFinancialYears.Update(item);
+                }
+
+                var selectedYear = await context.CompanyFinancialYears.FindAsync(year);
+                selectedYear.IsCurrentYear = true;
+                selectedYear.UpdateDate = DateTime.Now;
+                selectedYear.UpdatedByUserId = currentUserService.UserId;
+
+                context.CompanyFinancialYears.Update(selectedYear);
+
+                await context.SaveChangesAsync(CancellationToken.None);
+                return new GeneralResponseDTO { Flag = true, Message = $"{year} has been upgraded as company current financial year." };
+            }
+            catch (Exception ex)
+            {
+                return new GeneralResponseDTO { Flag = false, Message = "Operation failed. Error has been occurred." };
+            }
+        }
     }
 }

@@ -1,0 +1,211 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Leave Request Not Approved</title>
+    <style type="text/css">
+        /* Base styles */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #333333;
+            background-color: #f7f7f7;
+        }
+
+        /* Container */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+        }
+
+        /* Header */
+        .header {
+            padding: 20px 0;
+            text-align: center;
+            border-bottom: 1px solid #eeeeee;
+        }
+
+            .header img {
+                max-height: 60px;
+                width: auto;
+            }
+
+        /* Content */
+        .content {
+            padding: 30px 25px;
+        }
+
+        h1 {
+            color: #e53e3e; /* Red for rejection */
+            font-size: 24px;
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        /* Status indicator */
+        .status-indicator {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            background-color: #e53e3e;
+            color: white;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 18px;
+        }
+
+        /* Leave details table */
+        .leave-details {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+        }
+
+            .leave-details th {
+                background-color: #f0f4f8;
+                padding: 12px;
+                text-align: left;
+                border: 1px solid #e2e8f0;
+                font-weight: 600;
+                color: #2c5282;
+            }
+
+            .leave-details td {
+                padding: 12px;
+                border: 1px solid #e2e8f0;
+            }
+
+        /* Comments section */
+        .comments-section {
+            background-color: #fff5f5;
+            border-left: 4px solid #e53e3e;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        /* Button */
+        .button-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #2c5282;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #666666;
+            border-top: 1px solid #eeeeee;
+        }
+
+        /* Responsive */
+        @media screen and (max-width: 600px) {
+            .container {
+                width: 100% !important;
+                border-radius: 0;
+            }
+
+            .content {
+                padding: 20px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <!-- Replace with your company logo -->
+            <img src="@Model.CompanyLogo" alt="Company Logo" />
+        </div>
+
+        <div class="content">
+            <h1>Leave Request Not Approved</h1>
+
+            <p>Dear @Model.EmployeeName,</p>
+
+            <p>We regret to inform you that your leave request could not be approved at this time.</p>
+
+            <div class="status-indicator">
+                <span class="status-badge">Not Approved</span>
+            </div>
+
+            <table class="leave-details">
+                <tr>
+                    <th>Leave Type</th>
+                    <td>@Model.LeaveType</td>
+                </tr>
+                <tr>
+                    <th>From Date</th>
+                    <td>@Model.StartDate</td>
+                </tr>
+                <tr>
+                    <th>To Date</th>
+                    <td>@Model.EndDate</td>
+                </tr>
+                <tr>
+                    <th>Total Days</th>
+                    <td>@Model.TotalDays</td>
+                </tr>
+                <tr>
+                    <th>Reviewed By</th>
+                    <td>@Model.ReviewedBy</td>
+                </tr>
+                <tr>
+                    <th>Review Date</th>
+                    <td>@Model.ReviewDate</td>
+                </tr>
+            </table>
+
+            <div class="comments-section">
+                <strong>Reason for non-approval:</strong>
+                <p>@Model.RejectionReason</p>
+            </div>
+
+            <p>If you wish to discuss this further or submit a modified request, please contact your manager or the HR department.</p>
+
+            <div class="button-container">
+                <a href="@Model.NewRequestUrl" class="button">Submit New Request</a>
+            </div>
+
+            <p>Thank you for your understanding.</p>
+
+            <p>
+                Regards,<br>
+                HR Department<br>
+                @Model.CompanyName
+            </p>
+        </div>
+
+        <div class="footer">
+            <p>This is an automated email. Please do not reply directly to this message.</p>
+            <p>&copy; @DateTime.Now.Year @Model.CompanyName. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

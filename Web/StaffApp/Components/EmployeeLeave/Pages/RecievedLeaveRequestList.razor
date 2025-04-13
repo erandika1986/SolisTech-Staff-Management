@@ -1,6 +1,5 @@
 ﻿@page "/EmployeeLeave/ManageEmployeeLeave"
 
-@using Google.Apis.Auth.AspNetCore3
 @using Microsoft.AspNetCore.Authorization
 @using StaffApp.Application.DTOs.Common
 @using StaffApp.Application.DTOs.EmploymentLeave
@@ -9,6 +8,7 @@
 @using StaffApp.Application.Extensions.Constants
 @using StaffApp.Application.Services
 @using StaffApp.Components.Shared
+@using StaffApp.Infrastructure.Services
 @using StaffApp.Services
 
 @inject ILeaveRequestService LeaveRequestService
@@ -118,6 +118,7 @@
 
 @attribute [Authorize(Roles = "Admin,Director,Manager,Team Lead")]
 @code {
+
     private string _searchString = "";
     private bool _loading = false;
     private bool _isMasterDataLoaded = false;
@@ -141,7 +142,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-
         await LoadMasterDataAsync();
     }
 

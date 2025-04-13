@@ -1,0 +1,93 @@
+﻿@page "/auth/callback"
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+
+<h3>Authenticating with Google...</h3>
+
+@if (!string.IsNullOrEmpty(Error))
+{
+    <p class="text-danger">@Error</p>
+}
+@if (IsComplete)
+{
+    <p class="text-success">Authentication successful! Redirecting...</p>
+}
+
+@code {
+    private string? Error;
+    private bool IsComplete = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = new Uri(Navigation.Uri);
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+        if (query.TryGetValue("error", out var errorVal))
+        {
+            Error = $"Google returned an error: {errorVal}";
+            return;
+        }
+
+        if (!query.TryGetValue("code", out var code))
+        {
+            Error = "No code received in callback.";
+            return;
+        }
+
+        try
+        {
+            var tokenResponse = await ExchangeCodeForTokensAsync(code!);
+            if (!string.IsNullOrEmpty(tokenResponse.AccessToken))
+            {
+                // Store token as needed (e.g., session, DB)
+                // Redirect user or show a success message
+                IsComplete = true;
+
+                // Redirect after delay
+                await Task.Delay(2000);
+                Navigation.NavigateTo("/dashboard", true);
+            }
+            else
+            {
+                Error = "Failed to retrieve access token.";
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = $"Exception: {ex.Message}";
+        }
+    }
+
+    private async Task<TokenResponse> ExchangeCodeForTokensAsync(string code)
+    {
+        var client = HttpClientFactory.CreateClient();
+
+        var values = new Dictionary<string, string>
+            {
+                ["code"] = code,
+                ["client_id"] = "[YOUR_CLIENT_ID]",
+                ["client_secret"] = "[YOUR_CLIENT_SECRET]",
+                ["redirect_uri"] = "https://yourapp.azurewebsites.net/auth/callback",
+                ["grant_type"] = "authorization_code"
+            };
+
+        var content = new FormUrlEncodedContent(values);
+        var response = await client.PostAsync("https://oauth2.googleapis.com/token", content);
+        response.EnsureSuccessStatusCode();
+
+        var json = await response.Content.ReadAsStringAsync();
+        return System.Text.Json.JsonSerializer.Deserialize<TokenResponse>(json, new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            })!;
+    }
+
+    private class TokenResponse
+    {
+        public string? AccessToken { get; set; }
+        public string? RefreshToken { get; set; }
+        public string? IdToken { get; set; }
+        public int ExpiresIn { get; set; }
+        public string? TokenType { get; set; }
+    }
+}

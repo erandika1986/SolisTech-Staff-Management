@@ -313,7 +313,8 @@ namespace StaffApp.Infrastructure.Data
                     new AppSetting() { Name = "CompanyName", Value = "" },
                     new AppSetting() { Name = "CompanyLogoUrl", Value = "" },
                     new AppSetting() { Name = "CompanyAddress", Value = "" },
-                    new AppSetting() { Name = "LeaveRequestCCList", Value = "" }
+                    new AppSetting() { Name = "LeaveRequestCCList", Value = "" },
+                    new AppSetting() { Name ="IsPasswordLoginEnable", Value ="False"}
 
                 };
                 await context.AppSettings.AddRangeAsync(appSettings);

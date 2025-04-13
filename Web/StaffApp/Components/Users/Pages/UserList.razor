@@ -62,8 +62,12 @@
                 <TemplateColumn CellClass="d-flex justify-end">
                     <CellTemplate Context="user">
                         <MudStack Row>
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditUserAsync(user.Item)"></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteUserAsync(user.Item)"></MudIconButton>
+                            <MudTooltip Text="Edit User" Color="Color.Primary" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditUserAsync(user.Item)"></MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete User" Color="Color.Error" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteUserAsync(user.Item)"></MudIconButton>
+                            </MudTooltip>
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>

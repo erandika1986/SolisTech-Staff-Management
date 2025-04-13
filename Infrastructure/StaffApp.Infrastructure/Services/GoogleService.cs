@@ -74,7 +74,7 @@ namespace StaffApp.Infrastructure.Services
             }
         }
 
-        public void InsertEvent(AppointmentDTO eventData)
+        public string InsertEvent(AppointmentDTO eventData)
         {
             try
             {
@@ -102,11 +102,15 @@ namespace StaffApp.Infrastructure.Services
                 };
                 EventsResource.InsertRequest addEvent = Service.Events.Insert(eventItem, "primary");
                 addEvent.SendUpdates = EventsResource.InsertRequest.SendUpdatesEnum.All;
-                addEvent.Execute();
+                var response = addEvent.Execute();
+
+                return response.Id;
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
+
+                return string.Empty;
             }
         }
 

@@ -1,5 +1,7 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Authorization
 
+@attribute [Authorize]
 <PageTitle>Home</PageTitle>
 
 <MudCheckBox @bind-Value="Basic_CheckBox1"></MudCheckBox>

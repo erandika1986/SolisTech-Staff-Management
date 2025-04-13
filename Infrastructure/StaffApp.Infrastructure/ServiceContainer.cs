@@ -22,13 +22,15 @@ namespace Microsoft.Extensions.DependencyInjection
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
             });
 
-            services.AddSingleton<GoogleService>();
-
-            services.AddScoped<LoadingService>();
-
             services.AddTransient<IStaffAppDbContext>(provider => provider.GetRequiredService<StaffAppDbContext>());
 
             services.AddTransient<StaffAppDbContextInitializer>();
+
+            services.AddSingleton<GoogleService>();
+            services.AddHttpClient();
+            services.AddSingleton<GoogleAuthService>();
+
+            services.AddScoped<LoadingService>();
 
             services.AddDatabaseDeveloperPageExceptionFilter();
 
@@ -69,7 +71,7 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddTransient<IDateTime, DateTimeService>();
 
             // Register the email sender
-            services.AddSingleton<IEmailService, SmtpEmailService>();
+            //services.AddSingleton<IEmailService, SmtpEmailService>();
             services.AddScoped<LeaveRequestEmailService>();
             services.AddTransient<IEmailSender, IdentityEmailSenderService>();
 

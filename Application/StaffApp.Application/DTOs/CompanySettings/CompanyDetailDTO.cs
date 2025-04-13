@@ -7,5 +7,6 @@
         public string CompanyLogoUrl { get; set; }
         public string CompanyName { get; set; }
         public string LeaveRequestCCList { get; set; }
+        public bool IsPasswordLoginEnable { get; set; }
     }
 }

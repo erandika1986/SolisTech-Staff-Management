@@ -6,6 +6,6 @@ namespace StaffApp.Application.Services
     {
         Task SendEmailAsync(string to, string subject, string htmlBody);
         Task SendEmailWithAttachmentsAsync(string to, string subject, string htmlBody, List<EmailAttachmentDTO> attachments);
-        Task SendEmailToMultipleRecipientsAsync(List<string> toAddresses, string subject, string htmlBody, List<EmailAttachmentDTO> attachments = null);
+        Task SendEmailToMultipleRecipientsAsync(List<string> toAddresses, List<string> ccList, string subject, string htmlBody, List<EmailAttachmentDTO> attachments = null);
     }
 }

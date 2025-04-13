@@ -3,7 +3,12 @@
 @inject NavigationManager NavigationManager
 
 <MudNavMenu>
-    <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+        <AuthorizeView>
+                    <Authorized>
+                            <MudNavLink Href="" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home">Home</MudNavLink>
+                    </Authorized>
+        </AuthorizeView>
+
 
     <AuthorizeView Roles="Admin,Director">
         <Authorized>
@@ -39,7 +44,6 @@
             </form>
         </Authorized>
         <NotAuthorized>
-            <MudNavLink Href="Account/Register" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">Register</MudNavLink>
             <MudNavLink Href="Account/Login" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Password">Login</MudNavLink>
         </NotAuthorized>
     </AuthorizeView>

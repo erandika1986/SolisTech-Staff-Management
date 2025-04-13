@@ -20,6 +20,7 @@ namespace StaffApp.Domain.Entity
         public HalfDaySessionType? HalfDaySessionType { get; set; }
         public ShortLeaveSessionType? ShortLeaveSessionType { get; set; }
         public string? Reason { get; set; }
+        public string? GoogleCalenderEventId { get; set; }
 
         public DateTime CreatedDate { get; set; }
         public string CreatedByUserId { get; set; }

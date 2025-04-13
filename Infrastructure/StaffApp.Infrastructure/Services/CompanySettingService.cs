@@ -22,13 +22,16 @@ namespace StaffApp.Infrastructure.Services
 
             var leaveRequestCCList = context.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.LeaveRequestCCList);
 
+            var isPasswordLoginEnable = context.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.IsPasswordLoginEnable);
+
             return new CompanyDetailDTO()
             {
                 ApplicationUrl = applicationUrl.Value,
                 CompanyAddress = companyAddress.Value,
                 CompanyLogoUrl = companyLogoUrl.Value,
                 CompanyName = companyName.Value,
-                LeaveRequestCCList = leaveRequestCCList.Value
+                LeaveRequestCCList = leaveRequestCCList.Value,
+                IsPasswordLoginEnable = bool.Parse(isPasswordLoginEnable.Value)
             };
         }
 

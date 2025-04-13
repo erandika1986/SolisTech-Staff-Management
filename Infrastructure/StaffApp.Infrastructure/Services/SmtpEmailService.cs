@@ -12,30 +12,33 @@ namespace StaffApp.Infrastructure.Services
     public class SmtpEmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
+        private readonly ICompanySettingService _companySettingService;
         private readonly ILogger<SmtpEmailService> _logger;
         private readonly IWebHostEnvironment _environment;
 
         public SmtpEmailService(
             IConfiguration configuration,
+            ICompanySettingService companySettingService,
             ILogger<SmtpEmailService> logger,
             IWebHostEnvironment environment)
         {
             _configuration = configuration;
+            _companySettingService = companySettingService;
             _logger = logger;
             _environment = environment;
         }
 
         public async Task SendEmailAsync(string to, string subject, string htmlBody)
         {
-            await SendEmailToMultipleRecipientsAsync(new List<string> { to }, subject, htmlBody);
+            await SendEmailToMultipleRecipientsAsync(new List<string> { to }, new List<string>(), subject, htmlBody);
         }
 
         public async Task SendEmailWithAttachmentsAsync(string to, string subject, string htmlBody, List<EmailAttachmentDTO> attachments)
         {
-            await SendEmailToMultipleRecipientsAsync(new List<string> { to }, subject, htmlBody, attachments);
+            await SendEmailToMultipleRecipientsAsync(new List<string> { to }, new List<string>(), subject, htmlBody, attachments);
         }
 
-        public async Task SendEmailToMultipleRecipientsAsync(List<string> toAddresses, string subject, string htmlBody, List<EmailAttachmentDTO> attachments = null)
+        public async Task SendEmailToMultipleRecipientsAsync(List<string> toAddresses, List<string> ccList, string subject, string htmlBody, List<EmailAttachmentDTO> attachments = null)
         {
             if (toAddresses == null || toAddresses.Count == 0)
             {
@@ -44,16 +47,17 @@ namespace StaffApp.Infrastructure.Services
 
             try
             {
-                var smtpSettings = _configuration.GetSection("SmtpSettings");
-                var smtpServer = smtpSettings["Server"];
-                var smtpPort = int.Parse(smtpSettings["Port"]);
-                var smtpUsername = smtpSettings["Username"];
-                var smtpPassword = smtpSettings["Password"];
-                var enableSsl = bool.Parse(smtpSettings["EnableSsl"]);
-                var senderEmail = smtpSettings["SenderEmail"];
-                var senderName = smtpSettings["SenderName"];
-                var replyToEmail = smtpSettings["ReplyToEmail"] ?? senderEmail;
-                var replyToName = smtpSettings["ReplyToName"] ?? senderName;
+                var companySMTPSettings = await _companySettingService.GetCompanySMTPSetting();
+                //var smtpSettings = _configuration.GetSection("SmtpSettings");
+                var smtpServer = companySMTPSettings.SMTPServer;
+                var smtpPort = int.Parse(companySMTPSettings.SMTPPort);
+                var smtpUsername = companySMTPSettings.SMTPUsername;
+                var smtpPassword = companySMTPSettings.SMTPPassword;
+                var enableSsl = bool.Parse(companySMTPSettings.SMTPEnableSsl);
+                var senderEmail = companySMTPSettings.SMTPSenderEmail;
+                var senderName = "SolisTech Pvt Ltd";
+                //var replyToEmail = smtpSettings["ReplyToEmail"] ?? senderEmail;
+                //var replyToName = smtpSettings["ReplyToName"] ?? senderName;
 
                 using (var client = new SmtpClient(smtpServer, smtpPort))
                 {
@@ -72,10 +76,10 @@ namespace StaffApp.Infrastructure.Services
                     })
                     {
                         // Add reply-to address if different from sender
-                        if (replyToEmail != senderEmail || replyToName != senderName)
-                        {
-                            mailMessage.ReplyToList.Add(new MailAddress(replyToEmail, replyToName));
-                        }
+                        //if (replyToEmail != senderEmail || replyToName != senderName)
+                        //{
+                        //    mailMessage.ReplyToList.Add(new MailAddress(replyToEmail, replyToName));
+                        //}
 
                         // Add all recipients
                         foreach (var address in toAddresses)
@@ -84,24 +88,24 @@ namespace StaffApp.Infrastructure.Services
                         }
 
                         // Add CC recipients if configured
-                        var ccAddresses = smtpSettings["CcAddresses"];
-                        if (!string.IsNullOrEmpty(ccAddresses))
+                        //var ccAddresses = smtpSettings["CcAddresses"];
+                        if (ccList.Any())
                         {
-                            foreach (var ccAddress in ccAddresses.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                            foreach (var ccAddress in ccList)
                             {
                                 mailMessage.CC.Add(ccAddress.Trim());
                             }
                         }
 
                         // Add BCC recipients if configured
-                        var bccAddresses = smtpSettings["BccAddresses"];
-                        if (!string.IsNullOrEmpty(bccAddresses))
-                        {
-                            foreach (var bccAddress in bccAddresses.Split(';', StringSplitOptions.RemoveEmptyEntries))
-                            {
-                                mailMessage.Bcc.Add(bccAddress.Trim());
-                            }
-                        }
+                        //var bccAddresses = smtpSettings["BccAddresses"];
+                        //if (!string.IsNullOrEmpty(bccAddresses))
+                        //{
+                        //    foreach (var bccAddress in bccAddresses.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                        //    {
+                        //        mailMessage.Bcc.Add(bccAddress.Trim());
+                        //    }
+                        //}
 
                         // Add attachments if any
                         if (attachments != null && attachments.Count > 0)

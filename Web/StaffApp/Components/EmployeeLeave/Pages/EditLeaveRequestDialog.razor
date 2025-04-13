@@ -4,12 +4,14 @@
 @using StaffApp.Application.Services
 @using StaffApp.Domain.Enum
 @using Microsoft.JSInterop
+@using StaffApp.Infrastructure.Services
 
 @inject ILeaveRequestService LeaveRequestService
 @inject IMasterDataService MasterDataService
 @inject IAzureBlobService AzureBlobService
 @inject IJSRuntime JSRuntime
 @inject ISnackbar Snackbar
+@inject LoadingService LoadingService
 
 <MudDialog>
     <DialogContent>
@@ -39,7 +41,7 @@
                                 </MudSelect>
                             </MudItem>
                             <MudItem xs="12" sm="6" md="6" lg="6">
-                                <MudSelect T="DropDownDTO" Label="Leave Duration" MultiSelection="false" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" Value="LeaveRequest.SelectedLeaveDuration" Required="true" RequiredError="Leave duration is required!" Disabled="IsDisabled">
+                                <MudSelect T="DropDownDTO" Label="Leave Duration" MultiSelection="false" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" Value="LeaveRequest.SelectedLeaveDuration" ValueChanged="@LeaveDurationChanged" Required="true" RequiredError="Leave duration is required!" Disabled="IsDisabled">
                                     @foreach (var leaveDuration in LeaveDurations)
                                     {
                                         <MudSelectItem T="DropDownDTO" Value="@leaveDuration">@leaveDuration.Name</MudSelectItem>
@@ -78,10 +80,11 @@
                                 </MudSelect>
                             </MudItem>
                             <MudItem xs="12" sm="6" md="6" lg="6">
-                                <MudDatePicker xs="12" sm="6" Label="From Date" @bind-Date="LeaveRequest.StartDate" Required="true" RequiredError="From date is required!" Disabled="IsDisabled" />
+                                <MudDatePicker xs="12" sm="6" Label="From Date" Date="LeaveRequest.StartDate" DateChanged="OnStartDateChanged" Required="true" RequiredError="From date is required!" Disabled="IsDisabled" />
                             </MudItem>
                             <MudItem xs="12" sm="6" md="6" lg="6">
-                                <MudDatePicker xs="12" sm="6" Label="To Date" @bind-Date="LeaveRequest.EndDate" Required="true" RequiredError="To date is required!" Disabled="IsDisabled" />
+                                <MudDatePicker xs="12" sm="6" Label="To Date" Date="LeaveRequest.EndDate" DateChanged="OnEndDateChanged" IsDateDisabledFunc="IsDateDisabled"
+                                AdditionalDateClassesFunc="AddCustomClass" Required="true" RequiredError="To date is required!" Disabled="IsDisabled" />
                             </MudItem>
                             <MudItem xs="12" sm="12" md="12" lg="12">
                                 <MudTextField @bind-Value="LeaveRequest.Reason" Label="Reason for Leave" Lines="4" Required="true" RequiredError="Leave reason is required!" Disabled="IsDisabled" />
@@ -165,12 +168,12 @@
             @if (LeaveRequestId == ApplicationConstants.Zero && !IsApprovalView)
             {
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" StartIcon="@Icons.Material.Filled.Save"
-                           Disabled="@(!success || (LeaveRequest.CurrentStatus == LeaveStatus.Approved || LeaveRequest.CurrentStatus == LeaveStatus.Rejected || LeaveRequest.CurrentStatus == LeaveStatus.Deleted))" Class="mr-1"> Apply</MudButton>
+                Disabled="@(!success || (LeaveRequest.CurrentStatus == LeaveStatus.Approved || LeaveRequest.CurrentStatus == LeaveStatus.Rejected || LeaveRequest.CurrentStatus == LeaveStatus.Deleted))" Class="mr-1"> Apply</MudButton>
             }
             else if (!IsApprovalView)
             {
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" StartIcon="@Icons.Material.Filled.Save"
-                           Disabled="@(!success || (LeaveRequest.CurrentStatus == LeaveStatus.Approved || LeaveRequest.CurrentStatus == LeaveStatus.Rejected || LeaveRequest.CurrentStatus == LeaveStatus.Deleted))" Class="mr-1">Update</MudButton>
+                Disabled="@(!success || (LeaveRequest.CurrentStatus == LeaveStatus.Approved || LeaveRequest.CurrentStatus == LeaveStatus.Rejected || LeaveRequest.CurrentStatus == LeaveStatus.Deleted))" Class="mr-1">Update</MudButton>
             }
             else if(IsApprovalView)
             {
@@ -220,6 +223,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        LoadingService.Show();
         ReportingManagers = await LeaveRequestService.GetMyReportingManagers();
         LeaveTypes = await MasterDataService.GetLeaveTypes();
         CompanyYears = await MasterDataService.GetAvailableCompanyYears();
@@ -267,6 +271,8 @@
             LeaveRequest.SelectedHalfDaySessionType = HalfDaySessionTypes.FirstOrDefault();
             LeaveRequest.SelectedShortLeaveSessionType = ShortLeaveSessionTypes.FirstOrDefault();
         }
+
+        LoadingService.Hide();
     }
 
     private void UploadFiles(IReadOnlyList<IBrowserFile> files)
@@ -292,19 +298,84 @@
 
     private async void LeaveTypeChanged(DropDownDTO changedValue)
     {
+        LoadingService.Show();
         LeaveRequest.SelectedLeaveType = changedValue;
         await LoadLeaveDurations();
+
+        switch(changedValue.Name)
+        {
+            case LeaveTypeConstants.AnnualLeave:
+                {
+
+                }
+                break;
+            case LeaveTypeConstants.SickLeave:
+                {
+
+                }
+                break;
+            case LeaveTypeConstants.MaternityLeave:
+                {
+
+                }
+                break;
+            case LeaveTypeConstants.PaternityLeave:
+                {
+
+                }
+                break;
+            case LeaveTypeConstants.NoPayLeave:
+                {
+
+                }
+                break;
+            case LeaveTypeConstants.ShortLeave:
+                {
+
+                }
+                break;
+        }
+
+        LoadingService.Hide();
+    }
+
+    private async void LeaveDurationChanged(DropDownDTO changedValue)
+    {
+        LoadingService.Show();
+
+
+
+        switch(changedValue.Id)
+        {
+            case (int)LeaveDuration.ShortLeave:
+            case (int)LeaveDuration.HalfDay:
+                {
+                    LeaveRequest.EndDate = LeaveRequest.StartDate;
+                }
+                break;
+            case (int)LeaveDuration.FullDay:
+                {
+
+                }
+                break;
+        }
+        LeaveRequest.SelectedLeaveDuration = changedValue;
+
+        LoadingService.Hide();        
     }
 
     private async Task LoadLeaveDurations()
     {
+        LoadingService.Show();
         LeaveDurations = await MasterDataService
         .GetLeaveDurations(LeaveRequest.SelectedLeaveType.Id);
         LeaveRequest.SelectedLeaveDuration = LeaveDurations.FirstOrDefault();
+        LoadingService.Hide();
     }
 
     private async Task RemoveSavedFile(EmployeeLeaveRequestSupportFileDTO file)
     {
+        LoadingService.Show();
         var result = await LeaveRequestService.RemoveSavedSupportFile(file);
         if(result.Flag)
         {
@@ -314,14 +385,16 @@
                 LeaveRequest.SavedSupportFiles.RemoveAt(index);
             }
         }
-
+        LoadingService.Hide();
         await ShowSnackbar(result);
     }
 
     private async Task DownloadFile(EmployeeLeaveRequestSupportFileDTO file)
     {
+        LoadingService.Show();
         var sasUrl = await AzureBlobService.GenerateSasTokenForBlobAsync(file.SavedFileName, ApplicationConstants.AzureBlobStorageName, DateTimeOffset.UtcNow.AddMinutes(5));
 
+        LoadingService.Hide();
         await JSRuntime.InvokeVoidAsync("open", sasUrl, "_blank");
     }
 
@@ -345,6 +418,7 @@
 
     private async Task Submit()
     {
+        LoadingService.Show();
         if (LeaveRequestId == ApplicationConstants.Zero)
         {
             LeaveRequest.Files = Files.ToList();
@@ -355,9 +429,13 @@
         }
         else
         {
-        
-        }
+            LeaveRequest.Files = Files.ToList();
 
+            //var response = await LeaveRequestService.(LeaveRequest);
+
+            //await ShowSnackbar(response);
+        }
+        LoadingService.Hide();
         await OnDialogClosed.InvokeAsync(true); // Notify parent
         MudDialog.Close(DialogResult.Ok(true));
     }
@@ -374,5 +452,45 @@
         {
             Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
         }
+    }
+
+    private Task OnStartDateChanged(DateTime? startDate)
+    {
+        LeaveRequest.StartDate = startDate;
+        LeaveRequest.EndDate = startDate;
+        return Task.CompletedTask;
+    }
+
+    private Task OnEndDateChanged(DateTime? endDate)
+    {
+        LeaveRequest.EndDate = endDate;
+        return Task.CompletedTask;
+    }
+
+    private bool IsDateDisabled(DateTime date)
+    {
+        if (!LeaveRequest.StartDate.HasValue)
+            return false;
+
+        if (LeaveTypeConstants.ShortLeave == LeaveRequest.SelectedLeaveType.Name)
+        {
+            return date < LeaveRequest.StartDate.Value.Date || date > LeaveRequest.StartDate.Value.Date;
+        }
+
+        if (LeaveTypeConstants.ShortLeave != LeaveRequest.SelectedLeaveType.Name && 
+            (int)LeaveDuration.HalfDay == LeaveRequest.SelectedLeaveDuration.Id)
+        {
+            return date < LeaveRequest.StartDate.Value.Date || date > LeaveRequest.StartDate.Value.Date;
+        }
+
+        return date < LeaveRequest.StartDate.Value.Date;
+    }
+
+    private string AddCustomClass(DateTime date)
+    {
+        if (IsDateDisabled(date))
+            return "disabled-date";
+
+        return string.Empty;
     }
 }

@@ -14,5 +14,6 @@
         public const string CompanyLogoUrl = "CompanyLogoUrl";
         public const string CompanyName = "CompanyName";
         public const string LeaveRequestCCList = "LeaveRequestCCList";
+        public const string IsPasswordLoginEnable = "IsPasswordLoginEnable";
     }
 }

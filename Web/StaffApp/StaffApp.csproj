@@ -9,10 +9,10 @@
 
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.*" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.*" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.*" />
     <PackageReference Include="MudBlazor" Version="8.*" />
     <PackageReference Include="Extensions.MudBlazor.StaticInput" Version="3.*" />
@@ -30,6 +30,9 @@
 
 
   <ItemGroup>
+    <Content Update="client_secret_web.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Update="client_secret_file.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -38,6 +41,24 @@
 
   <ItemGroup>
     <None Update="EmailTemplates\EmployeeLeaveRequestEmailTemplate.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="EmailTemplates\LeaveRequestApprovalEmailTemplate.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="EmailTemplates\LeaveRequestEmailTemplate.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="EmailTemplates\LeaveRequestRejectionEmailTemplate.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="EmailTemplates\PasswordResetTemplate.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="EmailTemplates\TwoFactorCodeTemplate.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="token.json\Google.Apis.Auth.OAuth2.Responses.TokenResponse-admin">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>

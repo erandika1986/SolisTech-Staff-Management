@@ -36,8 +36,12 @@
                 <TemplateColumn CellClass="d-flex justify-end">
                     <CellTemplate Context="department">
                         <MudStack Row>
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditRoleAsync(department.Item)"></MudIconButton>
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteRoleAsync(department.Item)"></MudIconButton>
+                           <MudTooltip Text="Edit Role" Color="Color.Primary" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditRoleAsync(department.Item)"></MudIconButton>
+                           </MudTooltip>
+                            <MudTooltip Text="Edit Role" Color="Color.Error" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteRoleAsync(department.Item)"></MudIconButton>
+                           </MudTooltip>
                         </MudStack>
                     </CellTemplate>
                 </TemplateColumn>
