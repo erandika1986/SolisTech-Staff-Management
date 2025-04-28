@@ -63,6 +63,8 @@ using (var scope = app.Services.CreateScope())
     await initializer.SeedAsync();
 }
 
+Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1NNaF5cXmBCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdmWXtceHVQR2JcWE11XUNWYUA=");
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {

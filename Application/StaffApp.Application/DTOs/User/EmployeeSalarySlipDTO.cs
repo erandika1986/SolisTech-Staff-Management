@@ -20,6 +20,9 @@
         public string PayPeriod { get; set; }
         public string PaymentMethod { get; set; }
         public string JoinDate { get; set; }
+        public string DaysWorked { get; set; }
+        public string LeaveTaken { get; set; }
+        public decimal NetSalary { get; set; }
 
         // Earnings
         public List<PaymentDescriptionDTO> Earnings { get; set; } = new List<PaymentDescriptionDTO>();

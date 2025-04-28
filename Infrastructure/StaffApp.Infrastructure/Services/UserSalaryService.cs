@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using StaffApp.Application.Contracts;
 using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.User;
@@ -7,10 +10,15 @@ using StaffApp.Application.Extensions.Helpers;
 using StaffApp.Application.Services;
 using StaffApp.Domain.Entity;
 using StaffApp.Domain.Enum;
+using Syncfusion.DocIO;
+using Syncfusion.DocIO.DLS;
+using Syncfusion.DocIORenderer;
+using System.Reflection;
+using Table = DocumentFormat.OpenXml.Wordprocessing.Table;
 
 namespace StaffApp.Infrastructure.Services
 {
-    public class UserSalaryService(IStaffAppDbContext context, IUserService userService, ICurrentUserService currentUserService) : IUserSalaryService
+    public class UserSalaryService(IStaffAppDbContext context, IUserService userService, ICurrentUserService currentUserService, ILogger<IUserSalaryService> userSalaryServiceLogger) : IUserSalaryService
     {
         public async Task<GeneralResponseDTO> ApproveUserSalaryAsync(EmployeeSalaryDTO salary, string comment)
         {
@@ -63,6 +71,85 @@ namespace StaffApp.Infrastructure.Services
             {
                 return new GeneralResponseDTO() { Flag = false, Message = ex.Message };
             }
+        }
+
+        public async Task<string> GenerateEstimateSalarySlip(EmployeeSalarySlipDTO salarySlip)
+        {
+            string filePath = string.Empty;
+
+            try
+            {
+                var outPutDirectory = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
+
+                var templatePath = System.IO.Path.Combine(outPutDirectory, @"WordTemplates\SalarySlipTemplate.docx");
+
+                // Create a temporary file for the modified document
+                string fileName = $"SalarySlip_{Guid.NewGuid().ToString()}.docx";
+                string tempDocxPath = System.IO.Path.Combine(@"C:\WordDocuments\", fileName);
+                string tempPdfPath = System.IO.Path.Combine(@"C:\WordDocuments\", System.IO.Path.ChangeExtension(fileName, ".pdf"));
+
+                File.Copy(templatePath, tempDocxPath, true);
+
+                // Modify the document using OpenXML
+                using (WordprocessingDocument wordDoc = WordprocessingDocument.Open(tempDocxPath, true))
+                {
+                    // Get the main document part
+                    MainDocumentPart mainPart = wordDoc.MainDocumentPart;
+
+                    ReplaceText(mainPart, "CompanyName", salarySlip.CompanyName);
+                    ReplaceText(mainPart, "CompanyAddress", salarySlip.CompanyAddress);
+                    ReplaceText(mainPart, "CompanyTelephone ", salarySlip.CompanyPhone);
+                    ReplaceText(mainPart, "CompanyEmail", salarySlip.CompanyEmail);
+                    ReplaceText(mainPart, "YearAndMonth", $"{salarySlip.SalarySlipYear}-{salarySlip.SalarySlipMonth}");
+                    ReplaceText(mainPart, "SLIPNumber", salarySlip.SalarySlipNumber);
+
+                    ReplaceText(mainPart, "EmployeeNumber", salarySlip.EmployeeId);
+                    ReplaceText(mainPart, "EmployeeName", salarySlip.EmployeeName);
+                    ReplaceText(mainPart, "EmployeeDesignation", salarySlip.Designation);
+                    ReplaceText(mainPart, "EmployeeDepartment", string.Empty);
+                    ReplaceText(mainPart, "EmployeeJoinDate", salarySlip.JoinDate);
+
+                    ReplaceText(mainPart, "PayPeriod", salarySlip.PayPeriod);
+                    ReplaceText(mainPart, "PaymentDate", salarySlip.PayDate);
+                    ReplaceText(mainPart, "PaymentMethod", salarySlip.PaymentMethod);
+                    ReplaceText(mainPart, "DaysWorked", salarySlip.DaysWorked.ToString());
+                    ReplaceText(mainPart, "LeaveTaken", salarySlip.LeaveTaken.ToString());
+
+                    ReplaceText(mainPart, "BankName", salarySlip.BankName);
+                    ReplaceText(mainPart, "AccountNumber", salarySlip.AccountNumber);
+                    ReplaceText(mainPart, "BranchName", salarySlip.Branch);
+
+                    ReplaceText(mainPart, "NetSalary", salarySlip.NetSalary.ToString("C"));
+
+                    Document doc = mainPart.Document;
+                    List<Table> tables = doc.Descendants<Table>().ToList();
+                    if (tables.Count > 0)
+                    {
+                        Table firstTable = tables[8];
+
+                        DocumentFormat.OpenXml.Wordprocessing.TableRow row = firstTable.Elements<DocumentFormat.OpenXml.Wordprocessing.TableRow>().ElementAtOrDefault(1);
+
+                        if (row != null)
+                        {
+                            // Fill values in specific cells
+                            FillCellValue(row, 0, "John Doe");      // First column
+                            FillCellValue(row, 1, "Employee123");   // Third column
+                        }
+                    }
+
+                    // Save the changes
+                    mainPart.Document.Save();
+                }
+                // Convert the modified document to PDF
+                ConvertWordToPdf(tempDocxPath, tempPdfPath);
+
+            }
+            catch (Exception ex)
+            {
+                userSalaryServiceLogger.LogError(ex.ToString());
+            }
+
+            return filePath;
         }
 
         public async Task<PaginatedResultDTO<EmployeeSalaryBasicDTO>> GetAllUsersSalariesAsync(int pageNumber, int pageSize, int status, string searchString = null, string sortField = null, bool ascending = true)
@@ -187,6 +274,10 @@ namespace StaffApp.Infrastructure.Services
             response.JoinDate = employee.HireDate.HasValue ? employee.HireDate.Value.ToString("yyyy-MM-dd") : string.Empty;
             response.PayDate = now.ToString("yyyy-MM-dd");
             response.PayPeriod = startOfMonth.ToString("yyyy-MM-dd") + "-" + endOfMonth.ToString("yyyy-MM-dd");
+            response.PaymentMethod = "Bank Transfer";
+            response.DaysWorked = @"22//22";
+            response.LeaveTaken = "0";
+
 
             var primaryBankAccount = context.EmployeeBankAccounts
                 .FirstOrDefault(x => x.EmployeeId == userId && x.IsPrimaryAccount);
@@ -240,10 +331,40 @@ namespace StaffApp.Infrastructure.Services
                 }
             }
 
-
+            response.NetSalary = response.Earnings.Sum(x => x.Amount) - response.Deductions.Sum(x => x.Amount);
 
 
             return response;
+        }
+
+        public void ConvertWordToPdf(string wordPath, string pdfPath)
+        {
+            using (FileStream docStream = new FileStream(wordPath, FileMode.Open, FileAccess.Read))
+            {
+                //Loads file stream into Word document
+                using (WordDocument wordDocument = new WordDocument(docStream, FormatType.Docx))
+                {
+                    //Instantiation of DocIORenderer for Word to PDF conversion
+                    using (DocIORenderer render = new DocIORenderer())
+                    {
+                        //Converts Word document into PDF document
+                        Syncfusion.Pdf.PdfDocument pdfDocument = render.ConvertToPDF(wordDocument);
+
+                        using (FileStream outputStream = new FileStream(pdfPath, FileMode.Create, FileAccess.Write))
+                        {
+                            pdfDocument.Save(outputStream);
+                        }
+
+                        //Saves the PDF document to MemoryStream.
+                        //MemoryStream stream = new MemoryStream();
+                        //pdfDocument.Save(stream);
+                        //stream.Position = 0;
+
+                        //Download PDF document in the browser.
+                        //return File(stream, "application/pdf", pdfPath);
+                    }
+                }
+            }
         }
 
         public async Task<EmployeeSalaryDTO> GetEmployeeSalaryByIdAsync(string userId)
@@ -480,8 +601,6 @@ namespace StaffApp.Infrastructure.Services
 
         }
 
-
-
         private async Task AddEmployeeSalaryHistoryRecord(EmployeeSalary employeeSalary)
         {
             var employeeSalaryHistory = new EmployeeSalaryHistory()
@@ -519,6 +638,45 @@ namespace StaffApp.Infrastructure.Services
 
             await context.SaveChangesAsync(CancellationToken.None);
 
+        }
+
+        private void ReplaceText(MainDocumentPart mainPart, string placeholder, string replacement)
+        {
+            string docText = null;
+            using (StreamReader sr = new StreamReader(mainPart.GetStream()))
+            {
+                docText = sr.ReadToEnd();
+            }
+
+            docText = docText.Replace(placeholder, replacement);
+
+            using (StreamWriter sw = new StreamWriter(mainPart.GetStream(FileMode.Create)))
+            {
+                sw.Write(docText);
+            }
+        }
+
+        // Helper method to fill a value in a specific cell
+        private void FillCellValue(TableRow row, int cellIndex, string value)
+        {
+            TableCell cell = row.Elements<TableCell>().ElementAtOrDefault(cellIndex);
+            if (cell != null)
+            {
+                // Get the first paragraph in the cell or create one if it doesn't exist
+                Paragraph paragraph = cell.Elements<Paragraph>().FirstOrDefault();
+                if (paragraph == null)
+                {
+                    paragraph = new Paragraph();
+                    cell.Append(paragraph);
+                }
+
+                // Clear existing content
+                paragraph.RemoveAllChildren<Run>();
+
+                // Add new text
+                Run run = new Run(new Text(value));
+                paragraph.Append(run);
+            }
         }
 
     }

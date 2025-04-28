@@ -1,8 +1,11 @@
 ﻿@using StaffApp.Application.DTOs.User
 @using System.Globalization
 @using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
 
 @inject IUserSalaryService UserSalaryService
+@inject IJSRuntime JSRuntime
+@inject LoadingService LoadingService
 
 <MudDialog>
     <DialogContent>
@@ -252,7 +255,7 @@
                         </MudItem>
                         <MudItem xs="6">
                             <MudText Typo="Typo.h5" Align="Align.Right" Style="color: #2e7d32; font-weight: bold;">
-                                @FormatCurrency(5380.00m)
+                                @FormatCurrency(@SalarySlipDTO.NetSalary)
                             </MudText>
                         </MudItem>
                     </MudGrid>
@@ -307,7 +310,9 @@
 
     private async Task GetSalarySlipAsync()
     {
+        LoadingService.Show();
         SalarySlipDTO = await UserSalaryService.GetEmployeeEstimateSalarySlip(EmployeeId);
+        LoadingService.Hide();
     }
 
     private string FormatCurrency(decimal amount)
@@ -325,9 +330,10 @@
         // Logic to handle emailing
     }
 
-    private void DownloadPdf()
+    private async Task DownloadPdf()
     {
         // Logic to handle PDF download
+        var filePath = await UserSalaryService.GenerateEstimateSalarySlip(SalarySlipDTO);
     }
 
     private void Cancel() => MudDialog.Cancel();

@@ -14,5 +14,6 @@ namespace StaffApp.Application.Services
         Task<PaginatedResultDTO<EmployeeSalaryBasicDTO>> GetAllUsersSalariesAsync(int pageNumber, int pageSize, int status, string searchString = null, string sortField = null, bool ascending = true);
         Task<EmployeeSalarySlipDTO> GetEmployeeEstimateSalarySlip(string userId);
         Task<EmployeeSalarySlipDTO> GetEmployeeSalarySlip(string userId, int year, int month);
+        Task<string> GenerateEstimateSalarySlip(EmployeeSalarySlipDTO salarySlip);
     }
 }
