@@ -4,8 +4,11 @@
     {
         public const string EmptyGuide = "00000000-0000-0000-0000-000000000000";
         public const int Zero = 0;
+        public const int One = 1;
+        public const int Two = 2;
         public const string AzureBlobStorageName = "solistechstaff";
         public const string SolisTechStaffURL = "https://schoolmanagement.blob.core.windows.net/solistechstaff";
+        public const decimal AllowMaximumShortLeavesPerMonth = 2;
 
         public const int HalfDayMorningStartHour = 8;
         public const int HalfDayMorningStartMin = 30;

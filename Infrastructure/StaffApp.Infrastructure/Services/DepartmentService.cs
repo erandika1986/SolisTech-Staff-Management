@@ -7,17 +7,8 @@ using StaffApp.Domain.Entity;
 
 namespace StaffApp.Infrastructure.Services
 {
-    public class DepartmentService : IDepartmentService
+    public class DepartmentService(IStaffAppDbContext context, ICurrentUserService currentUserService) : IDepartmentService
     {
-        private readonly IStaffAppDbContext context;
-        private readonly ICurrentUserService currentUserService;
-
-        public DepartmentService(IStaffAppDbContext context, ICurrentUserService currentUserService)
-        {
-            this.context = context;
-            this.currentUserService = currentUserService;
-        }
-
         public async Task<GeneralResponseDTO> SaveDepartment(DepartmentDTO model)
         {
             var department = await context.Departments.FindAsync(model.Id);

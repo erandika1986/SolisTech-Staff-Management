@@ -1,0 +1,240 @@
+﻿@page "/Users/Salaries"
+@using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.User
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@inject IUserSalaryService UserSalaryService
+@inject IMasterDataService MasterDataService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+@inject IJSRuntime JSRuntime
+@inject LoadingService LoadingService
+
+@attribute [Authorize]
+<MudGrid>
+    <MudItem xs="12" sm="12" md="12" lg="12">
+        @if (!_isMasterDataLoaded)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudText>Loading master data...</MudText>
+        }
+        else
+        {
+            <MudDataGrid @ref="_dataGrid" T="EmployeeSalaryBasicDTO" ServerData="@(LoadData)" Sortable="true"
+            Filterable="false"
+            Hideable="true"
+            Hover="true"
+            Striped="true"
+            Elevation="25"
+            Loading="@_loading">
+                <ToolBarContent>
+
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="4" lg="4">
+                            <MudText Typo="Typo.h6">Manage Employee Salaries</MudText>
+                            <MudSpacer />
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="8" lg="8">
+
+                            <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+                                <MudSelect T="DropDownDTO" Label="Salary Status" Class="mt-0" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedEmployeeSalaryStatus" ValueChanged="@SalaryStatusChanged" Style="padding-right:2px;">
+                                    @foreach (var employeeSalaryStatus in EmployeeSalaryStatuses)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@employeeSalaryStatus">@employeeSalaryStatus.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+
+                                <MudTextField T="string" Label="Search" ValueChanged="@(s=>OnSearch(s))" Placeholder="Search" Adornment="Adornment.Start"
+                                AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                            </MudPaper>
+
+                        </MudItem>
+                    </MudGrid>
+
+                </ToolBarContent>
+                <Columns>
+
+                    <PropertyColumn Property="x=>x.FullName" Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeSalaryBasicDTO.FullName))" />
+                    <PropertyColumn Property="x=>x.BasicSalary" Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeSalaryBasicDTO.BasicSalary))" />
+                    <PropertyColumn Property="x=>x.EffectiveFrom" Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeSalaryBasicDTO.EffectiveFrom))" />
+                    <PropertyColumn Property="x=>x.StatusText" Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeSalaryBasicDTO.StatusText))" />
+                    <PropertyColumn Property="x=>x.UpdatedOn" Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeSalaryBasicDTO.UpdatedOn))" />
+                    <PropertyColumn Property="x=>x.UpdatedBy" Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeSalaryBasicDTO.UpdatedBy))" />
+                    <TemplateColumn CellClass="d-flex justify-end">
+                        <CellTemplate Context="user">
+
+                            <MudStack Row>
+                                <MudTooltip Text="View Estimate Salary" Color="Color.Info" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled" OnClick="()=> ViewEstimateSalaryAsync(user.Item)"></MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Approve Revised Salary" Color="Color.Success" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Variant="Variant.Filled" Disabled="user.Item.Status == Domain.Enum.EmployeeSalaryStatus.Approved || user.Item.Status == Domain.Enum.EmployeeSalaryStatus.SubmittedForRevised" OnClick="() => ApproveOrAskedForReviseAsync(user.Item)"></MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Ask For Revise Salary" Color="Color.Warning" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.NotInterested" Color="Color.Warning" Variant="Variant.Filled" OnClick=" ()=> ApproveOrAskedForReviseAsync(user.Item)" Disabled="user.Item.Status == Domain.Enum.EmployeeSalaryStatus.Approved || user.Item.Status == Domain.Enum.EmployeeSalaryStatus.SubmittedForRevised"></MudIconButton>
+                                </MudTooltip>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="EmployeeSalaryBasicDTO" />
+                </PagerContent>
+            </MudDataGrid>
+        }
+
+    </MudItem>
+</MudGrid>
+
+@code {
+
+    private string _searchString = "";
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = false;
+
+    private MudDataGrid<EmployeeSalaryBasicDTO> _dataGrid;
+
+    private List<EmployeeSalaryBasicDTO> Users { get; set; } = new List<EmployeeSalaryBasicDTO>();
+
+    private IEnumerable<DropDownDTO> EmployeeSalaryStatuses = new List<DropDownDTO>();
+    private DropDownDTO SelectedEmployeeSalaryStatus = new DropDownDTO();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMasterDataAsync();
+    }
+
+    private async Task LoadMasterDataAsync()
+    {
+        try
+        {
+            // Load your master data
+            EmployeeSalaryStatuses =  MasterDataService.GetEmployeeSalaryStatus(true);
+            SelectedEmployeeSalaryStatus = EmployeeSalaryStatuses.FirstOrDefault();
+
+            _isMasterDataLoaded = true;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine($"Error loading master data: {ex.Message}");
+        }
+    }
+
+    private void SalaryStatusChanged(DropDownDTO changedValue)
+    {
+        SelectedEmployeeSalaryStatus = changedValue;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private Task OnSearch(string text)
+    {
+        _searchString = text;
+        return _dataGrid.ReloadServerData();
+    }
+
+    private async Task<GridData<EmployeeSalaryBasicDTO>> LoadData(GridState<EmployeeSalaryBasicDTO> state)
+    {
+        _loading = true;
+
+        try
+        {
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            // Call the service with parameters
+            var result = await UserSalaryService.GetAllUsersSalariesAsync(
+                page,
+                pageSize,
+                SelectedEmployeeSalaryStatus.Id,
+                _searchString,
+                sortBy,
+                sortDirection
+            );
+
+            // Return the result in GridData format
+            return new GridData<EmployeeSalaryBasicDTO>
+                {
+                    Items = result.Items,
+                    TotalItems = result.TotalItems
+                };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ApproveOrAskedForReviseAsync(EmployeeSalaryBasicDTO request)
+    {
+        var parameters = new DialogParameters
+        {
+            { "EmployeeId", request.UserId },
+            { "EmployeeFullName", request.FullName},
+            { "IsApprovalView", true },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEmployeeSalaryDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<ManageUserSalaryDialog>($"Approve or Ask for Revised Salary For : {request.FullName}", parameters, _maxWidth);
+    }
+
+    private async Task HandleEmployeeSalaryDialogClosedAsync(bool result)
+    {
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task ViewEstimateSalaryAsync(EmployeeSalaryBasicDTO request)
+    {
+        var parameters = new DialogParameters
+        {
+            { "EmployeeId", request.UserId },
+            { "EmployeeFullName", request.FullName},
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEstimateSalaryDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,   // hides the "X" button
+            NoHeader = true, 
+            MaxWidth = MaxWidth.Large,
+            FullWidth = true
+        };
+
+        await Dialog.ShowAsync<ViewUserSalaryOverviewDialog>($"", parameters, options);
+    }
+
+    private async Task HandleEstimateSalaryDialogClosedAsync(bool result)
+    {
+        // _dataGrid?.ReloadServerData();
+        // StateHasChanged();
+    }
+
+    string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+}

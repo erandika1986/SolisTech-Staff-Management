@@ -9,24 +9,28 @@ using System.Net.Mail;
 
 namespace StaffApp.Infrastructure.Services
 {
-    public class SmtpEmailService : IEmailService
+    public class SmtpEmailService(
+        IConfiguration _configuration,
+        ICompanySettingService _companySettingService,
+        ILogger<SmtpEmailService> _logger,
+        IWebHostEnvironment _environment) : IEmailService
     {
-        private readonly IConfiguration _configuration;
-        private readonly ICompanySettingService _companySettingService;
-        private readonly ILogger<SmtpEmailService> _logger;
-        private readonly IWebHostEnvironment _environment;
+        //private readonly IConfiguration _configuration;
+        //private readonly ICompanySettingService _companySettingService;
+        //private readonly ILogger<SmtpEmailService> _logger;
+        //private readonly IWebHostEnvironment _environment;
 
-        public SmtpEmailService(
-            IConfiguration configuration,
-            ICompanySettingService companySettingService,
-            ILogger<SmtpEmailService> logger,
-            IWebHostEnvironment environment)
-        {
-            _configuration = configuration;
-            _companySettingService = companySettingService;
-            _logger = logger;
-            _environment = environment;
-        }
+        //public SmtpEmailService(
+        //    IConfiguration configuration,
+        //    ICompanySettingService companySettingService,
+        //    ILogger<SmtpEmailService> logger,
+        //    IWebHostEnvironment environment)
+        //{
+        //    _configuration = configuration;
+        //    _companySettingService = companySettingService;
+        //    _logger = logger;
+        //    _environment = environment;
+        //}
 
         public async Task SendEmailAsync(string to, string subject, string htmlBody)
         {

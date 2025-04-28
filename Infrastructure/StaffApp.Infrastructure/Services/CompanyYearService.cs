@@ -134,5 +134,22 @@ namespace StaffApp.Infrastructure.Services
                 return new GeneralResponseDTO { Flag = false, Message = "Operation failed. Error has been occurred." };
             }
         }
+
+        public async Task<CompanyYearDTO> GetCurrentYear()
+        {
+            var currentYear = await context.CompanyYears.FirstOrDefaultAsync(x => x.IsCurrentYear);
+            if (currentYear != null)
+            {
+                return new CompanyYearDTO
+                {
+                    Id = currentYear.Id,
+                    Year = currentYear.Year,
+                    StartDate = currentYear.StartDate,
+                    EndDate = currentYear.EndDate,
+                    IsCurrentYear = currentYear.IsCurrentYear
+                };
+            }
+            return null;
+        }
     }
 }

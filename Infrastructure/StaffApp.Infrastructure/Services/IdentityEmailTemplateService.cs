@@ -3,18 +3,18 @@ using Microsoft.Extensions.Configuration;
 
 namespace StaffApp.Infrastructure.Services
 {
-    public class IdentityEmailTemplateService
+    public class IdentityEmailTemplateService(IWebHostEnvironment _environment, IConfiguration _configuration)
     {
-        private readonly IWebHostEnvironment _environment;
-        private readonly IConfiguration _configuration;
+        //private readonly IWebHostEnvironment _environment;
+        //private readonly IConfiguration _configuration;
 
-        public IdentityEmailTemplateService(
-            IWebHostEnvironment environment,
-            IConfiguration configuration)
-        {
-            _environment = environment;
-            _configuration = configuration;
-        }
+        //public IdentityEmailTemplateService(
+        //    IWebHostEnvironment environment,
+        //    IConfiguration configuration)
+        //{
+        //    _environment = environment;
+        //    _configuration = configuration;
+        //}
 
         public async Task<string> GetConfirmationEmailTemplateAsync(string confirmationLink, string userName)
         {

@@ -13,6 +13,8 @@
         public const string CompanyAddress = "CompanyAddress";
         public const string CompanyLogoUrl = "CompanyLogoUrl";
         public const string CompanyName = "CompanyName";
+        public const string CompanyPhone = "CompanyPhone";
+        public const string CompanyEmail = "CompanyEmail";
         public const string LeaveRequestCCList = "LeaveRequestCCList";
         public const string IsPasswordLoginEnable = "IsPasswordLoginEnable";
     }

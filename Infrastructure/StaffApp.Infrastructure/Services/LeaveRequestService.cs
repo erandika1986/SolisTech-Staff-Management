@@ -17,6 +17,7 @@ namespace StaffApp.Infrastructure.Services
     public class LeaveRequestService(
         IStaffAppDbContext staffAppDbContext,
         IUserService userService,
+        ICompanyYearService companyYearService,
         ILeaveAllocationService leaveAllocationService,
         ICurrentUserService currentUserService,
         IAzureBlobService azureBlobService,
@@ -546,9 +547,10 @@ namespace StaffApp.Infrastructure.Services
         private async Task<bool> ValidateLeaveRequest(
             EmployeeLeaveRequestDTO leaveRequest)
         {
+
             // Check if employee has sufficient leave balance
             decimal remainingLeaves = await leaveAllocationService
-                .GetRemainingLeavesAsync(leaveRequest.EmployeeId, leaveRequest.SelectedLeaveType.Id);
+                .GetRemainingLeavesAsync(leaveRequest.EmployeeId, leaveRequest.SelectedLeaveType.Id, leaveRequest.StartDate.Value);
 
             // Calculate working days for the request
             decimal requestedDays = CalculateWorkingDays(leaveRequest.StartDate.Value, leaveRequest.EndDate.Value);
@@ -741,5 +743,6 @@ namespace StaffApp.Infrastructure.Services
 
             await emailService.SendEmailToMultipleRecipientsAsync(toEmailAddress, ccList, $"Leave Request From - {employeeLeaveRequest.Employee.FullName}", template);
         }
+
     }
 }

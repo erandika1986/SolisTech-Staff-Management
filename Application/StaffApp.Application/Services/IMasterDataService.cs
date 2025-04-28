@@ -16,5 +16,7 @@ namespace StaffApp.Application.Services
         List<DropDownDTO> GetHalfDaySessionTypes();
         List<DropDownDTO> GetShortLeaveSessionTypes();
         Task<List<DropDownDTO>> GetOfficeLocations();
+        List<DropDownDTO> GetEmployeeSalaryStatus(bool hasDefaultValue = false);
+        List<DropDownDTO> GetEmployeeSalaryTransferStatus();
     }
 }

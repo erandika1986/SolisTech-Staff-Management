@@ -24,6 +24,12 @@
         </Authorized>
     </AuthorizeView>
 
+    <AuthorizeView Roles="Admin,Director">
+        <Authorized>
+            <MudNavLink Href="Users/Salaries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AttachMoney">Manage Employee Salaries</MudNavLink>
+        </Authorized>
+    </AuthorizeView>
+
     <AuthorizeView Roles="Admin,Director,Manager,Team Lead">
         <Authorized>
             <MudNavLink Href="EmployeeLeave/ManageEmployeeLeave" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Verified">Manage Employee Leaves</MudNavLink>

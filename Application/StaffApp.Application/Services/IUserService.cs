@@ -22,5 +22,8 @@ namespace StaffApp.Application.Services
         Task<List<DropDownDTO>> GetAvailableEmploymentTypes();
         List<DropDownDTO> GetAvailableGenderTypes();
         Task<List<string>> GetLoggedInUserAssignedRoles(string id);
+        Task<GeneralResponseDTO> SaveUserBankAccount(UserBankAccountDTO userBankAccount);
+        Task<List<UserBankAccountDTO>> GetAllUserBankAccount(string userId);
+        Task<GeneralResponseDTO> DeleteUserBankAccount(int id);
     }
 }

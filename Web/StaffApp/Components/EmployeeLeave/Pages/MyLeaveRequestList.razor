@@ -8,10 +8,32 @@
 @using StaffApp.Application.Services
 
 @inject ILeaveRequestService LeaveRequestService
+@inject ILeaveAllocationService LeaveAllocationService
 @inject IMasterDataService MasterDataService
 @inject IDialogService Dialog
 
 @attribute [Authorize]
+    @if (LeaveDashboardData.LeaveTypeSummaries.Count>0)
+    {
+     <MudGrid Gutter="true">
+
+        @foreach (var dashboardItem in LeaveDashboardData.LeaveTypeSummaries)
+        {
+            <MudItem xs="12" sm="6" md="2" lg="2">
+                <MudPaper Elevation="2" Class="p-4">
+                    <MudText Typo="Typo.h6" Class="p-4 d-flex align-center justify-center"> @dashboardItem.LeaveTypeName</MudText>
+                    <MudText Color="Color.Primary" Class="p-4 d-flex align-center justify-center">Total Leaves : @dashboardItem.TotalLeaveDays</MudText>
+                    <MudText Color="Color.Primary" Class="p-4 d-flex align-center justify-center">Remaining Leaves : @dashboardItem.RemainingLeaveDays</MudText>
+                    <MudText Color="Color.Primary" Class="p-4 d-flex align-center justify-center">Approved Leaves : @dashboardItem.ApprovedLeaveDays</MudText>
+                    <MudText Color="Color.Primary" Class="p-4 d-flex align-center justify-center">Pending Leaves :@dashboardItem.PendingLeaveDays</MudText>
+                    <MudText Color="Color.Primary" Class="p-4 d-flex align-center justify-center">Rejected Leaves :@dashboardItem.RejectedLeaveDays</MudText>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+}
+
+
 <MudCard>
     <MudCardHeader>
         <CardHeaderContent>
@@ -70,12 +92,12 @@
                         </MudItem>
                         <MudItem xs="12" sm="12" md="12" lg="12">
                             <MudDataGrid @ref="_dataGrid" T="BasicEmployeeLeaveRequestDTO" ServerData="@(LoadData)" Sortable="true"
-                                         Filterable="false"
-                                         Hideable="true"
-                                         Hover="true"
-                                         Striped="true"
-                                         Elevation="25"
-                                         Loading="@_loading">
+                            Filterable="false"
+                            Hideable="true"
+                            Hover="true"
+                            Striped="true"
+                            Elevation="25"
+                            Loading="@_loading">
                                 <Columns>
                                     <PropertyColumn Property="x=>x.LeaveType" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.LeaveType))" />
                                     <PropertyColumn Property="x=>x.StartDate" Title="@GetDisplayName(typeof(BasicEmployeeLeaveRequestDTO), nameof(BasicEmployeeLeaveRequestDTO.StartDate))" />
@@ -119,6 +141,8 @@
     private bool _isMasterDataLoaded = false;
     private MudDataGrid<BasicEmployeeLeaveRequestDTO> _dataGrid;
 
+    private LeaveDashboardDTO LeaveDashboardData = new LeaveDashboardDTO();
+
     private List<BasicEmployeeLeaveRequestDTO> LeaveRequests { get; set; } = new List<BasicEmployeeLeaveRequestDTO>();
 
     private DateTime? StartDate = DateTime.Now.AddDays(-14);
@@ -137,7 +161,9 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await GetMyLeaveDashboardDataAsync();
         await LoadMasterDataAsync();
+
     }
 
     private async Task LoadMasterDataAsync()
@@ -162,6 +188,11 @@
             // Handle error
             Console.WriteLine($"Error loading master data: {ex.Message}");
         }
+    }
+
+    private async Task GetMyLeaveDashboardDataAsync()
+    {
+        LeaveDashboardData = await LeaveAllocationService.GetMyLeaveDashboardData();
     }
 
     private void CompanyYearChanged(DropDownDTO changedValue)
@@ -293,5 +324,62 @@
         var prop = type.GetProperty(propertyName);
         var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
         return displayAttribute?.Name ?? propertyName;
+    }
+
+
+
+
+
+
+    // Summary data
+    private int TotalLeaves = 24;
+    private int ApprovedLeaves = 16;
+    private int PendingLeaves = 4;
+    private int RejectedLeaves = 4;
+
+    // Chart data
+    private string[] UsageLabels = new[] { "Approved", "Pending", "Rejected" };
+    private double[] UsageData => new[] { (double)ApprovedLeaves, PendingLeaves, RejectedLeaves };
+
+    // Upcoming leaves
+    private List<LeaveEntry> UpcomingLeaves = new()
+    {
+        new LeaveEntry { Date = DateTime.Now.AddDays(2), Reason = "Family Event" },
+        new LeaveEntry { Date = DateTime.Now.AddDays(10), Reason = "Vacation" }
+    };
+
+    // Leave history
+    private List<LeaveHistoryEntry> LeaveHistory = new()
+    {
+        new LeaveHistoryEntry { Date = DateTime.Now.AddDays(-15), Type = "Casual", Status = "Approved", Reason = "Medical" },
+        new LeaveHistoryEntry { Date = DateTime.Now.AddDays(-5), Type = "Casual", Status = "Rejected", Reason = "Late Request" },
+        new LeaveHistoryEntry { Date = DateTime.Now.AddDays(-2), Type = "Casual", Status = "Pending", Reason = "Personal" }
+    };
+
+    private Color GetStatusColor(string status) => status switch
+    {
+        "Approved" => Color.Success,
+        "Pending" => Color.Warning,
+        "Rejected" => Color.Error,
+        _ => Color.Default
+    };
+
+    private void RequestLeave()
+    {
+        // Navigate to leave request form or show dialog
+    }
+
+    class LeaveEntry
+    {
+        public DateTime Date { get; set; }
+        public string Reason { get; set; }
+    }
+
+    class LeaveHistoryEntry
+    {
+        public DateTime Date { get; set; }
+        public string Type { get; set; }
+        public string Status { get; set; }
+        public string Reason { get; set; }
     }
 }

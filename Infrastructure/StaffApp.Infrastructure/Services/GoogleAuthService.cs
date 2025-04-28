@@ -9,18 +9,18 @@ using System.Text.Json;
 
 namespace StaffApp.Infrastructure.Services
 {
-    public class GoogleAuthService
+    public class GoogleAuthService(IHttpClientFactory _httpClientFactory, IHttpContextAccessor _httpContextAccessor, IConfiguration _config)
     {
-        private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly IConfiguration _config;
+        //private readonly IHttpClientFactory _httpClientFactory;
+        //private readonly IHttpContextAccessor _httpContextAccessor;
+        //private readonly IConfiguration _config;
 
-        public GoogleAuthService(IHttpClientFactory httpClientFactory, IConfiguration config, IHttpContextAccessor httpContextAccessor)
-        {
-            _httpClientFactory = httpClientFactory;
-            _config = config;
-            _httpContextAccessor = httpContextAccessor;
-        }
+        //public GoogleAuthService(IHttpClientFactory httpClientFactory, IConfiguration config, IHttpContextAccessor httpContextAccessor)
+        //{
+        //    _httpClientFactory = httpClientFactory;
+        //    _config = config;
+        //    _httpContextAccessor = httpContextAccessor;
+        //}
 
         public async Task<string> GetAuthorizationUrlAsync()
         {

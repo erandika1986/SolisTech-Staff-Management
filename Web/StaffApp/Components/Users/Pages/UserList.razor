@@ -1,6 +1,7 @@
 ﻿@page "/Users/List"
 @using Microsoft.AspNetCore.Authorization
 @using Microsoft.AspNetCore.Identity
+@using StaffApp.Application.DTOs.Common
 @using StaffApp.Application.DTOs.User
 @using StaffApp.Application.Extensions.Constants
 @using StaffApp.Application.Services
@@ -61,7 +62,14 @@
                 <PropertyColumn Property="x=>x.HireDate" Title="@GetDisplayName(typeof(BasicUserDTO), nameof(BasicUserDTO.HireDate))" />
                 <TemplateColumn CellClass="d-flex justify-end">
                     <CellTemplate Context="user">
+
                         <MudStack Row>
+                            <MudTooltip Text="Manage Employee Salary" Color="Color.Success" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Info" Variant="Variant.Filled" OnClick="() => ManageEmployeeSalaryAsync(user.Item)"></MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Manage bank accounts" Color="Color.Success" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Success" Variant="Variant.Filled" OnClick="() => ManageBankAccountAsync(user.Item)"></MudIconButton>
+                            </MudTooltip>
                             <MudTooltip Text="Edit User" Color="Color.Primary" Placement="Placement.Top">
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditUserAsync(user.Item)"></MudIconButton>
                             </MudTooltip>
@@ -87,13 +95,12 @@
 
     private List<BasicUserDTO> Users { get; set; } = new List<BasicUserDTO>();
 
-    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Large, FullWidth = true };
 
     protected override async Task OnInitializedAsync()
     {
 
     }
-
 
     private async Task<GridData<BasicUserDTO>> LoadData(GridState<BasicUserDTO> state)
     {
@@ -172,6 +179,40 @@
         var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
         return Dialog.ShowAsync<ConfirmationDialog>("Delete", parameters, options);
+    }
+
+    private async Task ManageBankAccountAsync(BasicUserDTO user)
+    {
+        var parameters = new DialogParameters
+        {
+            { "EmployeeId", user.Id },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleBankAccountDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<ManageUserBankAccountDialog>($"Manage Bank Account For : {user.FullName}", parameters, _maxWidth);
+    }
+
+    private async Task ManageEmployeeSalaryAsync(BasicUserDTO user)
+    {
+        var parameters = new DialogParameters
+        {
+            { "EmployeeId", user.Id },
+            { "EmployeeFullName", user.FullName},
+            { "IsApprovalView", false },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEmployeeSalaryDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<ManageUserSalaryDialog>($"Manage Salary For : {user.FullName}", parameters, _maxWidth);
+    }
+
+    private async Task HandleBankAccountDialogClosedAsync(bool result)
+    {
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task HandleEmployeeSalaryDialogClosedAsync(bool result)
+    {
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
     }
 
     private async Task HandleEditDialogClosedAsync(bool result)

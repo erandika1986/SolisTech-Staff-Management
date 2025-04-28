@@ -1,0 +1,16 @@
+﻿using StaffApp.Domain.Entity.Common;
+
+namespace StaffApp.Domain.Entity
+{
+    public class EmployeeSalaryAddon : BaseAuditableEntity
+    {
+        public int EmployeeSalaryId { get; set; }
+        public int SalaryAddonId { get; set; }
+        public decimal OriginalValue { get; set; }
+        public decimal AdjustedValue { get; set; }
+        public DateTime EffectiveFrom { get; set; }
+
+        public virtual EmployeeSalary EmployeeSalary { get; set; }
+        public virtual SalaryAddon SalaryAddon { get; set; }
+    }
+}

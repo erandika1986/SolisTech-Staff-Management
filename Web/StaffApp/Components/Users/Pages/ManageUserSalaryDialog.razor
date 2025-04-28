@@ -1,0 +1,268 @@
+﻿@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.User
+@using StaffApp.Application.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+@using StaffApp.Components.Shared
+@using StaffApp.Infrastructure.Services
+
+
+@inject IUserSalaryService UserSalaryService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+@inject IJSRuntime JSRuntime
+@inject LoadingService LoadingService
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-2">
+                    <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                        <MudGrid>
+
+                            <MudItem xs="12" sm="12" md="6" lg="6">
+                                <MudNumericField T="Decimal" Label="Basic Salary" @bind-Value="EmployeeSalary.BasicSalary" Min=35000 Required="true" RequiredError="Basic salary is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudDatePicker xs="12" sm="6" Label="Effective Date" Date="EmployeeSalary.EffectiveFrom" Required="true" RequiredError="Effective date is required!"/>
+                            </MudItem>
+                        </MudGrid>
+                    </MudForm>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="6" lg="6">
+                <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+                    <MudSelect T="EmployeeSalaryAddonDTO" Label="Select Salary Add-on" ToStringFunc="(item) => item  is not null? item.SalaryAddon:string.Empty" MultiSelection="false" @bind-Value="SelectedSalaryAddon">
+                        @foreach (var salaryAddon in AvailableSalaryAddons)
+                        {
+                            <MudSelectItem T="EmployeeSalaryAddonDTO" Value="@salaryAddon">@salaryAddon.SalaryAddon</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddSalaryAddon">
+                        <MudIcon Icon="@Icons.Material.Filled.Add"  /> Add
+                    </MudButton>
+                </MudPaper>
+
+            </MudItem>
+            <MudItem xs="12" sm="12">
+                <MudTable Items="EmployeeSalary.EmployeeSalaryAddons">
+                    <HeaderContent>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Original Value</MudTh>
+                        <MudTh>Adjusted Value</MudTh>
+                        <MudTh>Effective From</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.SalaryAddon</MudTd>
+                        <MudTd>                        
+                            <MudNumericField @bind-Value="context.OriginalValue" Immediate="true" Required="true" RequiredError="Original value is required!" />
+                        </MudTd>
+                        <MudTd>
+                            <MudNumericField @bind-Value="context.AdjustedValue" Immediate="true" Required="true" RequiredError="Adjusted value is required!" />
+                        </MudTd>
+                        <MudTd>
+                            <MudDatePicker Date="context.EffectiveFrom" Immediate="true" Required="true" RequiredError="Effective date is required!" />
+                        </MudTd>
+                        <MudTd>
+                            <MudStack Row>
+                                <MudTooltip Text="Delete Salary Add-on" Color="Color.Error" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" Disabled="context.ApplyForAllEmployees" OnClick="() => RemoveAddon(context)"></MudIconButton>
+                                </MudTooltip>
+                            </MudStack>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudItem>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-4 mud-height-full">
+                    <MudText Typo="Typo.subtitle2">@($"Errors ({errors.Length})")</MudText>
+                    @foreach (var error in errors)
+                    {
+                        <MudText Color="@Color.Error">@error</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            @if (!IsApprovalView)
+            {
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(!success)" Class="ml-auto">
+                    Send For Approval
+                </MudButton>
+            }
+            @if (IsApprovalView)
+            {
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ApproveSalaryUpdateAsync" Disabled="@(!success)" Class="ml-auto">
+                    Approve
+                </MudButton>
+                <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="AskForReviseSalaryUpdateAsync" Disabled="@(!success)" Class="ml-auto">
+                    Ask for Revise
+                </MudButton>
+            }
+            }
+
+        </MudPaper>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public string EmployeeId { get; set; }
+
+    [Parameter] public string EmployeeFullName { get; set; }
+
+    [Parameter] public bool IsApprovalView { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
+    public EmployeeSalaryDTO EmployeeSalary { get; set; } = new();
+
+    public IEnumerable<EmployeeSalaryAddonDTO> AvailableSalaryAddons { get; set; } = new HashSet<EmployeeSalaryAddonDTO>();
+
+    public EmployeeSalaryAddonDTO? SelectedSalaryAddon { get; set; } = new();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    bool success;
+    string[] errors = { };
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadingService.Show();
+        AvailableSalaryAddons = await UserSalaryService.GetUnAssignedSalaryAddonsAsync(EmployeeId);
+        SelectedSalaryAddon = AvailableSalaryAddons.Count()> 0? AvailableSalaryAddons.FirstOrDefault() : null;
+        EmployeeSalary = await UserSalaryService.GetEmployeeSalaryByIdAsync(EmployeeId);
+        LoadingService.Hide();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (form.IsValid)
+        {
+            LoadingService.Show();
+            var response = await UserSalaryService.SaveUserSalaryAsync(EmployeeSalary);
+
+            await ShowSnackbar(response);
+            LoadingService.Hide();
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private string GetDisplayNameByPropertyInfor(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    private string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+
+    private void AddSalaryAddon()
+    {
+        EmployeeSalary.EmployeeSalaryAddons.Add(SelectedSalaryAddon);
+
+        var salaryAddons = AvailableSalaryAddons.ToHashSet();
+        salaryAddons.Remove(SelectedSalaryAddon);
+        AvailableSalaryAddons = salaryAddons;
+
+        SelectedSalaryAddon = AvailableSalaryAddons.Count() > 0 ? AvailableSalaryAddons.FirstOrDefault() : null;
+    }
+
+    private void RemoveAddon(EmployeeSalaryAddonDTO addonDTO)
+    {
+        EmployeeSalary.EmployeeSalaryAddons.Remove(addonDTO);
+
+        addonDTO.Id = 0;
+        var salaryAddons = AvailableSalaryAddons.ToHashSet();
+        salaryAddons.Add(addonDTO);
+        AvailableSalaryAddons = salaryAddons;
+
+    }
+
+    private async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
+
+    private async Task ApproveSalaryUpdateAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Approve Salary Update for {EmployeeFullName}" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Approve" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Success },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var response = await UserSalaryService.ApproveUserSalaryAsync(EmployeeSalary, comment);
+
+            await ShowSnackbar(response);
+
+            await OnDialogClosed.InvokeAsync(true); // Notify parent
+            MudDialog.Close(DialogResult.Ok(true));
+
+        }
+    }
+
+    private async Task AskForReviseSalaryUpdateAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Ask Salary Revise For  {EmployeeFullName}" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Ask" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Success },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var response = await UserSalaryService.AskToReviseUserSalaryAsync(EmployeeSalary, comment);
+
+            await ShowSnackbar(response);
+
+            await OnDialogClosed.InvokeAsync(true); // Notify parent
+            MudDialog.Close(DialogResult.Ok(true));
+
+        }
+    }
+}

@@ -10,7 +10,7 @@ namespace StaffApp.Application.DTOs.User
         [Display(Name = "Full Name")]
         public string FullName { get; set; }
 
-        [Display(Name = "UserName")]
+        [Display(Name = "User Name")]
         public string UserName { get; set; }
 
         [Display(Name = "NIC")]

@@ -1,0 +1,336 @@
+﻿@using StaffApp.Application.DTOs.User
+@using System.Globalization
+@using StaffApp.Application.Services
+
+@inject IUserSalaryService UserSalaryService
+
+<MudDialog>
+    <DialogContent>
+        <MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
+            <MudPaper Elevation="3" Class="pa-4">
+                <!-- Header Section with Logo and Company Info -->
+                <MudGrid>
+                    <MudItem xs="3">
+                        <MudImage Src="@SalarySlipDTO.LogoUrl" Alt="Company Logo" Width="150" Height="80" ObjectFit="ObjectFit.Contain" />
+                    </MudItem>
+                    <MudItem xs="6">
+                        <MudText Typo="Typo.h5" Align="Align.Center" Class="mb-1">@SalarySlipDTO.CompanyName</MudText>
+                        <MudText Typo="Typo.subtitle1" Align="Align.Center" Class="mb-1">@SalarySlipDTO.CompanyAddress</MudText>
+                        <MudText Typo="Typo.subtitle2" Align="Align.Center">Tel: @SalarySlipDTO.CompanyPhone | Email: @SalarySlipDTO.CompanyPhone</MudText>
+                    </MudItem>
+                    <MudItem xs="3">
+                        <MudText Typo="Typo.h6" Align="Align.Right" Style="font-weight: bold;">SALARY SLIP</MudText>
+                        <MudText Typo="Typo.body1" Align="Align.Right">@SalarySlipDTO.SalarySlipMonth @SalarySlipDTO.SalarySlipYear</MudText>
+                        <MudText Typo="Typo.body2" Align="Align.Right">Slip #: @SalarySlipDTO.SalarySlipNumber</MudText>
+                    </MudItem>
+                </MudGrid>
+
+                <MudDivider Class="my-4" />
+
+                <!-- Employee Details Section -->
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudCard Elevation="0" Class="pt-0">
+                            <MudCardContent Class="pt-0">
+                                <MudText Typo="Typo.subtitle1" Style="font-weight: bold;">Employee Details</MudText>
+
+                                <MudGrid Class="pt-0">
+                                    <MudItem xs="5">
+                                        <MudText Typo="Typo.body2">Employee ID:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="7">
+                                        <MudText Typo="Typo.body2">@SalarySlipDTO.EmployeeNo</MudText>
+                                    </MudItem>
+
+                                    <MudItem xs="5">
+                                        <MudText Typo="Typo.body2">Name:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="7">
+                                        <MudText Typo="Typo.body2">@SalarySlipDTO.EmployeeName</MudText>
+                                    </MudItem>
+
+                                    <MudItem xs="5">
+                                        <MudText Typo="Typo.body2">Designation:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="7">
+                                        <MudText Typo="Typo.body2">@SalarySlipDTO.Designation</MudText>
+                                    </MudItem>
+
+                                    <MudItem xs="5">
+                                        <MudText Typo="Typo.body2">Department:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="7">
+                                        <MudText Typo="Typo.body2">Information Technology</MudText>
+                                    </MudItem>
+
+                                    <MudItem xs="5">
+                                        <MudText Typo="Typo.body2">Join Date:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="7">
+                                        <MudText Typo="Typo.body2">@SalarySlipDTO.JoinDate</MudText>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudCard Elevation="0" Class="pt-0">
+                            <MudCardContent Class="pt-0">
+                                <MudText Typo="Typo.subtitle1" Style="font-weight: bold;">Payment Details</MudText>
+
+                                <MudGrid Class="pt-0">
+                                    <MudItem xs="5">
+                                        <MudText Typo="Typo.body2">Pay Period:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="7">
+                                        <MudText Typo="Typo.body2">@SalarySlipDTO.PayPeriod</MudText>
+                                    </MudItem>
+
+                                    <MudItem xs="5">
+                                        <MudText Typo="Typo.body2">Payment Date:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="7">
+                                        <MudText Typo="Typo.body2">@SalarySlipDTO.PayDate</MudText>
+                                    </MudItem>
+
+                                    <MudItem xs="5">
+                                        <MudText Typo="Typo.body2">Payment Method:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="7">
+                                        <MudText Typo="Typo.body2">Bank Transfer</MudText>
+                                    </MudItem>
+
+                                    <MudItem xs="5">
+                                        <MudText Typo="Typo.body2">Days Worked:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="7">
+                                        <MudText Typo="Typo.body2">22 / 22</MudText>
+                                    </MudItem>
+
+                                    <MudItem xs="5">
+                                        <MudText Typo="Typo.body2">Leave Taken:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="7">
+                                        <MudText Typo="Typo.body2">0 days</MudText>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+
+                <MudDivider Class="my-4" />
+
+                <!-- Earnings and Deductions Section -->
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudCard Elevation="0">
+                            <MudCardHeader>
+                                <MudText Typo="Typo.h6">Earnings</MudText>
+                            </MudCardHeader>
+                            <MudCardContent Class="pt-0">
+                                <MudSimpleTable Hover="true" Dense="true" Class="mt-2">
+                                    <thead>
+                                        <tr>
+                                            <th>Description</th>
+                                            <th style="text-align: right">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var earning in @SalarySlipDTO.Earnings)
+                                        {
+                                            <tr>
+                                                <td>@earning.Description</td>
+                                                <td style="text-align: right">@FormatCurrency(@earning.Amount)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </MudSimpleTable>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudCard Elevation="0">
+                            <MudCardHeader>
+                                <MudText Typo="Typo.h6">Deductions</MudText>
+                            </MudCardHeader>
+                            <MudCardContent Class="pt-0">
+                                <MudSimpleTable Hover="true" Dense="true" Class="mt-2">
+                                    <thead>
+                                        <tr>
+                                            <th>Description</th>
+                                            <th style="text-align: right">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var deductions in @SalarySlipDTO.Deductions)
+                                        {
+                                            <tr>
+                                                <td>@deductions.Description</td>
+                                                <td style="text-align: right">@FormatCurrency(@deductions.Amount)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </MudSimpleTable>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+
+                <MudDivider Class="my-4" />
+
+                <!-- Summary Section -->
+                <MudGrid>
+                    <MudItem xs="12" sm="6">
+                        <MudCard Elevation="0">
+                            <MudCardHeader>
+                                <MudText Typo="Typo.h6">Employer Contributions</MudText>
+                            </MudCardHeader>
+                            <MudCardContent Class="pt-0">
+                                <MudSimpleTable Hover="true" Dense="true" Class="mt-2">
+                                    <thead>
+                                        <tr>
+                                            <th>Description</th>
+                                            <th style="text-align: right">Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var contribution in @SalarySlipDTO.EmployerContributions)
+                                        {
+                                            <tr>
+                                                <td>@contribution.Description</td>
+                                                <td style="text-align: right">@FormatCurrency(@contribution.Amount)</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </MudSimpleTable>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+
+                    <MudItem xs="12" sm="6">
+                        <MudCard Elevation="0">
+                            <MudCardHeader>
+                                <MudText Typo="Typo.h6">Bank Details</MudText>
+                            </MudCardHeader>
+                            <MudCardContent Class="pt-0">
+                                <MudGrid Class="pt-0">
+                                    <MudItem xs="5">
+                                        <MudText Typo="Typo.body2">Bank Name:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="7">
+                                        <MudText Typo="Typo.body2">@SalarySlipDTO.BankName</MudText>
+                                    </MudItem>
+
+                                    <MudItem xs="5">
+                                        <MudText Typo="Typo.body2">Account Number:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="7">
+                                        <MudText Typo="Typo.body2">@SalarySlipDTO.AccountNumber</MudText>
+                                    </MudItem>
+
+                                    <MudItem xs="5">
+                                        <MudText Typo="Typo.body2">Branch:</MudText>
+                                    </MudItem>
+                                    <MudItem xs="7">
+                                        <MudText Typo="Typo.body2">@SalarySlipDTO.Branch</MudText>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudItem>
+                </MudGrid>
+
+                <!-- Net Salary Section -->
+                <MudPaper Elevation="2" Class="mt-4 pa-4" Style="background-color: #f5f5f5;">
+                    <MudGrid>
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.h6">Net Salary</MudText>
+                            <MudText Typo="Typo.caption">Total Earnings - Total Deductions</MudText>
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudText Typo="Typo.h5" Align="Align.Right" Style="color: #2e7d32; font-weight: bold;">
+                                @FormatCurrency(5380.00m)
+                            </MudText>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+
+                <!-- Footer Note -->
+                <MudText Typo="Typo.caption" Class="mt-4" Align="Align.Center">
+                    This is a computer-generated salary slip and does not require a signature. For any queries regarding this pay slip, please contact the HR department.
+                </MudText>
+
+                <!-- Action Buttons -->
+                <MudGrid Class="mt-4">
+                    <MudItem xs="12" Style="text-align: center;">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Print" OnClick="@PrintSalarySlip">
+                            Print
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Email" Class="ml-2" OnClick="@EmailSalarySlip">
+                            Email
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.GetApp" Class="ml-2" OnClick="@DownloadPdf">
+                            Download PDF
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudPaper>
+        </MudContainer>
+    </DialogContent>
+    <DialogActions>
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Close</MudButton>
+        </MudPaper>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [Parameter] public string EmployeeId { get; set; }
+
+    [Parameter] public string EmployeeFullName { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
+    private EmployeeSalarySlipDTO SalarySlipDTO { get; set; } = new EmployeeSalarySlipDTO();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetSalarySlipAsync();
+    }
+
+    private async Task GetSalarySlipAsync()
+    {
+        SalarySlipDTO = await UserSalaryService.GetEmployeeEstimateSalarySlip(EmployeeId);
+    }
+
+    private string FormatCurrency(decimal amount)
+    {
+        return string.Format(CultureInfo.GetCultureInfo("en-US"),"${0:N2}",amount);
+    }
+
+    private void PrintSalarySlip()
+    {
+        // Logic to handle printing
+    }
+
+    private void EmailSalarySlip()
+    {
+        // Logic to handle emailing
+    }
+
+    private void DownloadPdf()
+    {
+        // Logic to handle PDF download
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}
+
+

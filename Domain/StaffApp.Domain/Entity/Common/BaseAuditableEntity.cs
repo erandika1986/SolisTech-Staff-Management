@@ -1,6 +1,4 @@
-﻿using StaffApp.Domain.Entity.Authentication;
-
-namespace StaffApp.Domain.Entity.Common
+﻿namespace StaffApp.Domain.Entity.Common
 {
     public class BaseAuditableEntity : BaseEntity
     {
@@ -10,7 +8,5 @@ namespace StaffApp.Domain.Entity.Common
         public string? UpdatedByUserId { get; set; }
         public bool IsActive { get; set; }
 
-        public virtual ApplicationUser CreatedByUser { get; set; } = new();
-        public virtual ApplicationUser UpdatedByUser { get; set; } = new();
     }
 }

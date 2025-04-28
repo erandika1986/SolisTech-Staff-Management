@@ -1,0 +1,231 @@
+﻿@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.User
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+@using StaffApp.Components.Shared
+
+@inject IUserService UserService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudIconButton Icon="@Icons.Material.Filled.Add" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => AddNewBankAccount()"></MudIconButton>
+            </MudItem>
+            @if (BankAccounts.Any())
+            {
+                <MudItem xs="12" sm="12" md="12" lg="12">
+                    <MudDataGrid Items="@BankAccounts" Sortable="true"
+                    Filterable="false"
+                    Hideable="true"
+                    Hover="true"
+                    Striped="true"
+                    Elevation="25">
+
+                        <Columns>
+                            <PropertyColumn Property="x=>x.BankName" Title="@GetDisplayName(typeof(UserBankAccountDTO), nameof(UserBankAccountDTO.BankName))" />
+                            <PropertyColumn Property="x=>x.AccountName" Title="@GetDisplayName(typeof(UserBankAccountDTO), nameof(UserBankAccountDTO.AccountName))" />
+                            <PropertyColumn Property="x=>x.AccountNumber" Title="@GetDisplayName(typeof(UserBankAccountDTO), nameof(UserBankAccountDTO.AccountNumber))" />
+                            <PropertyColumn Property="x=>x.BranchName" Title="@GetDisplayName(typeof(UserBankAccountDTO), nameof(UserBankAccountDTO.BranchName))" />
+                            <PropertyColumn Property="x=>x.BranchCode" Title="@GetDisplayName(typeof(UserBankAccountDTO), nameof(UserBankAccountDTO.BranchCode))" />
+                            <TemplateColumn CellClass="d-flex justify-end">
+                                <CellTemplate Context="bankAccount">
+                                    <MudStack Row>
+
+                                        <MudTooltip Text="Edit Company Year" Color="Color.Primary" Placement="Placement.Top">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditUserBankAccountAsync(bankAccount.Item)"></MudIconButton>
+                                        </MudTooltip>
+                                        <MudTooltip Text="Delete Company Year" Color="Color.Error" Placement="Placement.Top">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteUserBankAccountAsync(bankAccount.Item)"></MudIconButton>
+                                        </MudTooltip>
+                                    </MudStack>
+                                </CellTemplate>
+                            </TemplateColumn>
+                        </Columns>
+                    </MudDataGrid>
+                </MudItem>
+            }
+
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-2">
+                    <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                        <MudGrid>
+
+                            <MudItem xs="12" sm="12" md="6" lg="6">
+                                <MudTextField T="string" Label="Bank Name" @bind-Value="SelectedEmployeeBankAccount.BankName" Required="true" RequiredError="Bank name is required!" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="12" md="6" lg="6">
+                                <MudTextField T="string" Label="Account Name" @bind-Value="SelectedEmployeeBankAccount.AccountName" Required="true" RequiredError="Account name is required!" />
+                            </MudItem>
+
+
+                            <MudItem xs="12" sm="12" md="6" lg="6">
+                                <MudTextField T="string" Label="Account Number" @bind-Value="SelectedEmployeeBankAccount.AccountNumber" Required="true" RequiredError="Account number is required!" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="12" md="6" lg="6">
+                                <MudTextField T="string" Label="Branch Name" @bind-Value="SelectedEmployeeBankAccount.BranchName" Required="true" RequiredError="Branch name is required!" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="12" md="6" lg="6">
+                                <MudTextField T="string" Label="Branch Code" @bind-Value="SelectedEmployeeBankAccount.BranchCode" Required="true" RequiredError="Branch code is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudCheckBox Label="Is Primary Account" @bind-Value="SelectedEmployeeBankAccount.IsPrimaryAccount" Color="Color.Primary"></MudCheckBox>
+                            </MudItem>
+                        </MudGrid>
+                        <MudGrid>
+                            <MudItem xs="12">
+                                <MudStack Row Justify="Justify.FlexEnd">
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="SaveAsync" Disabled="@(!success)">
+                                        Save
+                                    </MudButton>
+                                </MudStack>
+                            </MudItem>
+                        </MudGrid>
+                    </MudForm>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-4 mud-height-full">
+                    <MudText Typo="Typo.subtitle2">@($"Errors ({errors.Length})")</MudText>
+                    @foreach (var error in errors)
+                    {
+                        <MudText Color="@Color.Error">@error</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+        </MudPaper>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public string EmployeeId { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
+
+    public UserBankAccountDTO SelectedEmployeeBankAccount { get; set; } = new();
+
+    public IEnumerable<UserBankAccountDTO> BankAccounts { get; set; } = new HashSet<UserBankAccountDTO>();
+
+    bool success;
+    string[] errors = { };
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetAllEmployeeBankAccountAsync();
+
+    }
+
+    private async Task GetAllEmployeeBankAccountAsync()
+    {
+        BankAccounts = await UserService.GetAllUserBankAccount(EmployeeId);
+        if (!BankAccounts.Any())
+        {
+            SelectedEmployeeBankAccount.IsPrimaryAccount = true;
+        }
+    }
+
+    private async Task AddNewBankAccount()
+    {
+        SelectedEmployeeBankAccount = new UserBankAccountDTO();
+        SelectedEmployeeBankAccount.IsPrimaryAccount = !BankAccounts.Any();
+    }
+
+    private async Task SaveAsync()
+    {
+        if (form.IsValid)
+        {
+            SelectedEmployeeBankAccount.EmployeeId = EmployeeId;
+
+            var result = await UserService.SaveUserBankAccount(SelectedEmployeeBankAccount);
+            await GetAllEmployeeBankAccountAsync();
+            await ShowSnackbar(result);
+            await AddNewBankAccount();
+        }
+    }
+
+    private async Task EditUserBankAccountAsync(UserBankAccountDTO userBankAccount)
+    {
+        SelectedEmployeeBankAccount = userBankAccount;
+    }
+
+    private Task DeleteUserBankAccountAsync(UserBankAccountDTO userBankAccount)
+    {
+
+        var parameters = new DialogParameters<ConfirmationDialog>
+            {
+                { "Id", userBankAccount.Id.ToString() },
+                { x => x.ContentText, "Do you really want to delete these records? This process cannot be undone." },
+                { x => x.ButtonText, "Delete" },
+                { x => x.Color, Color.Error },
+                { "OnDialogClosed", EventCallback.Factory.Create<string>(this, HandleDeleteConfirmationDialogClosedAsync)  }
+            };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        return Dialog.ShowAsync<ConfirmationDialog>("Delete", parameters, options);
+    }
+
+    private async Task HandleDeleteConfirmationDialogClosedAsync(string id)
+    {
+        if (BankAccounts.Count() <= ApplicationConstants.One)
+        {
+            ShowSnackbar(new GeneralResponseDTO
+            {
+                Flag = false,
+                Message = "Unable to delete the bank account since user should have at least one bank account."
+             });
+        }
+        else
+        {
+            var accountId = int.Parse(id);
+            var result = await UserService.DeleteUserBankAccount(accountId);
+            await GetAllEmployeeBankAccountAsync();
+            await AddNewBankAccount();
+            await ShowSnackbar(result);
+        }
+
+    }
+
+    private async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private string GetDisplayNameByPropertyInfor(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    private string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+}

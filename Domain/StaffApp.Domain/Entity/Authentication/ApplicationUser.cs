@@ -21,11 +21,12 @@ namespace StaffApp.Domain.Entity.Authentication
         public virtual CompanyLocation CompanyLocation { get; set; }
 
         public virtual ICollection<Department> DepartmentHeads { get; set; } = new HashSet<Department>();
-
-        public virtual ICollection<EmployeeSalary> EmployeeSalaries { get; set; } = new HashSet<EmployeeSalary>();
         public virtual ICollection<EmployeeLeaveRequest> EmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
         public virtual ICollection<EmployeeLeaveRequest> LeaveRequestReportingManagers { get; set; } = new HashSet<EmployeeLeaveRequest>();
         public virtual ICollection<EmployeeLeaveAllocation> EmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();
+        public virtual ICollection<EmployeeBankAccount> EmployeeBankAccounts { get; set; } = new HashSet<EmployeeBankAccount>();
+        public virtual ICollection<EmployeeSalary> EmployeeSalaries { get; set; } = new HashSet<EmployeeSalary>();
+        public virtual ICollection<EmployeeSalaryHistory> EmployeeSalaryHistories { get; set; } = new HashSet<EmployeeSalaryHistory>();
 
         //public virtual ICollection<EmployeeLeaveRequest> CreatedEmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
         //public virtual ICollection<EmployeeLeaveRequest> UpdatedEmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
@@ -36,8 +37,8 @@ namespace StaffApp.Domain.Entity.Authentication
         //public virtual ICollection<EmployeeLeaveAllocation> CreatedEmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();
         //public virtual ICollection<EmployeeLeaveAllocation> UpdatedEmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();
 
-        public virtual ICollection<EmployeeSalary> CreatedEmployeeSalaries { get; set; } = new HashSet<EmployeeSalary>();
-        public virtual ICollection<EmployeeSalary> UpdatedEmployeeSalaries { get; set; } = new HashSet<EmployeeSalary>();
+        //public virtual ICollection<EmployeeSalary> CreatedEmployeeSalaries { get; set; } = new HashSet<EmployeeSalary>();
+        //public virtual ICollection<EmployeeSalary> UpdatedEmployeeSalaries { get; set; } = new HashSet<EmployeeSalary>();
 
         //public virtual ICollection<EmployeeDepartment> EmployeeDepartments { get; set; } = new HashSet<EmployeeDepartment>();
         //public virtual ICollection<EmployeeDepartment> CreatedEmployeeDepartments { get; set; } = new HashSet<EmployeeDepartment>();

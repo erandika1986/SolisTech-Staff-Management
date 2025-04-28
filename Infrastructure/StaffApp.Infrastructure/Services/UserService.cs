@@ -10,7 +10,6 @@ using StaffApp.Application.Extensions.Helpers;
 using StaffApp.Application.Services;
 using StaffApp.Domain.Entity.Authentication;
 using StaffApp.Domain.Enum;
-using StaffApp.Infrastructure.Interceptors;
 using System.Text;
 
 namespace StaffApp.Infrastructure.Services
@@ -19,10 +18,10 @@ namespace StaffApp.Infrastructure.Services
         IStaffAppDbContext context,
         IDepartmentService departmentService,
         IRoleService roleService,
+        ICurrentUserService currentUserService,
         UserManager<ApplicationUser> userManager,
         IConfiguration configuration,
-        SignInManager<ApplicationUser> signInManager,
-        AuditableEntitySaveChangesInterceptor auditableEntitySaveChangesInterceptor) : IUserService
+        SignInManager<ApplicationUser> signInManager) : IUserService
     {
 
 
@@ -255,6 +254,172 @@ namespace StaffApp.Infrastructure.Services
             return new GeneralResponseDTO(true, "User has been deleted successfully.");
         }
 
+
+
+        public async Task<List<UserDropDownDTO>> GetManagerJobRoleUsersAsync()
+        {
+            var roleNames = new List<string> { RoleConstants.Director, RoleConstants.Manager, RoleConstants.TeamLead };
+            var users = new List<ApplicationUser>();
+            foreach (var roleName in roleNames)
+            {
+                if (await roleService.RoleExistsAsync(roleName))
+                {
+                    var usersInRole = await userManager.GetUsersInRoleAsync(roleName);
+                    users.AddRange(usersInRole);
+                }
+            }
+
+            var userDto = users.Distinct().Select(x => new UserDropDownDTO()
+            {
+                Id = x.Id,
+                Name = x.FullName
+            }).ToList();
+
+            return userDto;
+        }
+
+        public async Task<List<DropDownDTO>> GetAvailableEmploymentTypes()
+        {
+            var employmentTypes = await context
+                .EmployeeTypes
+                .Select(x => new DropDownDTO() { Id = x.Id, Name = x.Name })
+                .ToListAsync();
+
+            return employmentTypes;
+        }
+
+        public List<DropDownDTO> GetAvailableGenderTypes()
+        {
+            return EnumHelper.GetDropDownList<Gender>();
+        }
+
+        public async Task<List<string>> GetLoggedInUserAssignedRoles(string id)
+        {
+            var user = await userManager.FindByIdAsync(id);
+
+            if (user is null)
+                return new List<string>();
+
+            var roles = await userManager.GetRolesAsync(user);
+
+            return roles.ToList();
+        }
+
+        public async Task<GeneralResponseDTO> SaveUserBankAccount(UserBankAccountDTO userBankAccount)
+        {
+            try
+            {
+                var bankAccount = await context.EmployeeBankAccounts.FindAsync(userBankAccount.Id);
+
+                if (userBankAccount.IsPrimaryAccount)
+                {
+                    var primaryBankAccount = await context.EmployeeBankAccounts
+                        .Where(x =>
+                            x.EmployeeId == bankAccount.EmployeeId &&
+                            x.Id != userBankAccount.Id &&
+                            x.IsActive &&
+                            x.IsPrimaryAccount == true)
+                        .ToListAsync();
+
+                    foreach (var item in primaryBankAccount)
+                    {
+                        item.IsPrimaryAccount = false;
+                        context.EmployeeBankAccounts.Update(item);
+                    }
+                }
+
+                if (bankAccount is null)
+                {
+                    bankAccount = new Domain.Entity.EmployeeBankAccount();
+                    bankAccount.EmployeeId = userBankAccount.EmployeeId;
+                    bankAccount.AccountName = userBankAccount.AccountName;
+                    bankAccount.AccountNumber = userBankAccount.AccountNumber;
+                    bankAccount.BankName = userBankAccount.BankName;
+                    bankAccount.BranchCode = userBankAccount.BranchCode;
+                    bankAccount.BranchName = userBankAccount.BranchName;
+                    bankAccount.IsPrimaryAccount = userBankAccount.IsPrimaryAccount;
+                    bankAccount.CreatedByUserId = currentUserService.UserId;
+                    bankAccount.UpdateDate = DateTime.Now;
+                    bankAccount.CreatedDate = DateTime.Now;
+                    bankAccount.UpdatedByUserId = currentUserService.UserId;
+                    bankAccount.IsActive = true;
+                    context.EmployeeBankAccounts.Add(bankAccount);
+
+                    await context.SaveChangesAsync(CancellationToken.None);
+
+                    return new GeneralResponseDTO(true, "User bank account has been created successfully.");
+                }
+                else
+                {
+                    bankAccount.AccountName = userBankAccount.AccountName;
+                    bankAccount.AccountNumber = userBankAccount.AccountNumber;
+                    bankAccount.BankName = userBankAccount.BankName;
+                    bankAccount.BranchCode = userBankAccount.BranchCode;
+                    bankAccount.BranchName = userBankAccount.BranchName;
+                    bankAccount.UpdateDate = DateTime.Now;
+                    bankAccount.UpdatedByUserId = currentUserService.UserId;
+                    bankAccount.IsPrimaryAccount = userBankAccount.IsPrimaryAccount;
+                    context.EmployeeBankAccounts.Update(bankAccount);
+
+                    await context.SaveChangesAsync(CancellationToken.None);
+
+                    return new GeneralResponseDTO(true, "User bank account has been updated successfully.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return new GeneralResponseDTO(false, ex.Message);
+            }
+        }
+
+        public Task<List<UserBankAccountDTO>> GetAllUserBankAccount(string userId)
+        {
+            var bankAccounts = context.EmployeeBankAccounts
+                 .Where(x => x.EmployeeId == userId && x.IsActive)
+                 .Select(x => new UserBankAccountDTO()
+                 {
+                     Id = x.Id,
+                     EmployeeId = x.EmployeeId,
+                     BankName = x.BankName,
+                     AccountName = x.AccountName,
+                     AccountNumber = x.AccountNumber,
+                     BranchName = x.BranchName,
+                     BranchCode = x.BranchCode,
+                     IsPrimaryAccount = x.IsPrimaryAccount
+                 }).ToListAsync();
+            return bankAccounts;
+        }
+
+        public async Task<GeneralResponseDTO> DeleteUserBankAccount(int id)
+        {
+            var bankAccount = await context.EmployeeBankAccounts.FindAsync(id);
+
+            if (bankAccount is null)
+                return new GeneralResponseDTO(false, "Bank account not found");
+
+            bankAccount.IsActive = false;
+            bankAccount.UpdateDate = DateTime.Now;
+            bankAccount.UpdatedByUserId = currentUserService.UserId;
+
+            if (bankAccount.IsPrimaryAccount)
+            {
+                var primaryBankAccount = await context.EmployeeBankAccounts
+                    .Where(x => x.EmployeeId == bankAccount.EmployeeId && x.IsActive && x.IsPrimaryAccount != true && x.Id != bankAccount.Id)
+                    .FirstOrDefaultAsync();
+                if (primaryBankAccount != null)
+                {
+                    primaryBankAccount.IsPrimaryAccount = true;
+                    context.EmployeeBankAccounts.Update(primaryBankAccount);
+                }
+                bankAccount.IsPrimaryAccount = false;
+            }
+
+            context.EmployeeBankAccounts.Update(bankAccount);
+            await context.SaveChangesAsync(CancellationToken.None);
+
+            return new GeneralResponseDTO(true, "User bank account has been deleted successfully.");
+        }
+
         private async Task<ApplicationUser?> FindUserByEmailAsync(string email) => await userManager.FindByEmailAsync(email);
 
         private static string CheckResponse(IdentityResult result)
@@ -313,55 +478,6 @@ namespace StaffApp.Infrastructure.Services
                 return new GeneralResponseDTO(false, error);
             else
                 return new GeneralResponseDTO(true, $"{user.FullName} assigned to {role.Name} successfully");
-        }
-
-        public async Task<List<UserDropDownDTO>> GetManagerJobRoleUsersAsync()
-        {
-            var roleNames = new List<string> { RoleConstants.Director, RoleConstants.Manager, RoleConstants.TeamLead };
-            var users = new List<ApplicationUser>();
-            foreach (var roleName in roleNames)
-            {
-                if (await roleService.RoleExistsAsync(roleName))
-                {
-                    var usersInRole = await userManager.GetUsersInRoleAsync(roleName);
-                    users.AddRange(usersInRole);
-                }
-            }
-
-            var userDto = users.Distinct().Select(x => new UserDropDownDTO()
-            {
-                Id = x.Id,
-                Name = x.FullName
-            }).ToList();
-
-            return userDto;
-        }
-
-        public async Task<List<DropDownDTO>> GetAvailableEmploymentTypes()
-        {
-            var employmentTypes = await context
-                .EmployeeTypes
-                .Select(x => new DropDownDTO() { Id = x.Id, Name = x.Name })
-                .ToListAsync();
-
-            return employmentTypes;
-        }
-
-        public List<DropDownDTO> GetAvailableGenderTypes()
-        {
-            return EnumHelper.GetDropDownList<Gender>();
-        }
-
-        public async Task<List<string>> GetLoggedInUserAssignedRoles(string id)
-        {
-            var user = await userManager.FindByIdAsync(id);
-
-            if (user is null)
-                return new List<string>();
-
-            var roles = await userManager.GetRolesAsync(user);
-
-            return roles.ToList();
         }
     }
 }

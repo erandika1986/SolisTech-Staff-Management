@@ -48,6 +48,7 @@ namespace StaffApp.Infrastructure.Data
                 await SeedLeaveTypeAsync();
                 await SeedCompanyLocationsAsync();
                 await SeedAppSettingsAsync();
+                await SeedSalaryAddonAsync();
             }
             catch (Exception ex)
             {
@@ -303,22 +304,55 @@ namespace StaffApp.Infrastructure.Data
             {
                 var appSettings = new List<AppSetting>
                 {
-                    new AppSetting() { Name = "SMTPServer", Value = "" },
-                    new AppSetting() { Name = "SMTPPort", Value = "" },
-                    new AppSetting() { Name = "SMTPUsername", Value = "" },
-                    new AppSetting() { Name = "SMTPPassword", Value = "" },
-                    new AppSetting() { Name = "SMTPEnableSsl", Value = "" },
-                    new AppSetting() { Name = "SMTPSenderEmail", Value = "" },
-                    new AppSetting() { Name = "ApplicationUrl", Value = "" },
-                    new AppSetting() { Name = "CompanyName", Value = "" },
-                    new AppSetting() { Name = "CompanyLogoUrl", Value = "" },
-                    new AppSetting() { Name = "CompanyAddress", Value = "" },
-                    new AppSetting() { Name = "LeaveRequestCCList", Value = "" },
-                    new AppSetting() { Name ="IsPasswordLoginEnable", Value ="False"}
+                    new AppSetting() { Name = CompanySettingConstants.SMTPServer, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.SMTPPort, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.SMTPUsername, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.SMTPPassword, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.SMTPEnableSsl, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.SMTPSenderEmail, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.ApplicationUrl, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.CompanyEmail, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.CompanyPhone, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.CompanyName, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.CompanyLogoUrl, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.CompanyAddress, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.LeaveRequestCCList, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.IsPasswordLoginEnable, Value = "False"}
 
                 };
                 await context.AppSettings.AddRangeAsync(appSettings);
 
+                await context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SeedSalaryAddonAsync()
+        {
+            if (!context.SalaryAddons.Any())
+            {
+                var salaryAddons = new List<SalaryAddon>
+                {
+                    new SalaryAddon() { Name = "PAYE", AddonType = SalaryAddonType.Deduction , ApplyForAllEmployees = true, ProportionType = ProportionType.Percentage, DefaultValue = 0 },
+                    new SalaryAddon() { Name = "EPF", AddonType = SalaryAddonType.Deduction , ApplyForAllEmployees = true, ProportionType = ProportionType.Percentage, DefaultValue = 8 },
+                    new SalaryAddon() { Name = "Stamp Duty", AddonType = SalaryAddonType.Deduction , ApplyForAllEmployees = true, ProportionType = ProportionType.FixedAmount, DefaultValue = 0 },
+                    new SalaryAddon() { Name = "Welfare", AddonType = SalaryAddonType.Deduction , ApplyForAllEmployees = true, ProportionType = ProportionType.FixedAmount, DefaultValue = 0 },
+                    new SalaryAddon() { Name = "Other Deductions", AddonType = SalaryAddonType.Deduction , ApplyForAllEmployees = true, ProportionType = ProportionType.FixedAmount, DefaultValue = 0 },
+                    new SalaryAddon() { Name = "EPF", AddonType = SalaryAddonType.SocialSecuritySchemesEmployeeShare , ApplyForAllEmployees = true, ProportionType = ProportionType.Percentage, DefaultValue = 12 },
+                    new SalaryAddon() { Name = "ETF", AddonType = SalaryAddonType.SocialSecuritySchemesEmployeeShare , ApplyForAllEmployees = true, ProportionType = ProportionType.Percentage, DefaultValue = 3 },
+                    new SalaryAddon() { Name = "Motor Vehicle", AddonType = SalaryAddonType.Allowance , ApplyForAllEmployees = false, ProportionType = ProportionType.FixedAmount, DefaultValue = 0 },
+                    new SalaryAddon() { Name = "Performance", AddonType = SalaryAddonType.Allowance , ApplyForAllEmployees = false, ProportionType = ProportionType.FixedAmount  , DefaultValue = 0 },
+                    new SalaryAddon() { Name = "House Rent Allowance (HRA)", AddonType = SalaryAddonType.Allowance , ApplyForAllEmployees = false, ProportionType = ProportionType.FixedAmount  , DefaultValue = 0 },
+                    new SalaryAddon() { Name = "Conveyance Allowance", AddonType = SalaryAddonType.Allowance , ApplyForAllEmployees = false, ProportionType = ProportionType.FixedAmount  , DefaultValue = 0 },
+                    new SalaryAddon() { Name = "Medical Allowance", AddonType = SalaryAddonType.Allowance , ApplyForAllEmployees = false, ProportionType = ProportionType.FixedAmount  , DefaultValue = 0 },
+                    new SalaryAddon() { Name = "Leave Travel Allowance (LTA)", AddonType = SalaryAddonType.Allowance , ApplyForAllEmployees = false, ProportionType = ProportionType.FixedAmount  , DefaultValue = 0 },
+                    new SalaryAddon() { Name = "City Compensatory Allowance (CCA)", AddonType = SalaryAddonType.Allowance , ApplyForAllEmployees = false, ProportionType = ProportionType.FixedAmount  , DefaultValue = 0 },
+                    new SalaryAddon() { Name = "Children Education Allowance", AddonType = SalaryAddonType.Allowance , ApplyForAllEmployees = false, ProportionType = ProportionType.FixedAmount  , DefaultValue = 0 },
+                    new SalaryAddon() { Name = "Uniform Allowance", AddonType = SalaryAddonType.Allowance , ApplyForAllEmployees = false, ProportionType = ProportionType.FixedAmount  , DefaultValue = 0 },
+                    new SalaryAddon() { Name = "Fuel Allowance", AddonType = SalaryAddonType.Allowance , ApplyForAllEmployees = false, ProportionType = ProportionType.FixedAmount  , DefaultValue = 0 },
+                    new SalaryAddon() { Name = "Driver  Allowance", AddonType = SalaryAddonType.Allowance , ApplyForAllEmployees = false, ProportionType = ProportionType.FixedAmount  , DefaultValue = 0 },
+                };
+
+                await context.SalaryAddons.AddRangeAsync(salaryAddons);
                 await context.SaveChangesAsync();
             }
         }

@@ -121,6 +121,12 @@ namespace StaffApp.Infrastructure.Data
         public DbSet<EmployeeLeaveRequestSupportFile> EmployeeLeaveRequestSupportFiles => Set<EmployeeLeaveRequestSupportFile>();
         public DbSet<LeaveTypeAllowDuration> LeaveTypeAllowDurations => Set<LeaveTypeAllowDuration>();
         public DbSet<AppSetting> AppSettings => Set<AppSetting>();
-
+        public DbSet<EmployeeBankAccount> EmployeeBankAccounts => Set<EmployeeBankAccount>();
+        public DbSet<SalaryAddon> SalaryAddons => Set<SalaryAddon>();
+        public DbSet<EmployeeSalaryAddon> EmployeeSalaryAddons => Set<EmployeeSalaryAddon>();
+        public DbSet<EmployeeMonthlySalary> EmployeeMonthlySalaries => Set<EmployeeMonthlySalary>();
+        public DbSet<EmployeeMonthlySalaryAddon> EmployeeMonthlySalaryAddons => Set<EmployeeMonthlySalaryAddon>();
+        public DbSet<EmployeeSalaryHistory> EmployeeSalaryHistories => Set<EmployeeSalaryHistory>();
+        public DbSet<EmployeeSalaryAddonHistory> EmployeeSalaryAddonHistories => Set<EmployeeSalaryAddonHistory>();
     }
 }

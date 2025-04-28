@@ -451,6 +451,64 @@ namespace StaffApp.Infrastructure.Migrations
                     b.ToTable("Department", (string)null);
                 });
 
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeBankAccount", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AccountName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BranchCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BranchName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EmployeeId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsPrimaryAccount")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.ToTable("EmployeeBankAccount", (string)null);
+                });
+
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeDepartment", b =>
                 {
                     b.Property<int>("Id")
@@ -722,6 +780,102 @@ namespace StaffApp.Infrastructure.Migrations
                     b.ToTable("EmployeeLeaveRequestSupportFile", (string)null);
                 });
 
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeMonthlySalary", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("CompanyYearId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeSalaryId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("GrossSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Month")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("NetSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalDeduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalForPF")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyYearId");
+
+                    b.HasIndex("EmployeeSalaryId");
+
+                    b.ToTable("EmployeeMonthlySalary", (string)null);
+                });
+
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeMonthlySalaryAddon", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeMonthlySalaryId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("SalaryAddonId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeMonthlySalaryId");
+
+                    b.HasIndex("SalaryAddonId");
+
+                    b.ToTable("EmployeeMonthlySalaryAddon", (string)null);
+                });
+
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalary", b =>
                 {
                     b.Property<int>("Id")
@@ -731,37 +885,31 @@ namespace StaffApp.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal>("BaseSalary")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("CreatedByUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<decimal>("IncrementAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("IncrementPercentage")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("IncrementReason")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("datetime2");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsIncrement")
-                        .HasColumnType("bit");
-
-                    b.Property<decimal>("Salary")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<int>("Status")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
 
                     b.Property<DateTime?>("UpdateDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("UpdatedByUserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
                         .IsRequired()
@@ -769,13 +917,159 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedByUserId");
-
-                    b.HasIndex("UpdatedByUserId");
-
                     b.HasIndex("UserId");
 
                     b.ToTable("EmployeeSalary", (string)null);
+                });
+
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalaryAddon", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AdjustedValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeSalaryId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("OriginalValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("SalaryAddonId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeSalaryId");
+
+                    b.HasIndex("SalaryAddonId");
+
+                    b.ToTable("EmployeeSalaryAddon", (string)null);
+                });
+
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalaryAddonHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AdjustedValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeSalaryHistoryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EmployeeSalaryId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<decimal>("OriginalValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("SalaryAddonId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeSalaryHistoryId");
+
+                    b.HasIndex("EmployeeSalaryId");
+
+                    b.HasIndex("SalaryAddonId");
+
+                    b.ToTable("EmployeeSalaryAddonHistory", (string)null);
+                });
+
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalaryHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BaseSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeSalaryId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeSalaryId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("EmployeeSalaryHistory", (string)null);
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeType", b =>
@@ -927,6 +1221,58 @@ namespace StaffApp.Infrastructure.Migrations
                     b.ToTable("LeaveTypeLogic", (string)null);
                 });
 
+            modelBuilder.Entity("StaffApp.Domain.Entity.SalaryAddon", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AddonType")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("ApplyForAllEmployees")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<string>("CreatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<decimal>("DefaultValue")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<int>("ProportionType")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdateDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedByUserId")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("SalaryAddon", (string)null);
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationRole", null)
@@ -1006,6 +1352,17 @@ namespace StaffApp.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("DepartmentHead");
+                });
+
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeBankAccount", b =>
+                {
+                    b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "Employee")
+                        .WithMany("EmployeeBankAccounts")
+                        .HasForeignKey("EmployeeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeDepartment", b =>
@@ -1103,29 +1460,116 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("EmployeeLeaveRequest");
                 });
 
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeMonthlySalary", b =>
+                {
+                    b.HasOne("StaffApp.Domain.Entity.CompanyYear", "CompnayYear")
+                        .WithMany("EmployeeMonthlySalaries")
+                        .HasForeignKey("CompanyYearId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StaffApp.Domain.Entity.EmployeeSalary", "EmployeeSalary")
+                        .WithMany("EmployeeMonthlySalaries")
+                        .HasForeignKey("EmployeeSalaryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CompnayYear");
+
+                    b.Navigation("EmployeeSalary");
+                });
+
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeMonthlySalaryAddon", b =>
+                {
+                    b.HasOne("StaffApp.Domain.Entity.EmployeeMonthlySalary", "EmployeeMonthlySalary")
+                        .WithMany("EmployeeMonthlySalaryAddons")
+                        .HasForeignKey("EmployeeMonthlySalaryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StaffApp.Domain.Entity.SalaryAddon", "SalaryAddon")
+                        .WithMany("EmployeeMonthlySalaryAddons")
+                        .HasForeignKey("SalaryAddonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("EmployeeMonthlySalary");
+
+                    b.Navigation("SalaryAddon");
+                });
+
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalary", b =>
                 {
-                    b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "CreatedByUser")
-                        .WithMany("CreatedEmployeeSalaries")
-                        .HasForeignKey("CreatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "UpdatedByUser")
-                        .WithMany("UpdatedEmployeeSalaries")
-                        .HasForeignKey("UpdatedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "User")
                         .WithMany("EmployeeSalaries")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("CreatedByUser");
+                    b.Navigation("User");
+                });
 
-                    b.Navigation("UpdatedByUser");
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalaryAddon", b =>
+                {
+                    b.HasOne("StaffApp.Domain.Entity.EmployeeSalary", "EmployeeSalary")
+                        .WithMany("EmployeeSalaryAddons")
+                        .HasForeignKey("EmployeeSalaryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StaffApp.Domain.Entity.SalaryAddon", "SalaryAddon")
+                        .WithMany("EmployeeSalaryAddons")
+                        .HasForeignKey("SalaryAddonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("EmployeeSalary");
+
+                    b.Navigation("SalaryAddon");
+                });
+
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalaryAddonHistory", b =>
+                {
+                    b.HasOne("StaffApp.Domain.Entity.EmployeeSalaryHistory", "EmployeeSalaryHistory")
+                        .WithMany("EmployeeSalaryAddonHistories")
+                        .HasForeignKey("EmployeeSalaryHistoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StaffApp.Domain.Entity.EmployeeSalary", "EmployeeSalary")
+                        .WithMany("EmployeeSalaryAddonHistories")
+                        .HasForeignKey("EmployeeSalaryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StaffApp.Domain.Entity.SalaryAddon", "SalaryAddon")
+                        .WithMany("EmployeeSalaryAddonHistories")
+                        .HasForeignKey("SalaryAddonId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("EmployeeSalary");
+
+                    b.Navigation("EmployeeSalaryHistory");
+
+                    b.Navigation("SalaryAddon");
+                });
+
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalaryHistory", b =>
+                {
+                    b.HasOne("StaffApp.Domain.Entity.EmployeeSalary", "EmployeeSalary")
+                        .WithMany("EmployeeSalaryHistories")
+                        .HasForeignKey("EmployeeSalaryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "User")
+                        .WithMany("EmployeeSalaryHistories")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("EmployeeSalary");
 
                     b.Navigation("User");
                 });
@@ -1173,9 +1617,9 @@ namespace StaffApp.Infrastructure.Migrations
 
             modelBuilder.Entity("StaffApp.Domain.Entity.Authentication.ApplicationUser", b =>
                 {
-                    b.Navigation("CreatedEmployeeSalaries");
-
                     b.Navigation("DepartmentHeads");
+
+                    b.Navigation("EmployeeBankAccounts");
 
                     b.Navigation("EmployeeLeaveBalances");
 
@@ -1183,9 +1627,9 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.Navigation("EmployeeSalaries");
 
-                    b.Navigation("LeaveRequestReportingManagers");
+                    b.Navigation("EmployeeSalaryHistories");
 
-                    b.Navigation("UpdatedEmployeeSalaries");
+                    b.Navigation("LeaveRequestReportingManagers");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.CompanyLocation", b =>
@@ -1198,6 +1642,8 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("EmployeeLeaveBalances");
 
                     b.Navigation("EmployeeLeaveRequests");
+
+                    b.Navigation("EmployeeMonthlySalaries");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.Department", b =>
@@ -1212,6 +1658,27 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("EmployeeLeaveRequestComments");
 
                     b.Navigation("EmployeeLeaveRequestSupportFiles");
+                });
+
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeMonthlySalary", b =>
+                {
+                    b.Navigation("EmployeeMonthlySalaryAddons");
+                });
+
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalary", b =>
+                {
+                    b.Navigation("EmployeeMonthlySalaries");
+
+                    b.Navigation("EmployeeSalaryAddonHistories");
+
+                    b.Navigation("EmployeeSalaryAddons");
+
+                    b.Navigation("EmployeeSalaryHistories");
+                });
+
+            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalaryHistory", b =>
+                {
+                    b.Navigation("EmployeeSalaryAddonHistories");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeType", b =>
@@ -1232,6 +1699,15 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("LeaveTypeConfigurations");
 
                     b.Navigation("LeaveTypeLogics");
+                });
+
+            modelBuilder.Entity("StaffApp.Domain.Entity.SalaryAddon", b =>
+                {
+                    b.Navigation("EmployeeMonthlySalaryAddons");
+
+                    b.Navigation("EmployeeSalaryAddonHistories");
+
+                    b.Navigation("EmployeeSalaryAddons");
                 });
 #pragma warning restore 612, 618
         }
