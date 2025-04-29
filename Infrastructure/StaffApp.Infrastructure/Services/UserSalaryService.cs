@@ -7,6 +7,7 @@ using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.User;
 using StaffApp.Application.Extensions.Constants;
 using StaffApp.Application.Extensions.Helpers;
+using StaffApp.Application.Extensions.Helpers.OpenXML;
 using StaffApp.Application.Services;
 using StaffApp.Domain.Entity;
 using StaffApp.Domain.Enum;
@@ -14,7 +15,9 @@ using Syncfusion.DocIO;
 using Syncfusion.DocIO.DLS;
 using Syncfusion.DocIORenderer;
 using System.Reflection;
+using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
 using Table = DocumentFormat.OpenXml.Wordprocessing.Table;
+using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
 
 namespace StaffApp.Infrastructure.Services
 {
@@ -98,7 +101,7 @@ namespace StaffApp.Infrastructure.Services
 
                     ReplaceText(mainPart, "CompanyName", salarySlip.CompanyName);
                     ReplaceText(mainPart, "CompanyAddress", salarySlip.CompanyAddress);
-                    ReplaceText(mainPart, "CompanyTelephone ", salarySlip.CompanyPhone);
+                    ReplaceText(mainPart, "Telephone", salarySlip.CompanyPhone);
                     ReplaceText(mainPart, "CompanyEmail", salarySlip.CompanyEmail);
                     ReplaceText(mainPart, "YearAndMonth", $"{salarySlip.SalarySlipYear}-{salarySlip.SalarySlipMonth}");
                     ReplaceText(mainPart, "SLIPNumber", salarySlip.SalarySlipNumber);
@@ -107,7 +110,7 @@ namespace StaffApp.Infrastructure.Services
                     ReplaceText(mainPart, "EmployeeName", salarySlip.EmployeeName);
                     ReplaceText(mainPart, "EmployeeDesignation", salarySlip.Designation);
                     ReplaceText(mainPart, "EmployeeDepartment", string.Empty);
-                    ReplaceText(mainPart, "EmployeeJoinDate", salarySlip.JoinDate);
+                    ReplaceText(mainPart, "JoinDate", salarySlip.JoinDate);
 
                     ReplaceText(mainPart, "PayPeriod", salarySlip.PayPeriod);
                     ReplaceText(mainPart, "PaymentDate", salarySlip.PayDate);
@@ -125,16 +128,123 @@ namespace StaffApp.Infrastructure.Services
                     List<Table> tables = doc.Descendants<Table>().ToList();
                     if (tables.Count > 0)
                     {
-                        Table firstTable = tables[8];
+                        //Employee Earnings
+                        Table earningTable = tables[5];
 
-                        DocumentFormat.OpenXml.Wordprocessing.TableRow row = firstTable.Elements<DocumentFormat.OpenXml.Wordprocessing.TableRow>().ElementAtOrDefault(1);
-
-                        if (row != null)
+                        for (int i = 0; i < salarySlip.Earnings.Count(); i++)
                         {
-                            // Fill values in specific cells
-                            FillCellValue(row, 0, "John Doe");      // First column
-                            FillCellValue(row, 1, "Employee123");   // Third column
+                            if (i == 0)
+                            {
+                                DocumentFormat.OpenXml.Wordprocessing.TableRow earningRow = earningTable.Elements<DocumentFormat.OpenXml.Wordprocessing.TableRow>().ElementAtOrDefault(1);
+                                // Fill values in specific cells
+                                FillCellValue(earningRow, 0, salarySlip.Earnings[i].Description);      // First column
+                                FillCellValue(earningRow, 1, salarySlip.Earnings[i].Amount.ToString("C"));   // Third column
+                            }
+                            else
+                            {
+                                TableRow newRow = new TableRow();
+
+                                // Add cells to the new row
+                                string[] cellValues = new string[] { salarySlip.Earnings[i].Description, salarySlip.Earnings[i].Amount.ToString("C") };
+                                int index = 0;
+                                foreach (string value in cellValues)
+                                {
+                                    var runProperties = new RunProperties(new Bold() { Val = false });
+                                    TableCell cell = new TableCell(new Paragraph(new Run(runProperties, new Text(value))));
+                                    OpenXMLTableHelper.SetCellFontSize(cell, 10);
+                                    //OpenXMLTableHelper.RemoveBoldFromTableCell(cell);
+                                    if (index == 1)
+                                    {
+                                        OpenXMLTableHelper.SetHorizontalTextAlignment(cell, JustificationValues.Right);
+                                    }
+                                    newRow.Append(cell);
+                                    index++;
+                                }
+
+                                earningTable.Append(newRow);
+                            }
                         }
+
+                        //Deduction
+                        Table deductionTable = tables[6];
+
+                        for (int i = 0; i < salarySlip.Deductions.Count; i++)
+                        {
+                            if (i == 0)
+                            {
+                                DocumentFormat.OpenXml.Wordprocessing.TableRow deductionRow = deductionTable.Elements<DocumentFormat.OpenXml.Wordprocessing.TableRow>().ElementAtOrDefault(1);
+                                // Fill values in specific cells
+                                FillCellValue(deductionRow, 0, salarySlip.Deductions[i].Description);      // First column
+                                FillCellValue(deductionRow, 1, salarySlip.Deductions[i].Amount.ToString("C"));   // Third column
+                            }
+                            else
+                            {
+                                TableRow newRow = new TableRow();
+                                // Add cells to the new row
+                                string[] cellValues = new string[] { salarySlip.Deductions[i].Description, salarySlip.Deductions[i].Amount.ToString("C") };
+                                int index = 0;
+                                foreach (string value in cellValues)
+                                {
+                                    var runProperties = new RunProperties(new Bold() { Val = false });
+                                    TableCell cell = new TableCell(new Paragraph(new Run(runProperties, new Text(value))));
+                                    OpenXMLTableHelper.SetCellFontSize(cell, 10);
+                                    //OpenXMLTableHelper.RemoveBoldFromTableCell(cell);
+                                    if (index == 1)
+                                    {
+                                        OpenXMLTableHelper.SetHorizontalTextAlignment(cell, JustificationValues.Right);
+                                    }
+                                    newRow.Append(cell);
+                                    index++;
+                                }
+                                deductionTable.Append(newRow);
+                            }
+                        }
+
+
+                        //Employer Contribution
+                        Table contributionTable = tables[8];
+                        for (int i = 0; i < salarySlip.EmployerContributions.Count; i++)
+                        {
+                            if (i == 0)
+                            {
+                                DocumentFormat.OpenXml.Wordprocessing.TableRow contributionRow = contributionTable.Elements<DocumentFormat.OpenXml.Wordprocessing.TableRow>().ElementAtOrDefault(1);
+                                // Fill values in specific cells
+                                FillCellValue(contributionRow, 0, salarySlip.EmployerContributions[i].Description);      // First column
+                                FillCellValue(contributionRow, 1, salarySlip.EmployerContributions[i].Amount.ToString("C"));   // Third column
+                            }
+                            else
+                            {
+                                TableRow newRow = new TableRow();
+                                // Add cells to the new row
+                                string[] cellValues = new string[] { salarySlip.EmployerContributions[i].Description, salarySlip.EmployerContributions[i].Amount.ToString("C") };
+                                int index = 0;
+                                foreach (string value in cellValues)
+                                {
+                                    var runProperties = new RunProperties(new Bold() { Val = false });
+                                    TableCell cell = new TableCell(new Paragraph(new Run(runProperties, new Text(value))));
+                                    OpenXMLTableHelper.SetCellFontSize(cell, 10);
+                                    //OpenXMLTableHelper.RemoveBoldFromTableCell(cell);
+                                    if (index == 1)
+                                    {
+                                        OpenXMLTableHelper.SetHorizontalTextAlignment(cell, JustificationValues.Right);
+                                    }
+                                    newRow.Append(cell);
+                                    index++;
+                                }
+                                contributionTable.Append(newRow);
+                            }
+                        }
+
+                        //Table fourthTable = tables[10];
+
+                        //DocumentFormat.OpenXml.Wordprocessing.TableRow row3 = fourthTable.Elements<DocumentFormat.OpenXml.Wordprocessing.TableRow>().ElementAtOrDefault(1);
+
+                        //if (row3 != null)
+                        //{
+                        //    // Fill values in specific cells
+                        //    FillCellValue(row3, 0, "John Doe444");      // First column
+                        //    FillCellValue(row3, 1, "Employee444");   // Third column
+                        //}
                     }
 
                     // Save the changes
@@ -275,7 +385,7 @@ namespace StaffApp.Infrastructure.Services
             response.PayDate = now.ToString("yyyy-MM-dd");
             response.PayPeriod = startOfMonth.ToString("yyyy-MM-dd") + "-" + endOfMonth.ToString("yyyy-MM-dd");
             response.PaymentMethod = "Bank Transfer";
-            response.DaysWorked = @"22//22";
+            response.DaysWorked = @"22/22";
             response.LeaveTaken = "0";
 
 
@@ -293,7 +403,7 @@ namespace StaffApp.Infrastructure.Services
             {
                 var employeeSalary = employee.EmployeeSalaries.FirstOrDefault();
 
-                response.Earnings.Add(new PaymentDescriptionDTO() { Amount = employeeSalary is not null ? employeeSalary.BaseSalary : 0 });
+                response.Earnings.Add(new PaymentDescriptionDTO() { Amount = employeeSalary is not null ? employeeSalary.BaseSalary : 0, Description = "Basic Salary" });
 
                 foreach (var addon in employeeSalary.EmployeeSalaryAddons)
                 {
@@ -642,6 +752,10 @@ namespace StaffApp.Infrastructure.Services
 
         private void ReplaceText(MainDocumentPart mainPart, string placeholder, string replacement)
         {
+            if (string.IsNullOrEmpty(replacement))
+            {
+                replacement = "N/A";
+            }
             string docText = null;
             using (StreamReader sr = new StreamReader(mainPart.GetStream()))
             {
@@ -657,7 +771,7 @@ namespace StaffApp.Infrastructure.Services
         }
 
         // Helper method to fill a value in a specific cell
-        private void FillCellValue(TableRow row, int cellIndex, string value)
+        private void FillCellValue(TableRow row, int cellIndex, string value, int fontSize = 10)
         {
             TableCell cell = row.Elements<TableCell>().ElementAtOrDefault(cellIndex);
             if (cell != null)
@@ -674,8 +788,11 @@ namespace StaffApp.Infrastructure.Services
                 paragraph.RemoveAllChildren<Run>();
 
                 // Add new text
-                Run run = new Run(new Text(value));
+                var runProperties = new RunProperties(new Bold() { Val = false });
+                Run run = new Run(runProperties, new Text(value));
                 paragraph.Append(run);
+
+                OpenXMLTableHelper.SetCellFontSize(cell, fontSize);
             }
         }
 
