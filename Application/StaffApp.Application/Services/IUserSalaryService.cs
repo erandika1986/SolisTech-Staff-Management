@@ -9,11 +9,12 @@ namespace StaffApp.Application.Services
         Task<EmployeeSalaryDTO> GetEmployeeSalaryByIdAsync(string userId);
         Task<GeneralResponseDTO> ApproveUserSalaryAsync(EmployeeSalaryDTO salary, string comment);
         Task<GeneralResponseDTO> AskToReviseUserSalaryAsync(EmployeeSalaryDTO salary, string comment);
+        Task<GeneralResponseDTO> GenerateEmployeesMonthSalary(int year, int month);
         Task<List<EmployeeSalaryAddonDTO>> GetUnAssignedSalaryAddonsAsync(string userId);
         Task<GeneralResponseDTO> SaveUserSalaryAddonAsync(EmployeeSalaryAddonDTO salaryAddon);
         Task<PaginatedResultDTO<EmployeeSalaryBasicDTO>> GetAllUsersSalariesAsync(int pageNumber, int pageSize, int status, string searchString = null, string sortField = null, bool ascending = true);
-        Task<EmployeeSalarySlipDTO> GetEmployeeEstimateSalarySlip(string userId);
-        Task<EmployeeSalarySlipDTO> GetEmployeeSalarySlip(string userId, int year, int month);
-        Task<string> GenerateEstimateSalarySlip(EmployeeSalarySlipDTO salarySlip);
+        Task<EmployeeSalarySlipDTO> GetEmployeeEstimateSalarySlipAsync(string userId);
+        Task<EmployeeSalarySlipDTO> GetEmployeeSalarySlipAsync(string userId, int year, int month);
+        Task<string> GenerateEstimateSalarySlipAsync(EmployeeSalarySlipDTO salarySlip);
     }
 }

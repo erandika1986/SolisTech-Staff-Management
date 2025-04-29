@@ -30,6 +30,7 @@ namespace StaffApp.Application.Contracts
         DbSet<LeaveTypeAllowDuration> LeaveTypeAllowDurations { get; }
         DbSet<LeaveTypeConfig> LeaveTypesConfigs { get; }
         DbSet<LeaveTypeLogic> LeaveTypesLogics { get; }
+        DbSet<PayeLogic> PayeLogics { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
         Task BeginTransactionAsync(CancellationToken cancellationToken);

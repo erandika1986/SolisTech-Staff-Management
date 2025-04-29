@@ -311,7 +311,7 @@
     private async Task GetSalarySlipAsync()
     {
         LoadingService.Show();
-        SalarySlipDTO = await UserSalaryService.GetEmployeeEstimateSalarySlip(EmployeeId);
+        SalarySlipDTO = await UserSalaryService.GetEmployeeEstimateSalarySlipAsync(EmployeeId);
         LoadingService.Hide();
     }
 
@@ -333,7 +333,7 @@
     private async Task DownloadPdf()
     {
         // Logic to handle PDF download
-        var filePath = await UserSalaryService.GenerateEstimateSalarySlip(SalarySlipDTO);
+        var filePath = await UserSalaryService.GenerateEstimateSalarySlipAsync(SalarySlipDTO);
     }
 
     private void Cancel() => MudDialog.Cancel();

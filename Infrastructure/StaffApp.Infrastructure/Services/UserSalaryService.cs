@@ -15,13 +15,20 @@ using Syncfusion.DocIO;
 using Syncfusion.DocIO.DLS;
 using Syncfusion.DocIORenderer;
 using System.Reflection;
+using JustificationValues = DocumentFormat.OpenXml.Wordprocessing.JustificationValues;
+using Paragraph = DocumentFormat.OpenXml.Wordprocessing.Paragraph;
 using Run = DocumentFormat.OpenXml.Wordprocessing.Run;
+using RunProperties = DocumentFormat.OpenXml.Wordprocessing.RunProperties;
 using Table = DocumentFormat.OpenXml.Wordprocessing.Table;
 using Text = DocumentFormat.OpenXml.Wordprocessing.Text;
 
 namespace StaffApp.Infrastructure.Services
 {
-    public class UserSalaryService(IStaffAppDbContext context, IUserService userService, ICurrentUserService currentUserService, ILogger<IUserSalaryService> userSalaryServiceLogger) : IUserSalaryService
+    public class UserSalaryService(
+        IStaffAppDbContext context,
+        IUserService userService,
+        ICurrentUserService currentUserService,
+        ILogger<IUserSalaryService> userSalaryServiceLogger) : IUserSalaryService
     {
         public async Task<GeneralResponseDTO> ApproveUserSalaryAsync(EmployeeSalaryDTO salary, string comment)
         {
@@ -76,7 +83,7 @@ namespace StaffApp.Infrastructure.Services
             }
         }
 
-        public async Task<string> GenerateEstimateSalarySlip(EmployeeSalarySlipDTO salarySlip)
+        public async Task<string> GenerateEstimateSalarySlipAsync(EmployeeSalarySlipDTO salarySlip)
         {
             string filePath = string.Empty;
 
@@ -339,7 +346,7 @@ namespace StaffApp.Infrastructure.Services
             return newResult;
         }
 
-        public async Task<EmployeeSalarySlipDTO> GetEmployeeEstimateSalarySlip(string userId)
+        public async Task<EmployeeSalarySlipDTO> GetEmployeeEstimateSalarySlipAsync(string userId)
         {
             var response = new EmployeeSalarySlipDTO();
 
@@ -363,8 +370,8 @@ namespace StaffApp.Infrastructure.Services
             response.CompanyEmail = companyEmail is not null ? companyEmail.Value : string.Empty;
             response.CompanyPhone = companyPhone is not null ? companyPhone.Value : string.Empty;
 
-            response.SalarySlipMonth = DateTime.Now.ToString("MMMM");
-            response.SalarySlipYear = DateTime.Now.Year.ToString();
+            response.SalarySlipMonth = "XX";
+            response.SalarySlipYear = "20XX";
             response.SalarySlipNumber = "####";
 
             if (employee == null)
@@ -386,7 +393,7 @@ namespace StaffApp.Infrastructure.Services
             response.PayPeriod = startOfMonth.ToString("yyyy-MM-dd") + "-" + endOfMonth.ToString("yyyy-MM-dd");
             response.PaymentMethod = "Bank Transfer";
             response.DaysWorked = @"22/22";
-            response.LeaveTaken = "0";
+            response.LeaveTaken = "N/A";
 
 
             var primaryBankAccount = context.EmployeeBankAccounts
@@ -441,6 +448,7 @@ namespace StaffApp.Infrastructure.Services
                 }
             }
 
+            response.Deductions.FirstOrDefault(x => x.Description == "PAYE").Amount = await CalculateMonthlyPayTax(response.Earnings.Sum(x => x.Amount));
             response.NetSalary = response.Earnings.Sum(x => x.Amount) - response.Deductions.Sum(x => x.Amount);
 
 
@@ -540,7 +548,7 @@ namespace StaffApp.Infrastructure.Services
             return response;
         }
 
-        public Task<EmployeeSalarySlipDTO> GetEmployeeSalarySlip(string userId, int year, int month)
+        public Task<EmployeeSalarySlipDTO> GetEmployeeSalarySlipAsync(string userId, int year, int month)
         {
             throw new NotImplementedException();
         }
@@ -711,6 +719,70 @@ namespace StaffApp.Infrastructure.Services
 
         }
 
+        public async Task<GeneralResponseDTO> GenerateEmployeesMonthSalary(int year, int month)
+        {
+            try
+            {
+                var employeeSalaries = await context
+                    .EmployeeSalaries.Where(x => x.User.IsActive && x.IsActive)
+                    .ToListAsync(CancellationToken.None);
+
+                foreach (var item in employeeSalaries)
+                {
+                    var employeeMonthlySalary = await context.EmployeeMonthlySalaries
+                        .FirstOrDefaultAsync(x => x.EmployeeSalaryId == item.Id && x.CompanyYearId == year && x.Month == (Month)month);
+
+                    if (employeeMonthlySalary is null)
+                    {
+                        employeeMonthlySalary = new EmployeeMonthlySalary()
+                        {
+                            EmployeeSalaryId = item.Id,
+                            CompanyYearId = year,
+                            Month = (Month)month,
+                            GrossSalary = item.BaseSalary,
+                            CreatedDate = DateTime.Now,
+                            CreatedByUserId = currentUserService.UserId,
+                            UpdateDate = DateTime.Now,
+                            UpdatedByUserId = currentUserService.UserId,
+                            IsActive = true
+                        };
+
+                        foreach (var addon in item.EmployeeSalaryAddons)
+                        {
+                            var amount = addon.AdjustedValue;
+                            if (addon.SalaryAddon.Name == "PAYE")
+                            {
+                                var totalAllowances = item.EmployeeSalaryAddons.Where(x => x.SalaryAddon.AddonType == SalaryAddonType.Allowance).Sum(x => x.AdjustedValue);
+                                amount = await CalculateMonthlyPayTax(totalAllowances);
+                            }
+
+                            var monthlyAddon = new EmployeeMonthlySalaryAddon()
+                            {
+                                SalaryAddonId = addon.SalaryAddonId,
+                                Amount = amount,
+                                CreatedDate = DateTime.Now,
+                                CreatedByUserId = currentUserService.UserId,
+                                UpdateDate = DateTime.Now,
+                                UpdatedByUserId = currentUserService.UserId,
+                                IsActive = true
+                            };
+                        }
+
+                        context.EmployeeMonthlySalaries.Add(employeeMonthlySalary);
+                    }
+                }
+
+                await context.SaveChangesAsync(CancellationToken.None);
+
+                return new GeneralResponseDTO() { Flag = true, Message = "Employee Month Salary generated successfully." };
+            }
+            catch (Exception ex)
+            {
+                return new GeneralResponseDTO() { Flag = false, Message = ex.Message };
+            }
+
+        }
+
         private async Task AddEmployeeSalaryHistoryRecord(EmployeeSalary employeeSalary)
         {
             var employeeSalaryHistory = new EmployeeSalaryHistory()
@@ -796,5 +868,60 @@ namespace StaffApp.Infrastructure.Services
             }
         }
 
+        private async Task<decimal> CalculateMonthlyPayTax(decimal monthlySalary)
+        {
+            decimal tax = 0;
+
+            var payeLogics = await context.PayeLogics.ToListAsync();
+
+            if (payeLogics == null || payeLogics.Count == 0)
+            {
+                return tax;
+            }
+
+            if (monthlySalary <= payeLogics.FirstOrDefault().MaxSalary)
+            {
+                return 0;
+            }
+
+            var brackets = payeLogics.Skip(1).Select(x => new
+            {
+                MaxLimit = x.MaxSalary,
+                MinLimit = x.MinSalary,
+                Rate = x.TaxRate / 100.00m
+            }).ToArray();
+
+            //for (int i = brackets.Length - 1; i >= 0; i--)
+            //{
+            //    if (monthlySalary > brackets[i].Limit)
+            //    {
+            //        decimal taxableAmount = monthlySalary - brackets[i].Limit;
+            //        tax += taxableAmount * brackets[i].Rate;
+            //        monthlySalary = brackets[i].Limit;
+            //    }
+            //}
+
+            for (int i = 0; i < brackets.Length; i++)
+            {
+                if (monthlySalary >= brackets[i].MinLimit && monthlySalary <= brackets[i].MaxLimit)
+                {
+                    decimal taxableAmount = monthlySalary - brackets[i].MinLimit;
+                    tax += taxableAmount * brackets[i].Rate;
+                }
+                else if (monthlySalary >= brackets[i].MinLimit && monthlySalary > brackets[i].MaxLimit)
+                {
+                    decimal taxableAmount = brackets[i].MaxLimit - brackets[i].MinLimit;
+                    tax += taxableAmount * brackets[i].Rate;
+                }
+                else
+                {
+
+                }
+
+            }
+
+            return Math.Round(tax, 2);
+
+        }
     }
 }

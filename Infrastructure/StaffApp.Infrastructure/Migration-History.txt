@@ -16,6 +16,7 @@ Add-Migration 00013 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00014 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00015 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00016 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00017 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 
 Database Update Command
 ====================================================================================================

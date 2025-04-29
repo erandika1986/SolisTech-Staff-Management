@@ -128,5 +128,6 @@ namespace StaffApp.Infrastructure.Data
         public DbSet<EmployeeMonthlySalaryAddon> EmployeeMonthlySalaryAddons => Set<EmployeeMonthlySalaryAddon>();
         public DbSet<EmployeeSalaryHistory> EmployeeSalaryHistories => Set<EmployeeSalaryHistory>();
         public DbSet<EmployeeSalaryAddonHistory> EmployeeSalaryAddonHistories => Set<EmployeeSalaryAddonHistory>();
+        public DbSet<PayeLogic> PayeLogics => Set<PayeLogic>();
     }
 }
