@@ -18,5 +18,6 @@ namespace StaffApp.Domain.Entity
         public virtual ICollection<EmployeeLeaveAllocation> EmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();
         public virtual ICollection<EmployeeLeaveRequest> EmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
         public virtual ICollection<EmployeeMonthlySalary> EmployeeMonthlySalaries { get; set; } = new HashSet<EmployeeMonthlySalary>();
+        public virtual ICollection<MonthlySalary> MonthlySalaries { get; set; } = new HashSet<MonthlySalary>();
     }
 }

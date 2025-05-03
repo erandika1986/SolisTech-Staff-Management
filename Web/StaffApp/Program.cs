@@ -46,7 +46,7 @@ builder.Services.AddSingleton<ICurrentUserService, CurrentUserService>();
 
 
 // Add services to the container.
-builder.Services.AddApplicationService();
+//builder.Services.AddApplicationService(builder.Configuration);
 //builder.Services.AddFOFWebAPIServices(builder.Configuration);
 builder.Services.AddInfrastructureService(builder.Configuration);
 

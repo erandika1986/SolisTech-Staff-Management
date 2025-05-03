@@ -13,6 +13,7 @@ namespace StaffApp.Application.Contracts
         DbSet<CompanyLocation> CompanyLocations { get; }
         DbSet<CompanyYear> CompanyYears { get; }
         DbSet<Department> Departments { get; }
+        DbSet<MonthlySalary> MonthlySalaries { get; }
         DbSet<EmployeeMonthlySalary> EmployeeMonthlySalaries { get; }
         DbSet<EmployeeMonthlySalaryAddon> EmployeeMonthlySalaryAddons { get; }
         DbSet<EmployeeDepartment> EmployeeDepartments { get; }

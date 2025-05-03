@@ -2,7 +2,7 @@
 {
     public enum EmployeeSalaryTransferStatus
     {
-        Started = 1,
+        Generated = 1,
         SubmittedForApproval = 2,
         Approved = 3,
         SubmittedForRevised = 4,

@@ -30,6 +30,7 @@ namespace StaffApp.Infrastructure.Services
         ICurrentUserService currentUserService,
         ILogger<IUserSalaryService> userSalaryServiceLogger) : IUserSalaryService
     {
+        #region Public Methods
         public async Task<GeneralResponseDTO> ApproveUserSalaryAsync(EmployeeSalaryDTO salary, string comment)
         {
             try
@@ -727,38 +728,59 @@ namespace StaffApp.Infrastructure.Services
                     .EmployeeSalaries.Where(x => x.User.IsActive && x.IsActive)
                     .ToListAsync(CancellationToken.None);
 
+                var monthlySalary = await context.MonthlySalaries.FirstOrDefaultAsync(x => x.CompanyYearId == year && x.Month == (Month)month);
+                if (monthlySalary != null)
+                {
+                    monthlySalary = new MonthlySalary()
+                    {
+                        IsActive = true,
+                        CompanyYearId = year,
+                        Month = (Month)month,
+                        CreatedDate = DateTime.Now,
+                        CreatedByUserId = currentUserService.UserId,
+                        UpdateDate = DateTime.Now,
+                        UpdatedByUserId = currentUserService.UserId,
+                        Status = EmployeeSalaryTransferStatus.Generated
+                    };
+                }
+
                 foreach (var item in employeeSalaries)
                 {
                     var employeeMonthlySalary = await context.EmployeeMonthlySalaries
-                        .FirstOrDefaultAsync(x => x.EmployeeSalaryId == item.Id && x.CompanyYearId == year && x.Month == (Month)month);
+                        .FirstOrDefaultAsync(x => x.EmployeeSalaryId == item.Id && x.MonthlySalary.CompanyYearId == year && x.MonthlySalary.Month == (Month)month);
 
                     if (employeeMonthlySalary is null)
                     {
-                        employeeMonthlySalary = new EmployeeMonthlySalary()
-                        {
-                            EmployeeSalaryId = item.Id,
-                            CompanyYearId = year,
-                            Month = (Month)month,
-                            GrossSalary = item.BaseSalary,
-                            CreatedDate = DateTime.Now,
-                            CreatedByUserId = currentUserService.UserId,
-                            UpdateDate = DateTime.Now,
-                            UpdatedByUserId = currentUserService.UserId,
-                            IsActive = true
-                        };
+                        var monthlyPaymentAddons = new List<EmployeeMonthlySalaryAddon>();
 
+                        var totalAllowances = 0.00m;
+                        var totalDeductions = 0.00m;
+                        var payeAddonId = 0;
                         foreach (var addon in item.EmployeeSalaryAddons)
                         {
                             var amount = addon.AdjustedValue;
                             if (addon.SalaryAddon.Name == "PAYE")
                             {
-                                var totalAllowances = item.EmployeeSalaryAddons.Where(x => x.SalaryAddon.AddonType == SalaryAddonType.Allowance).Sum(x => x.AdjustedValue);
-                                amount = await CalculateMonthlyPayTax(totalAllowances);
+
+                                //var totalAllowances = item.EmployeeSalaryAddons.Where(x => x.SalaryAddon.AddonType == SalaryAddonType.Allowance).Sum(x => x.AdjustedValue);
+                                payeAddonId = addon.SalaryAddonId;
+                                amount = 0;
                             }
+                            else if (addon.SalaryAddon.ProportionType == ProportionType.Percentage)
+                            {
+                                amount = (item.BaseSalary * addon.AdjustedValue) / 100.00m;
+                                if (addon.SalaryAddon.AddonType == SalaryAddonType.Allowance)
+                                {
+                                    totalAllowances += amount;
+                                }
+                            }
+
 
                             var monthlyAddon = new EmployeeMonthlySalaryAddon()
                             {
                                 SalaryAddonId = addon.SalaryAddonId,
+                                AdjustedValue = addon.AdjustedValue,
+                                OriginalValue = addon.OriginalValue,
                                 Amount = amount,
                                 CreatedDate = DateTime.Now,
                                 CreatedByUserId = currentUserService.UserId,
@@ -766,9 +788,53 @@ namespace StaffApp.Infrastructure.Services
                                 UpdatedByUserId = currentUserService.UserId,
                                 IsActive = true
                             };
+
+                            monthlyPaymentAddons.Add(monthlyAddon);
                         }
 
-                        context.EmployeeMonthlySalaries.Add(employeeMonthlySalary);
+                        var payAddon = monthlyPaymentAddons.FirstOrDefault(x => x.SalaryAddonId == payeAddonId);
+                        if (payAddon != null)
+                        {
+                            var payeTax = await CalculateMonthlyPayTax(item.BaseSalary + totalAllowances);
+                            payAddon.Amount = payeTax;
+                        }
+
+                        var totalEarning = monthlyPaymentAddons
+                            .Where(x => x.SalaryAddon.AddonType == SalaryAddonType.Allowance)
+                            .Sum(x => x.Amount) + item.BaseSalary;
+
+                        var totalDeduction = monthlyPaymentAddons
+                            .Where(x =>
+                                x.SalaryAddon.AddonType == SalaryAddonType.Deduction ||
+                                x.SalaryAddon.AddonType == SalaryAddonType.SocialSecuritySchemesEmployeeShare)
+                            .Sum(x => x.Amount);
+
+                        var employerContribution = monthlyPaymentAddons
+                            .Where(x => x.SalaryAddon.AddonType == SalaryAddonType.SocialSecuritySchemesCompanyShare)
+                            .Sum(x => x.Amount);
+
+                        employeeMonthlySalary = new EmployeeMonthlySalary()
+                        {
+                            EmployeeSalaryId = item.Id,
+                            BasicSalary = item.BaseSalary,
+                            TotalEarning = totalEarning,
+                            EmployerContribution = employerContribution,
+                            TotalDeduction = totalDeduction,
+                            NetSalary = totalEarning - totalDeduction,
+                            CreatedDate = DateTime.Now,
+                            CreatedByUserId = currentUserService.UserId,
+                            UpdateDate = DateTime.Now,
+                            UpdatedByUserId = currentUserService.UserId,
+                            IsActive = true,
+                            Status = EmployeeSalaryStatus.Generated
+                        };
+
+                        foreach (var addon in monthlyPaymentAddons)
+                        {
+                            employeeMonthlySalary.EmployeeMonthlySalaryAddons.Add(addon);
+                        }
+
+                        monthlySalary.EmployeeMonthlySalaries.Add(employeeMonthlySalary);
                     }
                 }
 
@@ -783,6 +849,283 @@ namespace StaffApp.Infrastructure.Services
 
         }
 
+        public async Task<GeneralResponseDTO> CheckEmployeesMonthlySalaryGeneratedAsync(int year, int month)
+        {
+            var IsEmployeeMonthlySalaryExsits = await context.EmployeeMonthlySalaries
+                .AnyAsync(x => x.MonthlySalary.CompanyYearId == year && x.MonthlySalary.Month == (Month)month);
+
+            return new GeneralResponseDTO()
+            {
+                Flag = IsEmployeeMonthlySalaryExsits,
+                Message = IsEmployeeMonthlySalaryExsits ? "Employee Monthly Salary already generated." : "Employee Monthly Salary not generated."
+            };
+        }
+
+        public async Task<PaginatedResultDTO<EmployeeSalarySummaryDTO>> GetMonthlyEmployeeSalaries(int year, int month, int pageNumber, int pageSize, string sortField = null, bool ascending = true)
+        {
+            var employeeSalaryQuery = context.EmployeeMonthlySalaries.Where(x => x.MonthlySalary.CompanyYearId == year && x.MonthlySalary.Month == (Month)month); ;
+
+            int totalCount = await employeeSalaryQuery.CountAsync();
+
+            if (!string.IsNullOrEmpty(sortField))
+            {
+                switch (sortField.ToLower())
+                {
+                    case "fullName":
+                        employeeSalaryQuery = ascending
+                            ? employeeSalaryQuery.OrderBy(u => u.EmployeeSalary.User.FullName)
+                            : employeeSalaryQuery.OrderByDescending(u => u.EmployeeSalary.User.FullName);
+                        break;
+                    case "basicSalary":
+                        employeeSalaryQuery = ascending
+                            ? employeeSalaryQuery.OrderBy(u => u.BasicSalary)
+                            : employeeSalaryQuery.OrderByDescending(u => u.BasicSalary);
+                        break;
+                    case "totalDeduction":
+                        employeeSalaryQuery = ascending
+                            ? employeeSalaryQuery.OrderBy(u => u.TotalDeduction)
+                            : employeeSalaryQuery.OrderByDescending(u => u.TotalDeduction);
+                        break;
+                    case "netSalary":
+                        employeeSalaryQuery = ascending
+                            ? employeeSalaryQuery.OrderBy(u => u.NetSalary)
+                            : employeeSalaryQuery.OrderByDescending(u => u.NetSalary);
+                        break;
+                    case "employeeNo":
+                        employeeSalaryQuery = ascending
+                            ? employeeSalaryQuery.OrderBy(u => u.EmployeeSalary.User.Id)
+                            : employeeSalaryQuery.OrderByDescending(u => u.EmployeeSalary.User.Id);
+                        break;
+                    default:
+                        employeeSalaryQuery = ascending
+                            ? employeeSalaryQuery.OrderBy(u => u.Id)
+                            : employeeSalaryQuery.OrderByDescending(u => u.Id);
+                        break;
+                }
+            }
+            else
+            {
+                // Default sorting by full name
+                employeeSalaryQuery = employeeSalaryQuery.OrderBy(u => u.EmployeeSalary.User.FullName);
+            }
+
+            var items = await employeeSalaryQuery
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(salary => new EmployeeSalarySummaryDTO
+            {
+                Id = salary.Id,
+                EmployeeName = salary.EmployeeSalary.User.FullName,
+                EmployeeNumber = salary.EmployeeSalary.User.Id,
+                NetSalary = salary.NetSalary.ToString("C"),
+                BasicSalary = salary.BasicSalary.ToString("C"),
+                TotalDeduction = salary.TotalDeduction.ToString("C"),
+                TotalEarning = salary.TotalEarning.ToString("C"),
+                EmployerContribution = salary.EmployerContribution.ToString("C")
+            }).ToListAsync();
+
+            var newResult = new PaginatedResultDTO<EmployeeSalarySummaryDTO>
+            {
+                Items = items,
+                TotalItems = totalCount,
+                Page = pageNumber,
+                PageSize = pageSize
+            };
+
+            return newResult;
+        }
+
+        public async Task<GeneralResponseDTO> UpdateUserMonthlySalaryAsync(EmployeeMonthlySalaryDTO salary)
+        {
+            try
+            {
+                var employeeMonthlySalary = await context.EmployeeMonthlySalaries.FindAsync(salary.Id);
+
+                //employeeMonthlySalary.BaseSalary = salary.BasicSalary;
+                //employeeMonthlySalary.EffectiveFrom = salary.EffectiveFrom;
+                //employeeMonthlySalary.UpdatedByUserId = currentUserService.UserId;
+                //employeeMonthlySalary.UpdateDate = DateTime.Now;
+                //employeeMonthlySalary.Status = Domain.Enum.EmployeeSalaryStatus.SubmittedForApproval;
+
+                //if (employeeMonthlySalary == null)
+                //{
+                //    employeeMonthlySalary = new Domain.Entity.EmployeeSalary()
+                //    {
+                //        UserId = salary.UserId,
+                //        BaseSalary = salary.BasicSalary,
+                //        EffectiveFrom = salary.EffectiveFrom,
+                //        Status = Domain.Enum.EmployeeSalaryStatus.SubmittedForApproval,
+                //        UpdatedByUserId = currentUserService.UserId,
+                //        UpdateDate = DateTime.Now,
+                //        IsActive = true
+                //    };
+
+                //    foreach (var addon in salary.EmployeeSalaryAddons)
+                //    {
+                //        employeeMonthlySalary.EmployeeSalaryAddons.Add(new Domain.Entity.EmployeeSalaryAddon()
+                //        {
+                //            SalaryAddonId = addon.SalaryAddonId,
+                //            OriginalValue = addon.OriginalValue,
+                //            AdjustedValue = addon.AdjustedValue,
+                //            EffectiveFrom = addon.EffectiveFrom,
+                //            CreatedByUserId = currentUserService.UserId,
+                //            CreatedDate = DateTime.Now,
+                //            UpdatedByUserId = currentUserService.UserId,
+                //            UpdateDate = DateTime.Now,
+                //            IsActive = true
+                //        });
+                //    }
+
+                //    context.EmployeeSalaries.Add(employeeMonthlySalary);
+
+                //    await context.SaveChangesAsync(CancellationToken.None);
+
+                //    return new GeneralResponseDTO() { Flag = true, Message = "User salary successfully inserted." };
+                //}
+                //else
+                //{
+                //    await AddEmployeeSalaryHistoryRecord(employeeMonthlySalary);
+
+                //    employeeMonthlySalary.BaseSalary = salary.BasicSalary;
+                //    employeeMonthlySalary.EffectiveFrom = salary.EffectiveFrom;
+                //    employeeMonthlySalary.UpdatedByUserId = currentUserService.UserId;
+                //    employeeMonthlySalary.UpdateDate = DateTime.Now;
+                //    employeeMonthlySalary.Status = Domain.Enum.EmployeeSalaryStatus.SubmittedForApproval;
+
+                //    var currentlySavedAddons = employeeMonthlySalary.EmployeeSalaryAddons.ToList();
+
+                //    var newlyAddedAddons = salary.EmployeeSalaryAddons.Where(x => x.Id <= 0);
+
+                //    var deletedAddons = (
+                //    from d in employeeMonthlySalary.EmployeeSalaryAddons
+                //    where !salary.EmployeeSalaryAddons.Any(x => x.Id == d.Id)
+                //    select d).ToList();
+
+                //    var updatedAddons = (
+                //        from u in salary.EmployeeSalaryAddons
+                //        where employeeMonthlySalary.EmployeeSalaryAddons.Any(x => x.Id == u.Id)
+                //        select u).ToList();
+
+                //    foreach (var addon in newlyAddedAddons)
+                //    {
+                //        //employeeSalary.EmployeeSalaryAddons.Add(new Domain.Entity.EmployeeSalaryAddon()
+                //        //{
+                //        //    SalaryAddonId = addon.SalaryAddonId,
+                //        //    OriginalValue = addon.OriginalValue,
+                //        //    AdjustedValue = addon.AdjustedValue,
+                //        //    EffectiveFrom = addon.EffectiveFrom,
+                //        //    CreatedByUserId = currentUserService.UserId,
+                //        //    CreatedDate = DateTime.Now,
+                //        //    UpdatedByUserId = currentUserService.UserId,
+                //        //    UpdateDate = DateTime.Now,
+                //        //    IsActive = true
+                //        //});
+
+                //        context.EmployeeSalaryAddons.Add(new Domain.Entity.EmployeeSalaryAddon()
+                //        {
+                //            EmployeeSalaryId = employeeMonthlySalary.Id,
+                //            SalaryAddonId = addon.SalaryAddonId,
+                //            OriginalValue = addon.OriginalValue,
+                //            AdjustedValue = addon.AdjustedValue,
+                //            EffectiveFrom = addon.EffectiveFrom,
+                //            CreatedByUserId = currentUserService.UserId,
+                //            CreatedDate = DateTime.Now,
+                //            UpdatedByUserId = currentUserService.UserId,
+                //            UpdateDate = DateTime.Now,
+                //            IsActive = true
+                //        });
+                //    }
+
+                //    await context.SaveChangesAsync(CancellationToken.None);
+
+
+
+                //    foreach (var addon in updatedAddons)
+                //    {
+                //        var existingAddon = employeeMonthlySalary.EmployeeSalaryAddons.FirstOrDefault(x => x.Id == addon.Id);
+                //        if (existingAddon != null)
+                //        {
+                //            existingAddon.SalaryAddonId = addon.SalaryAddonId;
+                //            existingAddon.OriginalValue = addon.OriginalValue;
+                //            existingAddon.AdjustedValue = addon.AdjustedValue;
+                //            existingAddon.EffectiveFrom = addon.EffectiveFrom;
+                //            existingAddon.UpdatedByUserId = currentUserService.UserId;
+                //            existingAddon.UpdateDate = DateTime.Now;
+
+                //            context.EmployeeSalaryAddons.Update(existingAddon);
+                //        }
+                //    }
+
+                //    await context.SaveChangesAsync(CancellationToken.None);
+
+
+
+                //    foreach (var deletedAddon in deletedAddons)
+                //    {
+                //        context.EmployeeSalaryAddons.Remove(deletedAddon);
+                //    }
+
+                //    await context.SaveChangesAsync(CancellationToken.None);
+
+                //    return new GeneralResponseDTO() { Flag = true, Message = "User salary successfully updated." };
+                //}
+
+                return new GeneralResponseDTO() { Flag = true, Message = "User salary successfully updated." };
+            }
+            catch (Exception ex)
+            {
+                return new GeneralResponseDTO() { Flag = false, Message = ex.Message };
+            }
+        }
+
+        public async Task<GeneralResponseDTO> ApproveMonthlySalaryAsBulkAsync(EmployeeMonthlySalaryDTO salary, string comment)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<GeneralResponseDTO> AskToReviseMonthlySalaryAsBulkAsync(EmployeeMonthlySalaryDTO salary, string comment)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<GeneralResponseDTO> UpdateMonthlySalarySubmittedToBankAsBulkAsync(EmployeeMonthlySalaryDTO salary, string comment)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<GeneralResponseDTO> UpdateMonthlySalaryTransferredAsBulkAsync(EmployeeMonthlySalaryDTO salary, string comment)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<EmployeeMonthlySalaryDTO> GetEmployeeMonthlySalary(int id)
+        {
+            var employeeMonthlySalary = await context.EmployeeMonthlySalaries
+                .FirstOrDefaultAsync(x => x.Id == id);
+
+            if (employeeMonthlySalary == null)
+            {
+                return null;
+            }
+
+            var monthlySalary = new EmployeeMonthlySalaryDTO()
+            {
+                Id = employeeMonthlySalary.Id,
+                EmployeeSalaryId = employeeMonthlySalary.EmployeeSalaryId,
+                BasicSalary = employeeMonthlySalary.BasicSalary,
+                TotalEarning = employeeMonthlySalary.TotalEarning,
+                TotalDeduction = employeeMonthlySalary.TotalDeduction,
+                NetSalary = employeeMonthlySalary.NetSalary,
+                EmployerContribution = employeeMonthlySalary.EmployerContribution,
+                MonthlySalaryId = employeeMonthlySalary.MonthlySalaryId,
+            };
+
+            return monthlySalary;
+        }
+
+        #endregion
+
+        #region Private Methods
         private async Task AddEmployeeSalaryHistoryRecord(EmployeeSalary employeeSalary)
         {
             var employeeSalaryHistory = new EmployeeSalaryHistory()
@@ -923,5 +1266,7 @@ namespace StaffApp.Infrastructure.Services
             return Math.Round(tax, 2);
 
         }
+
+        #endregion
     }
 }

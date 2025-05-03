@@ -17,6 +17,7 @@ namespace StaffApp.Domain.Entity
         public virtual ICollection<EmployeeMonthlySalary> EmployeeMonthlySalaries { get; set; } = new HashSet<EmployeeMonthlySalary>();
         public virtual ICollection<EmployeeSalaryHistory> EmployeeSalaryHistories { get; set; } = new HashSet<EmployeeSalaryHistory>();
         public virtual ICollection<EmployeeSalaryAddonHistory> EmployeeSalaryAddonHistories { get; set; } = new HashSet<EmployeeSalaryAddonHistory>();
+        public virtual ICollection<EmployeeSalaryComment> EmployeeSalaryComments { get; set; } = new HashSet<EmployeeSalaryComment>();
 
     }
 }

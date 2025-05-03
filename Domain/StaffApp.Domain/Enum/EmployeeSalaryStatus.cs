@@ -11,6 +11,9 @@ namespace StaffApp.Domain.Enum
         Approved = 2,
 
         [Description("Submitted For Revised")]
-        SubmittedForRevised = 3
+        SubmittedForRevised = 3,
+
+        [Description("Generated")]
+        Generated = 4
     }
 }

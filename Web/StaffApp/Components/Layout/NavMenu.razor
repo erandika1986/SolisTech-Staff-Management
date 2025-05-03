@@ -26,7 +26,11 @@
 
     <AuthorizeView Roles="Admin,Director">
         <Authorized>
-            <MudNavLink Href="Users/Salaries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AttachMoney">Manage Employee Salaries</MudNavLink>
+            <MudNavGroup Title="Salaries" Expanded="true" Icon="@Icons.Material.Filled.MonetizationOn">
+                  <MudNavLink Href="Users/Salaries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Money">Manage Employee Salaries</MudNavLink>
+                  <MudNavLink Href="Users/Salaries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AttachMoney">Manage Monthly Salaries</MudNavLink>
+             </MudNavGroup>
+
         </Authorized>
     </AuthorizeView>
 

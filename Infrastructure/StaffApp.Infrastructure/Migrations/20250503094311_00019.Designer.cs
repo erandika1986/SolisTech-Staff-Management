@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StaffApp.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using StaffApp.Infrastructure.Data;
 namespace StaffApp.Infrastructure.Migrations
 {
     [DbContext(typeof(StaffAppDbContext))]
-    partial class StaffAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250503094311_00019")]
+    partial class _00019
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -792,7 +795,7 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Property<decimal>("BasicSalary")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("CompnayYearId")
+                    b.Property<int>("CompanyYearId")
                         .HasColumnType("int");
 
                     b.Property<string>("CreatedByUserId")
@@ -810,7 +813,7 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<int>("MonthlySalaryId")
+                    b.Property<int>("Month")
                         .HasColumnType("int");
 
                     b.Property<decimal>("NetSalary")
@@ -833,11 +836,9 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CompnayYearId");
+                    b.HasIndex("CompanyYearId");
 
                     b.HasIndex("EmployeeSalaryId");
-
-                    b.HasIndex("MonthlySalaryId");
 
                     b.ToTable("EmployeeMonthlySalary", (string)null);
                 });
@@ -1042,44 +1043,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.ToTable("EmployeeSalaryAddonHistory", (string)null);
                 });
 
-            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalaryComment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("EmployeeSalaryId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("UpdateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedByUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeSalaryId");
-
-                    b.ToTable("EmployeeSalaryComment", (string)null);
-                });
-
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalaryHistory", b =>
                 {
                     b.Property<int>("Id")
@@ -1276,84 +1239,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.HasIndex("LeaveTypeId");
 
                     b.ToTable("LeaveTypeLogic", (string)null);
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.MonthlySalary", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CompanyYearId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Month")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedByUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompanyYearId");
-
-                    b.ToTable("MonthlySalary", (string)null);
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.MonthlySalaryComment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Comment")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("MonthlySalaryId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedByUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MonthlySalaryId");
-
-                    b.ToTable("MonthlySalaryComment", (string)null);
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.PayeLogic", b =>
@@ -1622,8 +1507,8 @@ namespace StaffApp.Infrastructure.Migrations
                 {
                     b.HasOne("StaffApp.Domain.Entity.CompanyYear", "CompnayYear")
                         .WithMany("EmployeeMonthlySalaries")
-                        .HasForeignKey("CompnayYearId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("CompanyYearId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("StaffApp.Domain.Entity.EmployeeSalary", "EmployeeSalary")
@@ -1632,17 +1517,9 @@ namespace StaffApp.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("StaffApp.Domain.Entity.MonthlySalary", "MonthlySalary")
-                        .WithMany("EmployeeMonthlySalaries")
-                        .HasForeignKey("MonthlySalaryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("CompnayYear");
 
                     b.Navigation("EmployeeSalary");
-
-                    b.Navigation("MonthlySalary");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeMonthlySalaryAddon", b =>
@@ -1721,17 +1598,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("SalaryAddon");
                 });
 
-            modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalaryComment", b =>
-                {
-                    b.HasOne("StaffApp.Domain.Entity.EmployeeSalary", "EmployeeSalary")
-                        .WithMany("EmployeeSalaryComments")
-                        .HasForeignKey("EmployeeSalaryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("EmployeeSalary");
-                });
-
             modelBuilder.Entity("StaffApp.Domain.Entity.EmployeeSalaryHistory", b =>
                 {
                     b.HasOne("StaffApp.Domain.Entity.EmployeeSalary", "EmployeeSalary")
@@ -1792,28 +1658,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("LeaveType");
                 });
 
-            modelBuilder.Entity("StaffApp.Domain.Entity.MonthlySalary", b =>
-                {
-                    b.HasOne("StaffApp.Domain.Entity.CompanyYear", "CompanyYear")
-                        .WithMany("MonthlySalaries")
-                        .HasForeignKey("CompanyYearId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("CompanyYear");
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.MonthlySalaryComment", b =>
-                {
-                    b.HasOne("StaffApp.Domain.Entity.MonthlySalary", "MonthlySalary")
-                        .WithMany("MonthlySalaryComments")
-                        .HasForeignKey("MonthlySalaryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("MonthlySalary");
-                });
-
             modelBuilder.Entity("StaffApp.Domain.Entity.Authentication.ApplicationUser", b =>
                 {
                     b.Navigation("DepartmentHeads");
@@ -1843,8 +1687,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("EmployeeLeaveRequests");
 
                     b.Navigation("EmployeeMonthlySalaries");
-
-                    b.Navigation("MonthlySalaries");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.Department", b =>
@@ -1874,8 +1716,6 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.Navigation("EmployeeSalaryAddons");
 
-                    b.Navigation("EmployeeSalaryComments");
-
                     b.Navigation("EmployeeSalaryHistories");
                 });
 
@@ -1902,13 +1742,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("LeaveTypeConfigurations");
 
                     b.Navigation("LeaveTypeLogics");
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.MonthlySalary", b =>
-                {
-                    b.Navigation("EmployeeMonthlySalaries");
-
-                    b.Navigation("MonthlySalaryComments");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.SalaryAddon", b =>

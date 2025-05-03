@@ -6,7 +6,10 @@ namespace StaffApp.Domain.Entity
     {
         public int EmployeeMonthlySalaryId { get; set; }
         public int SalaryAddonId { get; set; }
+        public decimal OriginalValue { get; set; }
+        public decimal AdjustedValue { get; set; }
         public decimal Amount { get; set; }
+        public bool IsPayeApplicable { get; set; }
 
         public virtual EmployeeMonthlySalary EmployeeMonthlySalary { get; set; }
         public virtual SalaryAddon SalaryAddon { get; set; }

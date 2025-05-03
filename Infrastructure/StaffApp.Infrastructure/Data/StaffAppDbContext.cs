@@ -110,6 +110,7 @@ namespace StaffApp.Infrastructure.Data
         public DbSet<Department> Departments => Set<Department>();
         public DbSet<EmployeeLeaveAllocation> EmployeeLeaveAllocations => Set<EmployeeLeaveAllocation>();
         public DbSet<EmployeeLeaveRequest> EmployeeLeaveRequests => Set<EmployeeLeaveRequest>();
+        public DbSet<MonthlySalary> MonthlySalaries => Set<MonthlySalary>();
         public DbSet<EmployeeSalary> EmployeeSalaries => Set<EmployeeSalary>();
         public DbSet<LeaveType> LeaveTypes => Set<LeaveType>();
         public DbSet<EmployeeDepartment> EmployeeDepartments => Set<EmployeeDepartment>();

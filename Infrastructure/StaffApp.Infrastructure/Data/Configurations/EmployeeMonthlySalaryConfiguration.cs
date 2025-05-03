@@ -15,9 +15,9 @@ namespace StaffApp.Infrastructure.Data.Configurations
             builder.Property(p => p.Id).ValueGeneratedOnAdd();
 
             builder
-               .HasOne<CompanyYear>(c => c.CompnayYear)
+               .HasOne<MonthlySalary>(c => c.MonthlySalary)
                .WithMany(c => c.EmployeeMonthlySalaries)
-               .HasForeignKey(c => c.CompanyYearId)
+               .HasForeignKey(c => c.MonthlySalaryId)
                .OnDelete(DeleteBehavior.Restrict)
                .IsRequired(true);
 
