@@ -1,4 +1,6 @@
-﻿namespace StaffApp.Application.DTOs.User
+﻿using StaffApp.Domain.Enum;
+
+namespace StaffApp.Application.DTOs.User
 {
     public class EmployeeSalarySlipDTO
     {
@@ -36,6 +38,7 @@
 
     public class PaymentDescriptionDTO
     {
+        public SalaryAddonType SalaryAddonType { get; set; }
         public string Description { get; set; }
         public decimal Amount { get; set; }
     }

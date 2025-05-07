@@ -33,9 +33,11 @@ namespace StaffApp.Infrastructure.Services
                     return new GeneralResponseDTO(false, "User already exists");
 
                 var password = string.Join("", new PasswordGenerator().GeneratePasswords(10));
+                var maxEmployeeNumber = await context.ApplicationUsers.MaxAsync(x => x.EmployeeNumber);
                 var user = new ApplicationUser()
                 {
                     FullName = model.FullName,
+                    EmployeeNumber = maxEmployeeNumber + 1,
                     Email = model.Email,
                     UserName = model.Email,
                     PasswordHash = password,
@@ -184,6 +186,7 @@ namespace StaffApp.Infrastructure.Services
                         {
                             UserName = user.UserName ?? string.Empty,
                             FullName = user.FullName ?? string.Empty,
+                            EmployeeNo = user.EmployeeNumber.ToString(),
                             Gender = !user.Gender.HasValue ? string.Empty : user.Gender.Value.ToString(),
                             HireDate = !user.HireDate.HasValue ? string.Empty : user.HireDate.Value.ToString("MM/dd/yyyy"),
                             Id = user.Id,

@@ -18,7 +18,7 @@ namespace StaffApp.Application.DTOs.User
         public string? UpdatedByUserId { get; set; }
         public bool IsActive { get; set; }
 
-        public EmployeeSalaryTransferStatus Status { get; set; }
+        public EmployeeSalaryStatus Status { get; set; }
 
         public List<EmployeeMonthlySalaryAddonDTO> EmployeeSalaryAddons { get; set; } = new List<EmployeeMonthlySalaryAddonDTO>();
     }

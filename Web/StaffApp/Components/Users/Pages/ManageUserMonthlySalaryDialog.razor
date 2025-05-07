@@ -1,0 +1,94 @@
+﻿@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.User
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@inject IUserSalaryService UserSalaryService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+@inject IJSRuntime JSRuntime
+@inject LoadingService LoadingService
+
+
+@code {
+    [Parameter] public int EmployeeMonthlySalaryId { get; set; }
+
+    [Parameter] public string EmployeeFullName { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
+    public EmployeeMonthlySalaryDTO EmployeeMonthSalary { get; set; } = new();
+
+    public IEnumerable<EmployeeMonthlySalaryAddonDTO> AvailableSalaryAddons { get; set; } = new HashSet<EmployeeMonthlySalaryAddonDTO>();
+
+    public EmployeeMonthlySalaryAddonDTO? SelectedSalaryAddon { get; set; } = new();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    bool success;
+    string[] errors = { };
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadingService.Show();
+        AvailableSalaryAddons = await UserSalaryService.GetUnAssignedMonthlySalaryAddonsAsync(EmployeeMonthlySalaryId);
+        SelectedSalaryAddon = AvailableSalaryAddons.Count() > 0 ? AvailableSalaryAddons.FirstOrDefault() : null;
+        EmployeeMonthSalary = await UserSalaryService.GetEmployeeMonthlySalary(EmployeeMonthlySalaryId);
+        LoadingService.Hide();
+    }
+
+    private void AddSalaryAddon()
+    {
+        EmployeeMonthSalary.EmployeeSalaryAddons.Add(SelectedSalaryAddon);
+
+        var salaryAddons = AvailableSalaryAddons.ToHashSet();
+        salaryAddons.Remove(SelectedSalaryAddon);
+        AvailableSalaryAddons = salaryAddons;
+
+        SelectedSalaryAddon = AvailableSalaryAddons.Count() > 0 ? AvailableSalaryAddons.FirstOrDefault() : null;
+    }
+
+    private void RemoveAddon(EmployeeMonthlySalaryAddonDTO addonDTO)
+    {
+        EmployeeMonthSalary.EmployeeSalaryAddons.Remove(addonDTO);
+
+        addonDTO.Id = 0;
+        var salaryAddons = AvailableSalaryAddons.ToHashSet();
+        salaryAddons.Add(addonDTO);
+        AvailableSalaryAddons = salaryAddons;
+
+    }
+
+    private async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private string GetDisplayNameByPropertyInfor(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    private string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+}

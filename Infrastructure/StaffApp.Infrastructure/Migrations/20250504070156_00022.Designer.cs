@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StaffApp.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using StaffApp.Infrastructure.Data;
 namespace StaffApp.Infrastructure.Migrations
 {
     [DbContext(typeof(StaffAppDbContext))]
-    partial class StaffAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250504070156_00022")]
+    partial class _00022
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -205,9 +208,6 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
-
-                    b.Property<int?>("EmployeeNumber")
-                        .HasColumnType("int");
 
                     b.Property<int?>("EmployeeTypeId")
                         .HasColumnType("int");
@@ -810,11 +810,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<bool>("IsRevised")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
                     b.Property<int>("MonthlySalaryId")
                         .HasColumnType("int");
 
@@ -1359,6 +1354,29 @@ namespace StaffApp.Infrastructure.Migrations
                     b.ToTable("MonthlySalaryComment", (string)null);
                 });
 
+            modelBuilder.Entity("StaffApp.Domain.Entity.PayeLogic", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("MaxSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MinSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TaxRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PayeLogic", (string)null);
+                });
+
             modelBuilder.Entity("StaffApp.Domain.Entity.SalaryAddon", b =>
                 {
                     b.Property<int>("Id")
@@ -1409,34 +1427,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("SalaryAddon", (string)null);
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.TaxLogic", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("MaxSalary")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("MinSalary")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("SalaryAddonId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("TaxRate")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SalaryAddonId");
-
-                    b.ToTable("TaxLogic", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -1814,17 +1804,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("MonthlySalary");
                 });
 
-            modelBuilder.Entity("StaffApp.Domain.Entity.TaxLogic", b =>
-                {
-                    b.HasOne("StaffApp.Domain.Entity.SalaryAddon", "SalaryAddon")
-                        .WithMany("TaxLogics")
-                        .HasForeignKey("SalaryAddonId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("SalaryAddon");
-                });
-
             modelBuilder.Entity("StaffApp.Domain.Entity.Authentication.ApplicationUser", b =>
                 {
                     b.Navigation("DepartmentHeads");
@@ -1927,8 +1906,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("EmployeeSalaryAddonHistories");
 
                     b.Navigation("EmployeeSalaryAddons");
-
-                    b.Navigation("TaxLogics");
                 });
 #pragma warning restore 612, 618
         }

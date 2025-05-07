@@ -8,6 +8,7 @@ namespace StaffApp.Application.DTOs.User
         public string Id { get; set; } = string.Empty;
         public string? Email { get; set; }
         public string? FullName { get; set; }
+        public int? EmployeeNumber { get; set; }
         public string? Password { get; set; }
         public string? NICNumber { get; set; }
         public string? LandNumber { get; set; }

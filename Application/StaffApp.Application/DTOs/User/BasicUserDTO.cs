@@ -10,6 +10,9 @@ namespace StaffApp.Application.DTOs.User
         [Display(Name = "Full Name")]
         public string FullName { get; set; }
 
+        [Display(Name = "Employee No")]
+        public string EmployeeNo { get; set; }
+
         [Display(Name = "User Name")]
         public string UserName { get; set; }
 

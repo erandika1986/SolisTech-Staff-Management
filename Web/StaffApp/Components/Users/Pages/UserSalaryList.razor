@@ -204,6 +204,7 @@
         var parameters = new DialogParameters
         {
             { "EmployeeId", request.UserId },
+            { "EmployeeMonthlySalaryId", 0 },
             { "EmployeeFullName", request.FullName},
             { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEstimateSalaryDialogClosedAsync)  }
         };

@@ -7,7 +7,7 @@ namespace StaffApp.Domain.Entity
     {
         public int CompanyYearId { get; set; }
         public Month Month { get; set; }
-        public EmployeeSalaryTransferStatus Status { get; set; }
+        public Employee Status { get; set; }
 
         public virtual CompanyYear CompanyYear { get; set; }
 

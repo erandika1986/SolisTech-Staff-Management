@@ -6,6 +6,7 @@ namespace StaffApp.Domain.Entity.Authentication
     public class ApplicationUser : IdentityUser
     {
         public string? FullName { get; set; }
+        public int? EmployeeNumber { get; set; }
         public string? NICNumber { get; set; }
         public string? LandNumber { get; set; }
         public DateTime? HireDate { get; set; }

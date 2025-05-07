@@ -14,5 +14,6 @@ namespace StaffApp.Domain.Entity
         public virtual ICollection<EmployeeSalaryAddon> EmployeeSalaryAddons { get; set; } = new HashSet<EmployeeSalaryAddon>();
         public virtual ICollection<EmployeeMonthlySalaryAddon> EmployeeMonthlySalaryAddons { get; set; } = new HashSet<EmployeeMonthlySalaryAddon>();
         public virtual ICollection<EmployeeSalaryAddonHistory> EmployeeSalaryAddonHistories { get; set; } = new HashSet<EmployeeSalaryAddonHistory>();
+        public virtual ICollection<TaxLogic> TaxLogics { get; set; } = new HashSet<TaxLogic>();
     }
 }

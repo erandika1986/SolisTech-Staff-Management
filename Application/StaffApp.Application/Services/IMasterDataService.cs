@@ -6,6 +6,7 @@ namespace StaffApp.Application.Services
     public interface IMasterDataService
     {
         Task<List<DropDownDTO>> GetAvailableCompanyYears();
+        List<DropDownDTO> GetAvailableMonths();
         Task<List<DropDownDTO>> GetAvailableEmploymentTypes();
         List<DropDownDTO> GetAvailableGenderTypes();
         List<DropDownDTO> GetAllowGenderTypes();

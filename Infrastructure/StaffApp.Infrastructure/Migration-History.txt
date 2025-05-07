@@ -20,6 +20,12 @@ Add-Migration 00017 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00018 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00019 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00020 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00021 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00022 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00023 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00024 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00025 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00026 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 
 Database Update Command
 ====================================================================================================

@@ -14,10 +14,10 @@ namespace StaffApp.Domain.Entity
         public decimal EmployerContribution { get; set; }
         public decimal TotalDeduction { get; set; }
         public decimal NetSalary { get; set; }
+        public bool IsRevised { get; set; }
         public EmployeeSalaryStatus Status { get; set; }
 
         public virtual EmployeeSalary EmployeeSalary { get; set; }
-        public virtual CompanyYear CompnayYear { get; set; }
         public virtual MonthlySalary MonthlySalary { get; set; }
 
         public virtual ICollection<EmployeeMonthlySalaryAddon> EmployeeMonthlySalaryAddons { get; set; } = new HashSet<EmployeeMonthlySalaryAddon>();

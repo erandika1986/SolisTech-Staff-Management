@@ -1,0 +1,214 @@
+﻿@page "/Users/MonthlySalaries"
+@using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.User
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@inject IUserSalaryService UserSalaryService
+@inject IMasterDataService MasterDataService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+@inject IJSRuntime JSRuntime
+@inject LoadingService LoadingService
+
+@attribute [Authorize]
+<MudGrid>
+    <MudItem xs="12" sm="12" md="12" lg="12">
+        @if (!_isMasterDataLoaded)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudText>Loading master data...</MudText>
+        }
+        else
+        {
+            <MudDataGrid @ref="_dataGrid" T="EmployeeMonthlySalarySummaryDTO" ServerData="@(LoadData)" Sortable="true"
+                         Filterable="false"
+                         Hideable="true"
+                         Hover="true"
+                         Striped="true"
+                         Elevation="25"
+                         Loading="@_loading">
+                <ToolBarContent>
+
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="4" lg="4">
+                            <MudText Typo="Typo.h6">Manage Monthly Salaries</MudText>
+                            <MudSpacer />
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="8" lg="8">
+
+                            <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+                                <MudSelect T="DropDownDTO" Label="Company Year" Class="mt-0" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedCompanyYear" ValueChanged="@CompanyYearChanged" Style="padding-right:2px;">
+                                    @foreach (var companyYear in CompanyYears)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@companyYear">@companyYear.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudSelect T="DropDownDTO" Label="Month" Class="mt-0" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedMonth" ValueChanged="@MonthChanged" Style="padding-right:2px;">
+                                    @foreach (var month in Months)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@month">@month.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudPaper>
+
+                        </MudItem>
+                    </MudGrid>
+
+                </ToolBarContent>
+                <Columns>
+
+                    <PropertyColumn Property="x=>x.EmployeeName" Title="@GetDisplayName(typeof(EmployeeMonthlySalarySummaryDTO), nameof(EmployeeMonthlySalarySummaryDTO.EmployeeName))" />
+                    <PropertyColumn Property="x=>x.EmployeeNumber" Title="@GetDisplayName(typeof(EmployeeMonthlySalarySummaryDTO), nameof(EmployeeMonthlySalarySummaryDTO.EmployeeNumber))" />
+                    <PropertyColumn Property="x=>x.BasicSalary" Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.BasicSalary))" />
+                    <PropertyColumn Property="x=>x.TotalEarning" Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.TotalEarning))" />
+                    <PropertyColumn Property="x=>x.EmployerContribution" Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.EmployerContribution))" />
+                    <PropertyColumn Property="x=>x.TotalDeduction" Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.TotalDeduction))" />
+                    <PropertyColumn Property="x=>x.NetSalary" Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.NetSalary))" />
+                    <TemplateColumn CellClass="d-flex justify-end">
+                        <CellTemplate Context="user">
+
+                            <MudStack Row>
+                                <MudTooltip Text="View Salary" Color="Color.Info" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled"></MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Approve Revised Salary" Color="Color.Success" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Variant="Variant.Filled"></MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Ask For Revise Salary" Color="Color.Warning" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.NotInterested" Color="Color.Warning" Variant="Variant.Filled"></MudIconButton>
+                                </MudTooltip>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="EmployeeMonthlySalarySummaryDTO" />
+                </PagerContent>
+            </MudDataGrid>
+        }
+
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12" lg="12" Style="text-align: center;">
+        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle">
+            Approve
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.NotInterested" Class="ml-2">
+            Ask for Revise
+        </MudButton>
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string _searchString = "";
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = false;
+
+    private MudDataGrid<EmployeeMonthlySalarySummaryDTO> _dataGrid;
+
+    private IEnumerable<DropDownDTO> CompanyYears = new List<DropDownDTO>();
+    private DropDownDTO SelectedCompanyYear = new DropDownDTO();
+
+    private IEnumerable<DropDownDTO> Months = new List<DropDownDTO>();
+    private DropDownDTO SelectedMonth = new DropDownDTO();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMasterDataAsync();
+    }
+
+    private async Task LoadMasterDataAsync()
+    {
+        try
+        {
+            // Load your master data
+            CompanyYears = await MasterDataService.GetAvailableCompanyYears();
+            SelectedCompanyYear = CompanyYears.FirstOrDefault();
+
+            Months = MasterDataService.GetAvailableMonths();
+            SelectedMonth = Months.FirstOrDefault();
+
+            _isMasterDataLoaded = true;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine($"Error loading master data: {ex.Message}");
+        }
+    }
+
+
+    private void CompanyYearChanged(DropDownDTO changedValue)
+    {
+        SelectedCompanyYear = changedValue;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private void MonthChanged(DropDownDTO changedValue)
+    {
+        SelectedMonth = changedValue;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task<GridData<EmployeeMonthlySalarySummaryDTO>> LoadData(GridState<EmployeeMonthlySalarySummaryDTO> state)
+    {
+        _loading = true;
+
+        try
+        {
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            // Call the service with parameters
+            var result = await UserSalaryService.GetMonthlyEmployeeSalaries(
+                SelectedCompanyYear.Id,
+                SelectedMonth.Id,
+                page,
+                pageSize,
+                sortBy,
+                sortDirection
+            );
+
+            // Return the result in GridData format
+            return new GridData<EmployeeMonthlySalarySummaryDTO>
+                {
+                    Items = result.Items,
+                    TotalItems = result.TotalItems
+                };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+}

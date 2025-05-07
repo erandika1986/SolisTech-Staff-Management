@@ -7,6 +7,8 @@ namespace StaffApp.Domain.Enum
         [Description("Percentage")]
         Percentage = 1,
         [Description("Fixed Amount")]
-        FixedAmount = 2
+        FixedAmount = 2,
+        [Description("Multiple Range")]
+        MultipleRange = 3,
     }
 }

@@ -14,6 +14,10 @@ namespace StaffApp.Infrastructure.Data.Configurations
 
             builder.Property(p => p.Id).ValueGeneratedOnAdd();
 
+            builder.Property(p => p.IsRevised)
+               .HasDefaultValue(false)
+               .IsRequired(true);
+
             builder
                .HasOne<MonthlySalary>(c => c.MonthlySalary)
                .WithMany(c => c.EmployeeMonthlySalaries)

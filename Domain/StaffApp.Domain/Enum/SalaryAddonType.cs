@@ -11,6 +11,8 @@ namespace StaffApp.Domain.Enum
         [Description("Social Security Schemes Employee Share")]
         SocialSecuritySchemesEmployeeShare = 3,
         [Description("Social Security Schemes Company Share")]
-        SocialSecuritySchemesCompanyShare = 4
+        SocialSecuritySchemesCompanyShare = 4,
+        [Description("Tax")]
+        Tax = 5,
     }
 }

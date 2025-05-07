@@ -162,7 +162,12 @@ namespace StaffApp.Infrastructure.Services
 
         public List<DropDownDTO> GetEmployeeSalaryTransferStatus()
         {
-            return EnumHelper.GetDropDownList<EmployeeSalaryTransferStatus>();
+            return EnumHelper.GetDropDownList<Employee>();
+        }
+
+        public List<DropDownDTO> GetAvailableMonths()
+        {
+            return EnumHelper.GetDropDownList<Month>();
         }
     }
 }

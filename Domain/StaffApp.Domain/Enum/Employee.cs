@@ -1,6 +1,6 @@
 ﻿namespace StaffApp.Domain.Enum
 {
-    public enum EmployeeSalaryTransferStatus
+    public enum Employee
     {
         Generated = 1,
         SubmittedForApproval = 2,

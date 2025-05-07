@@ -1,6 +1,6 @@
 ﻿namespace StaffApp.Application.DTOs.User
 {
-    public class EmployeeSalarySummaryDTO
+    public class EmployeeMonthlySalarySummaryDTO
     {
         public int Id { get; set; }
         public string EmployeeName { get; set; }

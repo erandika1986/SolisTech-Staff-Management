@@ -1,5 +1,6 @@
 ﻿@using StaffApp.Application.DTOs.User
 @using System.Globalization
+@using StaffApp.Application.Extensions.Constants
 @using StaffApp.Application.Services
 @using StaffApp.Infrastructure.Services
 
@@ -143,10 +144,13 @@
                                     <tbody>
                                         @foreach (var earning in @SalarySlipDTO.Earnings)
                                         {
-                                            <tr>
-                                                <td>@earning.Description</td>
-                                                <td style="text-align: right">@FormatCurrency(@earning.Amount)</td>
-                                            </tr>
+                                            @if (earning.Amount > 0)
+                                            {
+                                                <tr>
+                                                    <td>@earning.Description</td>
+                                                    <td style="text-align: right">@FormatCurrency(@earning.Amount)</td>
+                                                </tr>
+                                            }
                                         }
                                     </tbody>
                                 </MudSimpleTable>
@@ -170,10 +174,13 @@
                                     <tbody>
                                         @foreach (var deductions in @SalarySlipDTO.Deductions)
                                         {
-                                            <tr>
-                                                <td>@deductions.Description</td>
-                                                <td style="text-align: right">@FormatCurrency(@deductions.Amount)</td>
-                                            </tr>
+                                            @if (deductions.Amount > 0)
+                                            {
+                                                <tr>
+                                                    <td>@deductions.Description</td>
+                                                    <td style="text-align: right">@FormatCurrency(@deductions.Amount)</td>
+                                                </tr>
+                                            }
                                         }
                                     </tbody>
                                 </MudSimpleTable>
@@ -202,10 +209,13 @@
                                     <tbody>
                                         @foreach (var contribution in @SalarySlipDTO.EmployerContributions)
                                         {
-                                            <tr>
-                                                <td>@contribution.Description</td>
-                                                <td style="text-align: right">@FormatCurrency(@contribution.Amount)</td>
-                                            </tr>
+                                            @if (contribution.Amount > 0)
+                                            {
+                                                <tr>
+                                                    <td>@contribution.Description</td>
+                                                    <td style="text-align: right">@FormatCurrency(@contribution.Amount)</td>
+                                                </tr>
+                                            }
                                         }
                                     </tbody>
                                 </MudSimpleTable>
@@ -296,6 +306,8 @@
 
     [Parameter] public string EmployeeFullName { get; set; }
 
+    [Parameter] public int EmployeeMonthlySalaryId { get; set; }
+
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; }
 
@@ -311,7 +323,15 @@
     private async Task GetSalarySlipAsync()
     {
         LoadingService.Show();
-        SalarySlipDTO = await UserSalaryService.GetEmployeeEstimateSalarySlipAsync(EmployeeId);
+        if (EmployeeMonthlySalaryId == ApplicationConstants.Zero)
+        {
+            SalarySlipDTO = await UserSalaryService.GetEmployeeEstimateSalarySlipAsync(EmployeeId);
+        }
+        else
+        {
+            SalarySlipDTO = await UserSalaryService.GetEmployeeSalarySlipAsync(EmployeeMonthlySalaryId);
+        }
+
         LoadingService.Hide();
     }
 
