@@ -25,5 +25,6 @@ namespace StaffApp.Application.Services
         Task<GeneralResponseDTO> UpdateMonthlySalarySubmittedToBankAsBulkAsync(int year, int month, string comment);
         Task<GeneralResponseDTO> UpdateMonthlySalaryTransferredAsBulkAsync(int year, int month, string comment);
         Task<EmployeeMonthlySalaryDTO> GetEmployeeMonthlySalary(int id);
+        Task<EmployeeMonthlySalaryStatusDTO> GetEmployeeMonthlySalaryStatus(int year, int month);
     }
 }

@@ -83,9 +83,9 @@
                                     <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled" OnClick="() => ManageEmployeeSalaryAsync(user.Item)"></MudIconButton>
                                 </MudTooltip>
                                 <MudTooltip Text="Edit Salary" Color="Color.Primary" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled"></MudIconButton>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditEmployeeMonthlySalaryAsync(user.Item)"></MudIconButton>
                                 </MudTooltip>
-@*                                 <MudTooltip Text="Approve Revised Salary" Color="Color.Success" Placement="Placement.Top">
+                                @*                                 <MudTooltip Text="Approve Revised Salary" Color="Color.Success" Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Variant="Variant.Filled"></MudIconButton>
                                 </MudTooltip>
                                 <MudTooltip Text="Ask For Revise Salary" Color="Color.Warning" Placement="Placement.Top">
@@ -100,6 +100,17 @@
                 </PagerContent>
             </MudDataGrid>
         }
+
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12" lg="12" Style="text-align: center;">
+
+        <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+            <MudText>Monthly Salary Status : @MonthlySalarySummary.StatusName</MudText>
+            <MudText>Created Date : @MonthlySalarySummary.CreatedDate</MudText>
+            <MudText>Created By User : @MonthlySalarySummary.CreatedByUser</MudText>
+            <MudText>Last Updated Date : @MonthlySalarySummary.UpdatedDate</MudText>
+            <MudText>Last Update User : @MonthlySalarySummary.UpdatedByUser</MudText>
+        </MudPaper>
 
     </MudItem>
     <MudItem xs="12" sm="12" md="12" lg="12" Style="text-align: center;">
@@ -123,6 +134,8 @@
     private IEnumerable<DropDownDTO> Months = new List<DropDownDTO>();
     private DropDownDTO SelectedMonth = new DropDownDTO();
 
+    private EmployeeMonthlySalaryStatusDTO MonthlySalarySummary = new EmployeeMonthlySalaryStatusDTO();
+
     private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Large, FullWidth = true };
 
     protected override async Task OnInitializedAsync()
@@ -140,6 +153,8 @@
 
             Months = MasterDataService.GetAvailableMonths();
             SelectedMonth = Months.FirstOrDefault();
+
+            MonthlySalarySummary = await UserSalaryService.GetEmployeeMonthlySalaryStatus(SelectedCompanyYear.Id, SelectedMonth.Id);
 
             _isMasterDataLoaded = true;
 
@@ -179,18 +194,39 @@
         // StateHasChanged();
     }
 
+    private async Task EditEmployeeMonthlySalaryAsync(EmployeeMonthlySalarySummaryDTO monthlySalary)
+    {
+        var parameters = new DialogParameters
+        {
+            { "EmployeeMonthlySalaryId", monthlySalary.Id },
+            { "EmployeeFullName", monthlySalary.EmployeeName},
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditEmployeeMonthlySalaryDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<ManageUserMonthlySalaryDialog>($"Edit Monthly Salary For : {monthlySalary.EmployeeName}", parameters, _maxWidth);
+    }
 
-    private void CompanyYearChanged(DropDownDTO changedValue)
+    private async Task HandleEditEmployeeMonthlySalaryDialogClosedAsync(bool result)
+    {
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+
+    private async Task CompanyYearChanged(DropDownDTO changedValue)
     {
         SelectedCompanyYear = changedValue;
+
+        MonthlySalarySummary = await UserSalaryService.GetEmployeeMonthlySalaryStatus(SelectedCompanyYear.Id, SelectedMonth.Id);
 
         _dataGrid?.ReloadServerData();
         StateHasChanged();
     }
 
-    private void MonthChanged(DropDownDTO changedValue)
+    private async Task MonthChanged(DropDownDTO changedValue)
     {
         SelectedMonth = changedValue;
+
+        MonthlySalarySummary = await UserSalaryService.GetEmployeeMonthlySalaryStatus(SelectedCompanyYear.Id, SelectedMonth.Id);
 
         _dataGrid?.ReloadServerData();
         StateHasChanged();

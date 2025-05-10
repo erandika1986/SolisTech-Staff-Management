@@ -747,7 +747,8 @@ namespace StaffApp.Infrastructure.Services
                     AdjustedValue = x.DefaultValue,
                     Amount = 0,
                     EmployeeMonthlySalaryId = employeeMonthlySalaryId,
-                    ApplyForAllEmployees = x.ApplyForAllEmployees
+                    ApplyForAllEmployees = x.ApplyForAllEmployees,
+                    ProportionType = x.ProportionType
                 })
                 .ToListAsync(CancellationToken.None);
 
@@ -916,7 +917,7 @@ namespace StaffApp.Infrastructure.Services
                         CreatedByUserId = currentUserService.UserId,
                         UpdateDate = DateTime.Now,
                         UpdatedByUserId = currentUserService.UserId,
-                        Status = Employee.Generated
+                        Status = MonthlySalaryStatus.Generated
                     };
                 }
 
@@ -1062,7 +1063,7 @@ namespace StaffApp.Infrastructure.Services
 
         public async Task<PaginatedResultDTO<EmployeeMonthlySalarySummaryDTO>> GetMonthlyEmployeeSalaries(int year, int month, int pageNumber, int pageSize, string sortField = null, bool ascending = true)
         {
-            var employeeSalaryQuery = context.EmployeeMonthlySalaries.Where(x => x.MonthlySalary.CompanyYearId == year && x.MonthlySalary.Month == (Month)month); ;
+            var employeeSalaryQuery = context.EmployeeMonthlySalaries.Where(x => x.MonthlySalary.CompanyYearId == year && x.MonthlySalary.Month == (Month)month);
 
             int totalCount = await employeeSalaryQuery.CountAsync();
 
@@ -1139,10 +1140,46 @@ namespace StaffApp.Infrastructure.Services
             return newResult;
         }
 
+        public async Task<EmployeeMonthlySalaryStatusDTO> GetEmployeeMonthlySalaryStatus(int year, int month)
+        {
+            var employeeMonth = await context.MonthlySalaries.FirstOrDefaultAsync(x => x.CompanyYearId == year && x.Month == (Month)month);
+
+            if (employeeMonth is null)
+                return new EmployeeMonthlySalaryStatusDTO()
+                {
+                    Id = 0,
+                    StatusName = EnumHelper.GetEnumDescription(MonthlySalaryStatus.NotGenerated),
+                    Status = MonthlySalaryStatus.NotGenerated
+                };
+
+            return new EmployeeMonthlySalaryStatusDTO()
+            {
+                CreatedByUser = employeeMonth.CreatedByUserId,
+                CreatedDate = employeeMonth.CreatedDate.ToString("yyyy-MM-dd"),
+                Id = employeeMonth.Id,
+                StatusName = EnumHelper.GetEnumDescription(employeeMonth.Status),
+                Status = employeeMonth.Status,
+                UpdatedByUser = employeeMonth.UpdatedByUserId,
+                UpdatedDate = employeeMonth.UpdateDate.Value.ToString("yyyy-MM-dd")
+            };
+        }
         public async Task<GeneralResponseDTO> UpdateUserMonthlySalaryAsync(EmployeeMonthlySalaryDTO salary)
         {
             try
             {
+
+
+                var alreadyAssignedAddons = salary.EmployeeSalaryAddons.Select(x => x.Id);
+
+                var deletedEmployeeAddons = await context.EmployeeMonthlySalaryAddons.Where(x => x.EmployeeMonthlySalaryId == salary.Id && !alreadyAssignedAddons.Contains(x.Id)).ToListAsync(CancellationToken.None);
+
+                foreach (var deletedItem in deletedEmployeeAddons)
+                {
+                    context.EmployeeMonthlySalaryAddons.Remove(deletedItem);
+                }
+
+                await context.SaveChangesAsync(CancellationToken.None);
+
                 var employeeMonthlySalary = await context.EmployeeMonthlySalaries.FindAsync(salary.Id);
 
                 var totalAllowances = 0.00m;
@@ -1153,6 +1190,7 @@ namespace StaffApp.Infrastructure.Services
 
                 foreach (var addon in salary.EmployeeSalaryAddons)
                 {
+                    var adjustedValue = addon.AdjustedValue;
                     var amount = addon.AdjustedValue;
 
                     if (addon.Id > 0)
@@ -1185,7 +1223,7 @@ namespace StaffApp.Infrastructure.Services
                                 totalEmployerContributions += amount;
                             }
 
-                            existingAddon.AdjustedValue = amount;
+                            existingAddon.AdjustedValue = adjustedValue;
                             existingAddon.Amount = amount;
                             existingAddon.OriginalValue = existingAddon.OriginalValue;
                             existingAddon.UpdateDate = DateTime.Now;
@@ -1246,7 +1284,7 @@ namespace StaffApp.Infrastructure.Services
 
                 foreach (var taxAddon in employeeTaxSalaryAddons)
                 {
-                    var deductionRecord = employeeMonthlySalary.EmployeeMonthlySalaryAddons.FirstOrDefault(x => x.SalaryAddonId == taxAddon.SalaryAddonId);
+                    var deductionRecord = employeeMonthlySalary.EmployeeMonthlySalaryAddons.FirstOrDefault(x => x.Id == taxAddon.Id);
 
                     var totalEarning = employeeMonthlySalary.BasicSalary + employeeMonthlySalary.EmployeeMonthlySalaryAddons
                          .Where(x => x.SalaryAddon.AddonType == SalaryAddonType.Allowance)
@@ -1277,42 +1315,7 @@ namespace StaffApp.Infrastructure.Services
                     totalDeductions += tax;
                 }
 
-                foreach (var item in taxSalaryAddons)
-                {
-                    foreach (var taxAddon in employeeTaxSalaryAddons)
-                    {
-                        var deductionPaymentAddon = employeeMonthlySalary.EmployeeMonthlySalaryAddons.FirstOrDefault(x => x.SalaryAddonId == taxAddon.SalaryAddonId);
-
-                        if (deductionPaymentAddon != null)
-                        {
-                            var tax = 0.00m;
-
-                            switch (taxAddon.SalaryAddon.ProportionType)
-                            {
-                                case ProportionType.FixedAmount:
-                                    {
-                                        tax = taxAddon.AdjustedValue;
-                                    }
-                                    break;
-                                case ProportionType.Percentage:
-                                    {
-                                        tax = ((employeeMonthlySalary.BasicSalary + totalAllowances) * taxAddon.AdjustedValue) / 100.00m;
-                                    }
-                                    break;
-                                case ProportionType.MultipleRange:
-                                    {
-                                        tax = CalculateMonthlyTaxForMultipleRange(employeeMonthlySalary.BasicSalary + totalAllowances, taxAddon.SalaryAddon.TaxLogics.ToList());
-                                    }
-                                    break;
-                            }
-
-                            deductionPaymentAddon.Amount = tax;
-                            totalDeductions += tax;
-                        }
-                    }
-                }
-
-                await context.SaveChangesAsync(CancellationToken.None);
+                //await context.SaveCha                                                                                                                                                                                          ngesAsync(CancellationToken.None);
 
                 employeeMonthlySalary.TotalEarning = employeeMonthlySalary.BasicSalary + totalAllowances;
                 employeeMonthlySalary.TotalDeduction = totalDeductions;
@@ -1340,7 +1343,7 @@ namespace StaffApp.Infrastructure.Services
             {
                 var monthlySalary = await context.MonthlySalaries
                     .FirstOrDefaultAsync(x => x.CompanyYearId == year && x.Month == (Month)month);
-                monthlySalary.Status = Employee.Approved;
+                monthlySalary.Status = MonthlySalaryStatus.Approved;
                 monthlySalary.MonthlySalaryComments.Add(new MonthlySalaryComment()
                 {
                     Comment = comment,
@@ -1375,7 +1378,7 @@ namespace StaffApp.Infrastructure.Services
             {
                 var monthlySalary = await context.MonthlySalaries
                     .FirstOrDefaultAsync(x => x.CompanyYearId == year && x.Month == (Month)month);
-                monthlySalary.Status = Employee.SubmittedForRevised;
+                monthlySalary.Status = MonthlySalaryStatus.SubmittedForRevised;
                 monthlySalary.MonthlySalaryComments.Add(new MonthlySalaryComment()
                 {
                     Comment = comment,
@@ -1410,7 +1413,7 @@ namespace StaffApp.Infrastructure.Services
             {
                 var monthlySalary = await context.MonthlySalaries
                     .FirstOrDefaultAsync(x => x.CompanyYearId == year && x.Month == (Month)month);
-                monthlySalary.Status = Employee.SubmittedToBank;
+                monthlySalary.Status = MonthlySalaryStatus.SubmittedToBank;
                 monthlySalary.MonthlySalaryComments.Add(new MonthlySalaryComment()
                 {
                     Comment = comment,
@@ -1438,7 +1441,7 @@ namespace StaffApp.Infrastructure.Services
             {
                 var monthlySalary = await context.MonthlySalaries
                     .FirstOrDefaultAsync(x => x.CompanyYearId == year && x.Month == (Month)month);
-                monthlySalary.Status = Employee.Transferred;
+                monthlySalary.Status = MonthlySalaryStatus.Transferred;
                 monthlySalary.MonthlySalaryComments.Add(new MonthlySalaryComment()
                 {
                     Comment = comment,
@@ -1481,6 +1484,7 @@ namespace StaffApp.Infrastructure.Services
                 EmployerContribution = employeeMonthlySalary.EmployerContribution,
                 MonthlySalaryId = employeeMonthlySalary.MonthlySalaryId,
                 Status = employeeMonthlySalary.Status,
+                CreatedDate = employeeMonthlySalary.CreatedDate
             };
 
             foreach (var addon in employeeMonthlySalary.EmployeeMonthlySalaryAddons)
@@ -1498,6 +1502,7 @@ namespace StaffApp.Infrastructure.Services
                     AdjustedValue = addon.AdjustedValue,
                     ApplyForAllEmployees = addon.SalaryAddon.ApplyForAllEmployees,
                     IsApplicableForPaye = addon.IsPayeApplicable,
+                    ProportionType = addon.SalaryAddon.ProportionType
                 });
             }
 
@@ -1636,6 +1641,8 @@ namespace StaffApp.Infrastructure.Services
             return Math.Round(tax, 2);
 
         }
+
+
 
         #endregion
     }

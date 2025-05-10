@@ -1,4 +1,6 @@
-﻿namespace StaffApp.Application.DTOs.User
+﻿using StaffApp.Domain.Enum;
+
+namespace StaffApp.Application.DTOs.User
 {
     public class EmployeeMonthlySalaryAddonDTO
     {
@@ -10,6 +12,7 @@
         public decimal OriginalValue { get; set; }
         public decimal AdjustedValue { get; set; }
         public bool ApplyForAllEmployees { get; set; }
+        public ProportionType ProportionType { get; set; }
 
         public bool IsApplicableForPaye { get; set; }
     }

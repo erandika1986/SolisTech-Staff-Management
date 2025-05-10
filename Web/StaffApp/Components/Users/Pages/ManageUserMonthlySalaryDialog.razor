@@ -11,6 +11,99 @@
 @inject IJSRuntime JSRuntime
 @inject LoadingService LoadingService
 
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-2">
+                    <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                        <MudGrid>
+
+                            <MudItem xs="12" sm="12" md="6" lg="6">
+                                <MudNumericField T="Decimal" Label="Basic Salary" @bind-Value="EmployeeMonthSalary.BasicSalary" Min=35000 Required="true" Disabled="true" RequiredError="Basic salary is required!" />
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudDatePicker xs="12" sm="6" Label="Salary Date" Date="EmployeeMonthSalary.CreatedDate" Required="true" Disabled="true" RequiredError="CreatedDate date is required!" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudForm>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="6" lg="6">
+                <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+                    <MudSelect T="EmployeeMonthlySalaryAddonDTO" Label="Select Salary Add-on" ToStringFunc="(item) => item  is not null? item.SalaryAddon:string.Empty" MultiSelection="false" @bind-Value="SelectedSalaryAddon">
+                        @foreach (var salaryAddon in AvailableSalaryAddons)
+                        {
+                            <MudSelectItem T="EmployeeMonthlySalaryAddonDTO" Value="@salaryAddon">@salaryAddon.SalaryAddon</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddSalaryAddon">
+                        <MudIcon Icon="@Icons.Material.Filled.Add" /> Add
+                    </MudButton>
+                </MudPaper>
+
+            </MudItem>
+            <MudItem xs="12" sm="12">
+                <MudTable Items="EmployeeMonthSalary.EmployeeSalaryAddons">
+                    <HeaderContent>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Original Value</MudTh>
+                        <MudTh>Adjusted Value</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.SalaryAddon</MudTd>
+                        <MudTd>
+                            <MudNumericField @bind-Value="context.OriginalValue" Immediate="true" Required="true" Disabled="true" RequiredError="Original value is required!" />
+                        </MudTd>
+                        <MudTd>
+                            <MudNumericField @bind-Value="context.AdjustedValue" Immediate="true" Required="true" Disabled="context.ProportionType == Domain.Enum.ProportionType.MultipleRange" RequiredError="Adjusted value is required!" />
+                        </MudTd>
+                        <MudTd>
+                            <MudStack Row>
+                                <MudTooltip Text="Delete Salary Add-on" Color="Color.Error" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" Disabled="context.ApplyForAllEmployees" OnClick="() => RemoveAddon(context)"></MudIconButton>
+                                </MudTooltip>
+                            </MudStack>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudItem>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-4 mud-height-full">
+                    <MudText Typo="Typo.subtitle2">@($"Errors ({errors.Length})")</MudText>
+                    @foreach (var error in errors)
+                    {
+                        <MudText Color="@Color.Error">@error</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" Disabled="@(!success)" OnClick="SaveAsync" Class="ml-auto">
+                Save
+            </MudButton>
+@*             @if (!IsApprovalView)
+            {
+
+            }
+            @if (IsApprovalView)
+            {
+                <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ApproveSalaryUpdateAsync" Disabled="@(!success)" Class="ml-auto">
+                    Approve
+                </MudButton>
+                <MudButton Color="Color.Warning" Variant="Variant.Filled" OnClick="AskForReviseSalaryUpdateAsync" Disabled="@(!success)" Class="ml-auto">
+                    Ask for Revise
+                </MudButton>
+            }
+            } *@
+
+        </MudPaper>
+    </DialogActions>
+</MudDialog>
 
 @code {
     [Parameter] public int EmployeeMonthlySalaryId { get; set; }
@@ -63,6 +156,18 @@
         salaryAddons.Add(addonDTO);
         AvailableSalaryAddons = salaryAddons;
 
+    }
+
+    private async Task SaveAsync()
+    {
+        if (form.IsValid)
+        {
+            LoadingService.Show();
+            var response = await UserSalaryService.UpdateUserMonthlySalaryAsync(EmployeeMonthSalary);
+
+            await ShowSnackbar(response);
+            LoadingService.Hide();
+        }
     }
 
     private async Task ShowSnackbar(GeneralResponseDTO result)
