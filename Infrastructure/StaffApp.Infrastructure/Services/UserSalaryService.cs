@@ -1126,7 +1126,8 @@ namespace StaffApp.Infrastructure.Services
                 BasicSalary = salary.BasicSalary.ToString("C"),
                 TotalDeduction = salary.TotalDeduction.ToString("C"),
                 TotalEarning = salary.TotalEarning.ToString("C"),
-                EmployerContribution = salary.EmployerContribution.ToString("C")
+                EmployerContribution = salary.EmployerContribution.ToString("C"),
+                IsRevised = salary.IsRevised
             }).ToListAsync();
 
             var newResult = new PaginatedResultDTO<EmployeeMonthlySalarySummaryDTO>
@@ -1152,17 +1153,21 @@ namespace StaffApp.Infrastructure.Services
                     Status = MonthlySalaryStatus.NotGenerated
                 };
 
+            var createdUser = await userService.GetUserByIdAsync(employeeMonth.CreatedByUserId);
+            var updatedUser = await userService.GetUserByIdAsync(employeeMonth.UpdatedByUserId);
+
             return new EmployeeMonthlySalaryStatusDTO()
             {
-                CreatedByUser = employeeMonth.CreatedByUserId,
+                CreatedByUser = createdUser.FullName,
                 CreatedDate = employeeMonth.CreatedDate.ToString("yyyy-MM-dd"),
                 Id = employeeMonth.Id,
                 StatusName = EnumHelper.GetEnumDescription(employeeMonth.Status),
                 Status = employeeMonth.Status,
-                UpdatedByUser = employeeMonth.UpdatedByUserId,
+                UpdatedByUser = updatedUser.FullName,
                 UpdatedDate = employeeMonth.UpdateDate.Value.ToString("yyyy-MM-dd")
             };
         }
+
         public async Task<GeneralResponseDTO> UpdateUserMonthlySalaryAsync(EmployeeMonthlySalaryDTO salary)
         {
             try
@@ -1324,12 +1329,48 @@ namespace StaffApp.Infrastructure.Services
                 employeeMonthlySalary.UpdateDate = DateTime.Now;
                 employeeMonthlySalary.UpdatedByUserId = currentUserService.UserId;
                 employeeMonthlySalary.Status = Domain.Enum.EmployeeSalaryStatus.SubmittedForApproval;
+                employeeMonthlySalary.IsRevised = true;
 
                 context.EmployeeMonthlySalaries.Update(employeeMonthlySalary);
 
                 await context.SaveChangesAsync(CancellationToken.None);
 
                 return new GeneralResponseDTO() { Flag = true, Message = "Employee monthly salary successfully updated." };
+            }
+            catch (Exception ex)
+            {
+                return new GeneralResponseDTO() { Flag = false, Message = ex.Message };
+            }
+        }
+
+        public async Task<GeneralResponseDTO> SubmitMonthlySalaryForApprovalAsBulkAsync(int monthlySalaryId, string comment)
+        {
+            try
+            {
+                var monthlySalary = await context.MonthlySalaries
+                    .FirstOrDefaultAsync(x => x.Id == monthlySalaryId);
+                monthlySalary.Status = MonthlySalaryStatus.SubmittedForApproval;
+                monthlySalary.MonthlySalaryComments.Add(new MonthlySalaryComment()
+                {
+                    Comment = comment,
+                    CreatedByUserId = currentUserService.UserId,
+                    CreatedDate = DateTime.Now,
+                    UpdatedByUserId = currentUserService.UserId,
+                    UpdateDate = DateTime.Now,
+                    IsActive = true
+                });
+
+                foreach (var employeeMonthlySalary in monthlySalary.EmployeeMonthlySalaries)
+                {
+                    employeeMonthlySalary.Status = EmployeeSalaryStatus.Approved;
+                    employeeMonthlySalary.UpdateDate = DateTime.Now;
+                    employeeMonthlySalary.UpdatedByUserId = currentUserService.UserId;
+                }
+
+                context.MonthlySalaries.Update(monthlySalary);
+                await context.SaveChangesAsync(CancellationToken.None);
+
+                return new GeneralResponseDTO() { Flag = true, Message = "Monthly salaries are submitted for approval successfully." };
             }
             catch (Exception ex)
             {

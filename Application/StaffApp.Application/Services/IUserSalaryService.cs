@@ -20,6 +20,7 @@ namespace StaffApp.Application.Services
         Task<GeneralResponseDTO> CheckEmployeesMonthlySalaryGeneratedAsync(int year, int month);
         Task<PaginatedResultDTO<EmployeeMonthlySalarySummaryDTO>> GetMonthlyEmployeeSalaries(int year, int month, int pageNumber, int pageSize, string sortField = null, bool ascending = true);
         Task<GeneralResponseDTO> UpdateUserMonthlySalaryAsync(EmployeeMonthlySalaryDTO salary);
+        Task<GeneralResponseDTO> SubmitMonthlySalaryForApprovalAsBulkAsync(int monthlySalaryId, string comment);
         Task<GeneralResponseDTO> ApproveMonthlySalaryAsBulkAsync(int year, int month, string comment);
         Task<GeneralResponseDTO> AskToReviseMonthlySalaryAsBulkAsync(int year, int month, string comment);
         Task<GeneralResponseDTO> UpdateMonthlySalarySubmittedToBankAsBulkAsync(int year, int month, string comment);

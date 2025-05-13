@@ -3,6 +3,7 @@
 @using StaffApp.Application.DTOs.Common
 @using StaffApp.Application.DTOs.User
 @using StaffApp.Application.Services
+@using StaffApp.Components.Shared
 @using StaffApp.Infrastructure.Services
 @using System.Reflection
 @using System.ComponentModel.DataAnnotations
@@ -75,12 +76,6 @@
                                 <MudTooltip Text="View Salary" Color="Color.Info" Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled"></MudIconButton>
                                 </MudTooltip>
-                                <MudTooltip Text="Approve Revised Salary" Color="Color.Success" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Variant="Variant.Filled"></MudIconButton>
-                                </MudTooltip>
-                                <MudTooltip Text="Ask For Revise Salary" Color="Color.Warning" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.NotInterested" Color="Color.Warning" Variant="Variant.Filled"></MudIconButton>
-                                </MudTooltip>
                             </MudStack>
                         </CellTemplate>
                     </TemplateColumn>
@@ -93,10 +88,10 @@
 
     </MudItem>
     <MudItem xs="12" sm="12" md="12" lg="12" Style="text-align: center;">
-        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle">
+        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="() => Approval()">
             Approve
         </MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.NotInterested" Class="ml-2">
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.NotInterested" OnClick="() => AskForRevise()" Class="ml-2">
             Ask for Revise
         </MudButton>
     </MudItem>
@@ -107,7 +102,14 @@
     private bool _loading = false;
     private bool _isMasterDataLoaded = false;
 
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
     private MudDataGrid<EmployeeMonthlySalarySummaryDTO> _dataGrid;
+
+    private EmployeeMonthlySalaryStatusDTO MonthlySalarySummary = new EmployeeMonthlySalaryStatusDTO();
 
     private IEnumerable<DropDownDTO> CompanyYears = new List<DropDownDTO>();
     private DropDownDTO SelectedCompanyYear = new DropDownDTO();
@@ -167,6 +169,8 @@
 
         try
         {
+            MonthlySalarySummary = await UserSalaryService.GetEmployeeMonthlySalaryStatus(SelectedCompanyYear.Id, SelectedMonth.Id);
+
             // Extract paging parameters
             var page = state.Page + 1; // MudBlazor uses 0-based indexing
             var pageSize = state.PageSize;
@@ -199,13 +203,93 @@
         }
     }
 
-    string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    private async Task Approval()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Approve Monthly Salary?" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Submit" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Success },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var response = await UserSalaryService.SubmitMonthlySalaryForApprovalAsBulkAsync(MonthlySalarySummary.Id, comment);
+
+            await ShowSnackbar(response);
+
+            await OnDialogClosed.InvokeAsync(true); // Notify parent
+            //MudDialog.Close(DialogResult.Ok(true));
+
+            _dataGrid?.ReloadServerData();
+            StateHasChanged();
+
+        }
+    }
+
+    private async Task AskForRevise()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Submitting Monthly Salary For Revise?" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Submit" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Success },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var response = await UserSalaryService.SubmitMonthlySalaryForApprovalAsBulkAsync(MonthlySalarySummary.Id, comment);
+
+            await ShowSnackbar(response);
+
+            await OnDialogClosed.InvokeAsync(true); // Notify parent
+            //MudDialog.Close(DialogResult.Ok(true));
+
+            _dataGrid?.ReloadServerData();
+            StateHasChanged();
+
+        }
+    }
+
+    private async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
+
+    private string GetDisplayNameByPropertyInfro(PropertyInfo prop)
     {
         var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
         return displayAttribute?.Name ?? prop.Name;
     }
 
-    string GetDisplayName(Type type, string propertyName)
+    private string GetDisplayName(Type type, string propertyName)
     {
         var prop = type.GetProperty(propertyName);
         var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
