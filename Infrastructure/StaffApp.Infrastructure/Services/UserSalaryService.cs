@@ -1122,7 +1122,7 @@ namespace StaffApp.Infrastructure.Services
                 Id = salary.Id,
                 EmployeeName = salary.EmployeeSalary.User.FullName,
                 EmployeeNumber = salary.EmployeeSalary.User.EmployeeNumber.ToString(),
-                NetSalary = salary.NetSalary.ToString("C"),
+                NetSalary = salary.NetSalary.ToString("C") + (salary.IsRevised ? " (Revised)" : string.Empty),
                 BasicSalary = salary.BasicSalary.ToString("C"),
                 TotalDeduction = salary.TotalDeduction.ToString("C"),
                 TotalEarning = salary.TotalEarning.ToString("C"),
@@ -1252,7 +1252,7 @@ namespace StaffApp.Infrastructure.Services
                                 amount = (employeeMonthlySalary.BasicSalary * addon.AdjustedValue) / 100.00m;
                             }
 
-                            if (salaryAddon.AddonType == SalaryAddonType.Allowance && addon.IsApplicableForPaye)
+                            if (salaryAddon.AddonType == SalaryAddonType.Allowance)
                             {
                                 totalAllowances += amount;
                             }
@@ -1378,12 +1378,12 @@ namespace StaffApp.Infrastructure.Services
             }
         }
 
-        public async Task<GeneralResponseDTO> ApproveMonthlySalaryAsBulkAsync(int year, int month, string comment)
+        public async Task<GeneralResponseDTO> ApproveMonthlySalaryAsBulkAsync(int monthlySalaryId, string comment)
         {
             try
             {
                 var monthlySalary = await context.MonthlySalaries
-                    .FirstOrDefaultAsync(x => x.CompanyYearId == year && x.Month == (Month)month);
+                    .FirstOrDefaultAsync(x => x.Id == monthlySalaryId);
                 monthlySalary.Status = MonthlySalaryStatus.Approved;
                 monthlySalary.MonthlySalaryComments.Add(new MonthlySalaryComment()
                 {
@@ -1413,12 +1413,12 @@ namespace StaffApp.Infrastructure.Services
             }
         }
 
-        public async Task<GeneralResponseDTO> AskToReviseMonthlySalaryAsBulkAsync(int year, int month, string comment)
+        public async Task<GeneralResponseDTO> AskToReviseMonthlySalaryAsBulkAsync(int monthlySalaryId, string comment)
         {
             try
             {
                 var monthlySalary = await context.MonthlySalaries
-                    .FirstOrDefaultAsync(x => x.CompanyYearId == year && x.Month == (Month)month);
+                    .FirstOrDefaultAsync(x => x.Id == monthlySalaryId);
                 monthlySalary.Status = MonthlySalaryStatus.SubmittedForRevised;
                 monthlySalary.MonthlySalaryComments.Add(new MonthlySalaryComment()
                 {
@@ -1448,12 +1448,12 @@ namespace StaffApp.Infrastructure.Services
             }
         }
 
-        public async Task<GeneralResponseDTO> UpdateMonthlySalarySubmittedToBankAsBulkAsync(int year, int month, string comment)
+        public async Task<GeneralResponseDTO> UpdateMonthlySalarySubmittedToBankAsBulkAsync(int monthlySalaryId, string comment)
         {
             try
             {
                 var monthlySalary = await context.MonthlySalaries
-                    .FirstOrDefaultAsync(x => x.CompanyYearId == year && x.Month == (Month)month);
+                    .FirstOrDefaultAsync(x => x.Id == monthlySalaryId);
                 monthlySalary.Status = MonthlySalaryStatus.SubmittedToBank;
                 monthlySalary.MonthlySalaryComments.Add(new MonthlySalaryComment()
                 {
@@ -1476,12 +1476,12 @@ namespace StaffApp.Infrastructure.Services
             }
         }
 
-        public async Task<GeneralResponseDTO> UpdateMonthlySalaryTransferredAsBulkAsync(int year, int month, string comment)
+        public async Task<GeneralResponseDTO> UpdateMonthlySalaryTransferredAsBulkAsync(int monthlySalaryId, string comment)
         {
             try
             {
                 var monthlySalary = await context.MonthlySalaries
-                    .FirstOrDefaultAsync(x => x.CompanyYearId == year && x.Month == (Month)month);
+                    .FirstOrDefaultAsync(x => x.Id == monthlySalaryId);
                 monthlySalary.Status = MonthlySalaryStatus.Transferred;
                 monthlySalary.MonthlySalaryComments.Add(new MonthlySalaryComment()
                 {

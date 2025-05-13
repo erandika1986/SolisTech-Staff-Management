@@ -136,7 +136,7 @@
                                         Color="Color.Primary" 
                                         Variant="Variant.Filled" 
                                         OnClick="() => EditEmployeeMonthlySalaryAsync(user.Item)"
-                                        Disabled="MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.Generated ||
+                                        Disabled="MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.Generated &&
                                                   MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.SubmittedForRevised"></MudIconButton>
                                 </MudTooltip>
                                 @*                                 <MudTooltip Text="Approve Revised Salary" Color="Color.Success" Placement="Placement.Top">
@@ -157,25 +157,40 @@
 
     </MudItem>
     <MudItem xs="12" sm="12" md="12" lg="12" Style="text-align: center;">
-
         <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
-            <MudText>Monthly Salary Status : @MonthlySalarySummary.StatusName | </MudText>
-            <MudText>Created Date : @MonthlySalarySummary.CreatedDate | </MudText>
-            <MudText>Created By User : @MonthlySalarySummary.CreatedByUser | </MudText>
-            <MudText>Last Updated Date : @MonthlySalarySummary.UpdatedDate | </MudText>
-            <MudText>Last Update User : @MonthlySalarySummary.UpdatedByUser</MudText>
+            <MudText><b>Salary Status : </b>@MonthlySalarySummary.StatusName | </MudText>
+            <MudText><b>Created Date : </b>@MonthlySalarySummary.CreatedDate | </MudText>
+            <MudText><b>Created User : </b>@MonthlySalarySummary.CreatedByUser | </MudText>
+            <MudText><b>Updated Date : </b>@MonthlySalarySummary.UpdatedDate | </MudText>
+            <MudText><b>Update User : </b>@MonthlySalarySummary.UpdatedByUser</MudText>
         </MudPaper>
-
     </MudItem>
     <MudItem xs="12" sm="12" md="12" lg="12" Style="text-align: center;">
+        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Chat">
+            Comments
+        </MudButton>
         <MudButton 
             Variant="Variant.Filled" 
             Color="Color.Success"
-            Disabled="MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.Generated || 
-                    MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.SubmittedForRevised"
+            Disabled="MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.Generated && MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.SubmittedForRevised"
             StartIcon="@Icons.Material.Filled.CheckCircle" 
-            OnClick="() => SubmitForApproval()">
+            OnClick="() => SubmitForApprovalAsync()">
             Submit For Approval
+        </MudButton>
+        <MudButton 
+            Variant="Variant.Filled"
+            Color="Color.Success"
+            Disabled="MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.Approved"
+            StartIcon="@Icons.Material.Filled.CheckCircle"
+                   OnClick="() => MaskAsSubmittedToBankAsync()">
+            Mark As Submitted To Bank
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Success"
+                   Disabled="MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.SubmittedToBank"
+                   StartIcon="@Icons.Material.Filled.CheckCircle"
+                   OnClick="() => MaskAsTransferredAsync()">
+            Mark As Transferred To Employee Account
         </MudButton>
     </MudItem>
 </MudGrid>
@@ -288,8 +303,6 @@
     {
         SelectedCompanyYear = changedValue;
 
-        
-
         _dataGrid?.ReloadServerData();
         StateHasChanged();
     }
@@ -357,7 +370,7 @@
     }
 
 
-    private async Task SubmitForApproval()
+    private async Task SubmitForApprovalAsync()
     {
         var parameters = new DialogParameters
         {
@@ -379,6 +392,76 @@
             var comment = result.Data as string;
 
             var response = await UserSalaryService.SubmitMonthlySalaryForApprovalAsBulkAsync(MonthlySalarySummary.Id, comment);
+
+            await ShowSnackbar(response);
+
+            await OnDialogClosed.InvokeAsync(true); // Notify parent
+            //MudDialog.Close(DialogResult.Ok(true));
+
+            _dataGrid?.ReloadServerData();
+            StateHasChanged();
+
+        }
+    }
+
+
+    private async Task MaskAsSubmittedToBankAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Mark As Salaries Submitted To The Bank." },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Submit" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Success },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var response = await UserSalaryService.UpdateMonthlySalarySubmittedToBankAsBulkAsync(MonthlySalarySummary.Id, comment);
+
+            await ShowSnackbar(response);
+
+            await OnDialogClosed.InvokeAsync(true); // Notify parent
+            //MudDialog.Close(DialogResult.Ok(true));
+
+            _dataGrid?.ReloadServerData();
+            StateHasChanged();
+
+        }
+    }
+
+
+    private async Task MaskAsTransferredAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Mark As Salaries Transferred To The Employee Account." },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Submit" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Success },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var response = await UserSalaryService.UpdateMonthlySalaryTransferredAsBulkAsync(MonthlySalarySummary.Id, comment);
 
             await ShowSnackbar(response);
 

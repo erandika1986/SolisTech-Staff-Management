@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Authorization
 @using StaffApp.Application.DTOs.Common
 @using StaffApp.Application.DTOs.User
+@using StaffApp.Application.Extensions.Constants
 @using StaffApp.Application.Services
 @using StaffApp.Components.Shared
 @using StaffApp.Infrastructure.Services
@@ -14,6 +15,8 @@
 @inject IDialogService Dialog
 @inject IJSRuntime JSRuntime
 @inject LoadingService LoadingService
+
+
 
 @attribute [Authorize]
 <MudGrid>
@@ -31,6 +34,7 @@
                          Hover="true"
                          Striped="true"
                          Elevation="25"
+                         RowClassFunc="GetRowClass"
                          Loading="@_loading">
                 <ToolBarContent>
 
@@ -74,7 +78,8 @@
 
                             <MudStack Row>
                                 <MudTooltip Text="View Salary" Color="Color.Info" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled"></MudIconButton>
+                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled"
+                                                   OnClick="() => ViewEmployeeSalarySlipAsync(user.Item)"></MudIconButton>
                                 </MudTooltip>
                             </MudStack>
                         </CellTemplate>
@@ -88,14 +93,45 @@
 
     </MudItem>
     <MudItem xs="12" sm="12" md="12" lg="12" Style="text-align: center;">
-        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="() => Approval()">
+        <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+            <MudText><b>Salary Status : </b>@MonthlySalarySummary.StatusName | </MudText>
+            <MudText><b>Created Date : </b>@MonthlySalarySummary.CreatedDate | </MudText>
+            <MudText><b>Created User : </b>@MonthlySalarySummary.CreatedByUser | </MudText>
+            <MudText><b>Updated Date : </b>@MonthlySalarySummary.UpdatedDate | </MudText>
+            <MudText><b>Update User : </b>@MonthlySalarySummary.UpdatedByUser</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12" lg="12" Style="text-align: center;">
+        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Chat">
+            Comments
+        </MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.CheckCircle" OnClick="() => Approval()" Disabled="MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.SubmittedForApproval">
             Approve
         </MudButton>
-        <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.NotInterested" OnClick="() => AskForRevise()" Class="ml-2">
+        <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.NotInterested" OnClick="() => AskForRevise()" Class="ml-2"
+                   Disabled="MonthlySalarySummary.Status == Domain.Enum.MonthlySalaryStatus.NotGenerated || 
+                        MonthlySalarySummary.Status == Domain.Enum.MonthlySalaryStatus.Generated || 
+                        MonthlySalarySummary.Status == Domain.Enum.MonthlySalaryStatus.SubmittedToBank || 
+                        MonthlySalarySummary.Status == Domain.Enum.MonthlySalaryStatus.Transferred">
             Ask for Revise
         </MudButton>
     </MudItem>
 </MudGrid>
+
+<style>
+    .pending-row {
+        background-color: #fff3cd !important; /* Soft amber background */
+        color: #856404 !important; /* Muted dark gold text */
+        border-left: 5px solid #ffc107 !important; /* Highlight stripe */
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+        .pending-row:hover {
+            background-color: #ffe8a1 !important; /* Brighter on hover */
+            transform: scale(1.01); /* Slight zoom on hover */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+</style>
 
 @code {
     private string _searchString = "";
@@ -203,6 +239,11 @@
         }
     }
 
+    private string GetRowClass(EmployeeMonthlySalarySummaryDTO summaryDTO, int index)
+    {
+        return summaryDTO.IsRevised ? "pending-row" : string.Empty;
+    }
+
     private async Task Approval()
     {
         var parameters = new DialogParameters
@@ -224,7 +265,7 @@
         {
             var comment = result.Data as string;
 
-            var response = await UserSalaryService.SubmitMonthlySalaryForApprovalAsBulkAsync(MonthlySalarySummary.Id, comment);
+            var response = await UserSalaryService.ApproveMonthlySalaryAsBulkAsync(MonthlySalarySummary.Id, comment);
 
             await ShowSnackbar(response);
 
@@ -270,6 +311,36 @@
 
         }
     }
+
+    private async Task ViewEmployeeSalarySlipAsync(EmployeeMonthlySalarySummaryDTO monthlySalary)
+    {
+        var parameters = new DialogParameters
+        {
+            { "EmployeeId", ApplicationConstants.EmptyGuide },
+            { "EmployeeMonthlySalaryId", monthlySalary.Id },
+            { "EmployeeFullName", monthlySalary.EmployeeName},
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEstimateSalaryDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,   // hides the "X" button
+                NoHeader = true,
+                MaxWidth = MaxWidth.Large,
+                FullWidth = true
+            };
+
+        await Dialog.ShowAsync<ViewUserSalaryOverviewDialog>($"", parameters, options);
+    }
+
+
+    private async Task HandleEstimateSalaryDialogClosedAsync(bool result)
+    {
+        // _dataGrid?.ReloadServerData();
+        // StateHasChanged();
+    }
+
+
 
     private async Task ShowSnackbar(GeneralResponseDTO result)
     {
