@@ -353,7 +353,11 @@
     private async Task DownloadPdf()
     {
         // Logic to handle PDF download
-        var filePath = await UserSalaryService.GenerateEstimateSalarySlipAsync(SalarySlipDTO);
+        var documentDto = await UserSalaryService.GenerateEstimateSalarySlipAsync(SalarySlipDTO);
+
+        var base64Data = Convert.ToBase64String(documentDto.FileArray);
+
+        await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", documentDto.FileName, base64Data);
     }
 
     private void Cancel() => MudDialog.Cancel();

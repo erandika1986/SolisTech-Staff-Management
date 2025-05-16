@@ -29,6 +29,7 @@ namespace StaffApp.Infrastructure.Services
         IStaffAppDbContext context,
         IUserService userService,
         ICurrentUserService currentUserService,
+        IFileDownloadService fileDownloadService,
         ILogger<IUserSalaryService> userSalaryServiceLogger) : IUserSalaryService
     {
         #region Public Methods
@@ -85,9 +86,10 @@ namespace StaffApp.Infrastructure.Services
             }
         }
 
-        public async Task<string> GenerateEstimateSalarySlipAsync(EmployeeSalarySlipDTO salarySlip)
+        public async Task<DocumentDTO> GenerateEstimateSalarySlipAsync(EmployeeSalarySlipDTO salarySlip)
         {
             string filePath = string.Empty;
+            var documentDto = new DocumentDTO();
 
             try
             {
@@ -95,10 +97,12 @@ namespace StaffApp.Infrastructure.Services
 
                 var templatePath = System.IO.Path.Combine(outPutDirectory, @"WordTemplates\SalarySlipTemplate.docx");
 
+                var salarySlipPath = context.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.SalarySlipFolderPath);
                 // Create a temporary file for the modified document
                 string fileName = $"SalarySlip_{Guid.NewGuid().ToString()}.docx";
-                string tempDocxPath = System.IO.Path.Combine(@"C:\WordDocuments\", fileName);
-                string tempPdfPath = System.IO.Path.Combine(@"C:\WordDocuments\", System.IO.Path.ChangeExtension(fileName, ".pdf"));
+                documentDto.FileName = System.IO.Path.ChangeExtension(fileName, ".pdf");
+                string tempDocxPath = System.IO.Path.Combine(salarySlipPath.Value, fileName);
+                string tempPdfPath = System.IO.Path.Combine(salarySlipPath.Value, System.IO.Path.ChangeExtension(fileName, ".pdf"));
 
                 File.Copy(templatePath, tempDocxPath, true);
 
@@ -262,13 +266,15 @@ namespace StaffApp.Infrastructure.Services
                 // Convert the modified document to PDF
                 ConvertWordToPdf(tempDocxPath, tempPdfPath);
 
+                documentDto.FileArray = await fileDownloadService.GetFileAsync(tempPdfPath);
+
             }
             catch (Exception ex)
             {
                 userSalaryServiceLogger.LogError(ex.ToString());
             }
 
-            return filePath;
+            return documentDto;
         }
 
         public async Task<PaginatedResultDTO<EmployeeSalaryBasicDTO>> GetAllUsersSalariesAsync(int pageNumber, int pageSize, int status, string searchString = null, string sortField = null, bool ascending = true)
@@ -1141,6 +1147,79 @@ namespace StaffApp.Infrastructure.Services
             return newResult;
         }
 
+        public async Task<PaginatedResultDTO<EmployeeMonthlySalarySummaryDTO>> GetMyMonthlySalaryList(int pageNumber, int pageSize, string sortField = null, bool ascending = true)
+        {
+            var currentUserId = currentUserService.UserId;
+            var employeeSalaryQuery = context.EmployeeMonthlySalaries
+                .Where(x => x.EmployeeSalary.UserId == currentUserId);
+
+            int totalCount = await employeeSalaryQuery.CountAsync();
+
+            if (!string.IsNullOrEmpty(sortField))
+            {
+                switch (sortField.ToLower())
+                {
+                    case "basicSalary":
+                        employeeSalaryQuery = ascending
+                            ? employeeSalaryQuery.OrderBy(u => u.BasicSalary)
+                            : employeeSalaryQuery.OrderByDescending(u => u.BasicSalary);
+                        break;
+                    case "totalDeduction":
+                        employeeSalaryQuery = ascending
+                            ? employeeSalaryQuery.OrderBy(u => u.TotalDeduction)
+                            : employeeSalaryQuery.OrderByDescending(u => u.TotalDeduction);
+                        break;
+                    case "employerContribution":
+                        employeeSalaryQuery = ascending
+                            ? employeeSalaryQuery.OrderBy(u => u.EmployerContribution)
+                            : employeeSalaryQuery.OrderByDescending(u => u.EmployerContribution);
+                        break;
+                    case "netSalary":
+                        employeeSalaryQuery = ascending
+                            ? employeeSalaryQuery.OrderBy(u => u.NetSalary)
+                            : employeeSalaryQuery.OrderByDescending(u => u.NetSalary);
+                        break;
+                    default:
+                        employeeSalaryQuery = ascending
+                            ? employeeSalaryQuery.OrderBy(u => u.Id)
+                            : employeeSalaryQuery.OrderByDescending(u => u.Id);
+                        break;
+                }
+            }
+            else
+            {
+                // Default sorting by full name
+                employeeSalaryQuery = employeeSalaryQuery.OrderBy(u => u.EmployeeSalary.User.FullName);
+            }
+
+            var items = await employeeSalaryQuery
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(salary => new EmployeeMonthlySalarySummaryDTO
+            {
+                Id = salary.Id,
+                EmployeeName = salary.EmployeeSalary.User.FullName,
+                EmployeeNumber = salary.EmployeeSalary.User.EmployeeNumber.ToString(),
+                NetSalary = salary.NetSalary.ToString("C") + (salary.IsRevised ? " (Revised)" : string.Empty),
+                BasicSalary = salary.BasicSalary.ToString("C"),
+                TotalDeduction = salary.TotalDeduction.ToString("C"),
+                TotalEarning = salary.TotalEarning.ToString("C"),
+                EmployerContribution = salary.EmployerContribution.ToString("C"),
+                IsRevised = salary.IsRevised,
+                Year = salary.MonthlySalary.CompanyYearId.ToString(),
+                Month = EnumHelper.GetEnumDescription(salary.MonthlySalary.Month)
+            }).ToListAsync();
+
+            var newResult = new PaginatedResultDTO<EmployeeMonthlySalarySummaryDTO>
+            {
+                Items = items,
+                TotalItems = totalCount,
+                Page = pageNumber,
+                PageSize = pageSize
+            };
+
+            return newResult;
+        }
         public async Task<EmployeeMonthlySalaryStatusDTO> GetEmployeeMonthlySalaryStatus(int year, int month)
         {
             var employeeMonth = await context.MonthlySalaries.FirstOrDefaultAsync(x => x.CompanyYearId == year && x.Month == (Month)month);

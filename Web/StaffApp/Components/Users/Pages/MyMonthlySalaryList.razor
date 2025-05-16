@@ -1,0 +1,190 @@
+﻿@page "/Users/MySalaries"
+@using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.User
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@inject IUserSalaryService UserSalaryService
+@inject IMasterDataService MasterDataService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+@inject IJSRuntime JSRuntime
+@inject LoadingService LoadingService
+
+@attribute [Authorize]
+<MudGrid>
+    <MudItem xs="12" sm="12" md="12" lg="12">
+        @if (!_isMasterDataLoaded)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudText>Loading master data...</MudText>
+        }
+        else
+        {
+            <MudDataGrid @ref="_dataGrid" T="EmployeeMonthlySalarySummaryDTO" ServerData="@(LoadData)" Sortable="true"
+                         Filterable="false"
+                         Hideable="true"
+                         Hover="true"
+                         Striped="true"
+                         Elevation="25"
+                         Loading="@_loading">
+                <ToolBarContent>
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="4" lg="4">
+                            <MudText Typo="Typo.h6">My Salaries</MudText>
+                            <MudSpacer />
+                        </MudItem>
+                    </MudGrid>
+
+                </ToolBarContent>
+                <Columns>
+                    <PropertyColumn Property="x=>x.Year"
+                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.Year))" />
+                    <PropertyColumn Property="x=>x.Month"
+                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.Month))" />
+                    <PropertyColumn Property="x=>x.BasicSalary"
+                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.BasicSalary))" />
+                    <PropertyColumn Property="x=>x.TotalEarning"
+                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.TotalEarning))" />
+                    <PropertyColumn Property="x=>x.EmployerContribution"
+                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.EmployerContribution))" />
+                    <PropertyColumn Property="x=>x.TotalDeduction"
+                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.TotalDeduction))" />
+                    <PropertyColumn Property="x=>x.NetSalary"
+                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.NetSalary))" />
+                    <TemplateColumn CellClass="d-flex justify-end">
+                        <CellTemplate Context="user">
+                            <MudStack Row>
+                                <MudTooltip Text="View Salary"
+                                            Color="Color.Info"
+                                            Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye"
+                                                   Color="Color.Info" Variant="Variant.Filled" OnClick="() => ViewMySalarySlipAsync(user.Item)"></MudIconButton>
+                                </MudTooltip>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="EmployeeMonthlySalarySummaryDTO" />
+                </PagerContent>
+            </MudDataGrid>
+        }
+
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string _searchString = "";
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = false;
+
+    private MudDataGrid<EmployeeMonthlySalarySummaryDTO> _dataGrid;
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMasterDataAsync();
+    }
+
+    private async Task ViewMySalarySlipAsync(EmployeeMonthlySalarySummaryDTO monthlySalary)
+    {
+        var parameters = new DialogParameters
+        {
+            { "EmployeeId", ApplicationConstants.EmptyGuide },
+            { "EmployeeMonthlySalaryId", monthlySalary.Id },
+            { "EmployeeFullName", monthlySalary.EmployeeName},
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEstimateSalaryDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,   // hides the "X" button
+                NoHeader = true,
+                MaxWidth = MaxWidth.Large,
+                FullWidth = true
+            };
+
+        await Dialog.ShowAsync<ViewUserSalaryOverviewDialog>($"", parameters, options);
+    }
+
+
+    private async Task HandleEstimateSalaryDialogClosedAsync(bool result)
+    {
+        // _dataGrid?.ReloadServerData();
+        // StateHasChanged();
+    }
+
+
+    private async Task LoadMasterDataAsync()
+    {
+        try
+        {
+            // // Load your master data
+            // EmployeeSalaryStatuses = MasterDataService.GetEmployeeSalaryStatus(true);
+            // SelectedEmployeeSalaryStatus = EmployeeSalaryStatuses.FirstOrDefault();
+
+            _isMasterDataLoaded = true;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine($"Error loading master data: {ex.Message}");
+        }
+    }
+
+    private async Task<GridData<EmployeeMonthlySalarySummaryDTO>> LoadData(GridState<EmployeeMonthlySalarySummaryDTO> state)
+    {
+        _loading = true;
+
+        try
+        {
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            // Call the service with parameters
+            var result = await UserSalaryService.GetMyMonthlySalaryList(
+                page,
+                pageSize,
+                sortBy,
+                sortDirection
+            );
+
+            // Return the result in GridData format
+            return new GridData<EmployeeMonthlySalarySummaryDTO>
+                {
+                    Items = result.Items,
+                    TotalItems = result.TotalItems
+                };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    private string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+}

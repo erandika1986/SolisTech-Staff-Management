@@ -19,15 +19,16 @@
 <PageTitle>Register</PageTitle>
 
 <StatusMessage Message="@message" />
-<h1>Register</h1>
-<h2>Associate your @ProviderDisplayName account.</h2>
-<MudDivider />
+<MudText Typo="Typo.h3">Register</MudText>
 
-<div  class="alert alert-info">
-    You've successfully authenticated with <strong>@ProviderDisplayName</strong>.
-    Please enter an email address for this site below and click the Register button to finish
-    logging in.
-</div>
+<MudText Typo="Typo.h5" Class="mb-4">Associate your company @ProviderDisplayName account with Staffy-HR.</MudText>
+
+<MudDivider Class="my-4" />
+
+<MudAlert Severity="Severity.Info" Class="my-4">
+    You've successfully authenticated with <MudText Typo="Typo.body1" Inline="true"><strong>@ProviderDisplayName</strong></MudText>.
+    Please click the Register button to finish logging in.
+</MudAlert>
 
 <div class="row">
     <div class="col-md-4">
@@ -39,7 +40,9 @@
                 <label for="Input.Email" class="form-label">Email</label>
                 <ValidationMessage For="() => Input.Email" />
             </div>
-            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button>
+
+            <MudButton Variant="Variant.Filled" ButtonType="ButtonType.Submit" StartIcon="@Icons.Material.Filled.PersonAdd" Color="Color.Success" Size="Size.Small">Register</MudButton>
+ @*            <button type="submit" class="w-100 btn btn-lg btn-primary">Register</button> *@
         </EditForm>
     </div>
 </div>
@@ -159,7 +162,12 @@
                 result = await UserManager.AddLoginAsync(existingUser, externalLoginInfo);
                 if (result.Succeeded)
                 {
-                    await MakeUserLogIn(existingUser);
+                    //await MakeUserLogIn(existingUser);
+                    var applicationUser = await UserManager.FindByEmailAsync(user.Email);
+                    var code = await UserManager.GenerateEmailConfirmationTokenAsync(applicationUser);
+                    var confirmationResult = await UserManager.ConfirmEmailAsync(applicationUser, code);
+                    await SignInManager.SignInAsync(applicationUser, isPersistent: false, externalLoginInfo.LoginProvider);
+                    RedirectManager.RedirectTo(ReturnUrl);
                 }
                 else
                 {

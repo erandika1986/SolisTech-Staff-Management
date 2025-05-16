@@ -317,7 +317,8 @@ namespace StaffApp.Infrastructure.Data
                     new AppSetting() { Name = CompanySettingConstants.CompanyLogoUrl, Value = "" },
                     new AppSetting() { Name = CompanySettingConstants.CompanyAddress, Value = "" },
                     new AppSetting() { Name = CompanySettingConstants.LeaveRequestCCList, Value = "" },
-                    new AppSetting() { Name = CompanySettingConstants.IsPasswordLoginEnable, Value = "False"}
+                    new AppSetting() { Name = CompanySettingConstants.IsPasswordLoginEnable, Value = "False"},
+                    new AppSetting() { Name = CompanySettingConstants.SalarySlipFolderPath, Value = "C:\\WordDocuments\\"}
 
                 };
                 await context.AppSettings.AddRangeAsync(appSettings);

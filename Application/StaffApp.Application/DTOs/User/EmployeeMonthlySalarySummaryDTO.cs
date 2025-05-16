@@ -10,6 +10,8 @@
         public string EmployerContribution { get; set; }
         public string TotalDeduction { get; set; }
         public string NetSalary { get; set; }
+        public string Year { get; set; }
+        public string Month { get; set; }
         public bool IsRevised { get; set; }
     }
 }
