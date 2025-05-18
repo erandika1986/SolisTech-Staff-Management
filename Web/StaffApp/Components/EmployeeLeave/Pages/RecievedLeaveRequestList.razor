@@ -15,6 +15,7 @@
 @inject IMasterDataService MasterDataService
 @inject IDialogService Dialog
 @inject ISnackbar Snackbar
+@inject LoadingService LoadingService
 
 @attribute [Authorize]
 <MudCard>
@@ -322,7 +323,35 @@
 
     private async Task DeleteLeaveRequestAsync(BasicEmployeeLeaveRequestDTO request)
     {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Delete Leave Request from {request.EmployeeName}" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Reject" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Error },
+            { "Icon", Icons.Material.Filled.Delete },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
 
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            LoadingService.Show();
+            var comment = result.Data as string;
+
+            var deleteResult = await LeaveRequestService.DeleteLeaveRequestAsync(request.Id, comment);
+
+            await ShowSnackbar(deleteResult);
+
+            _dataGrid?.ReloadServerData();
+            StateHasChanged();
+
+            LoadingService.Hide();
+        }
     }
 
     async Task ShowSnackbar(GeneralResponseDTO result)

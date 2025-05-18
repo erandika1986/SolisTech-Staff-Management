@@ -6,16 +6,21 @@
 @using System.ComponentModel.DataAnnotations
 @using StaffApp.Application.Extensions.Constants
 @using StaffApp.Application.Services
+@using StaffApp.Components.Shared
+@using StaffApp.Domain.Enum
+@using StaffApp.Infrastructure.Services
 
 @inject ILeaveRequestService LeaveRequestService
 @inject ILeaveAllocationService LeaveAllocationService
 @inject IMasterDataService MasterDataService
 @inject IDialogService Dialog
+@inject LoadingService LoadingService
+@inject ISnackbar Snackbar
 
 @attribute [Authorize]
     @if (LeaveDashboardData.LeaveTypeSummaries.Count>0)
-    {
-     <MudGrid Gutter="true">
+{
+    <MudGrid Gutter="true">
 
         @foreach (var dashboardItem in LeaveDashboardData.LeaveTypeSummaries)
         {
@@ -115,7 +120,7 @@
                                                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" Disabled="leave.Item.Status!=Domain.Enum.LeaveStatus.Pending" OnClick="() => EditLeaveRequestAsync(leave.Item)"></MudIconButton>
                                                 </MudTooltip>
                                                 <MudTooltip Text="Cancel My Leave Request" Color="Color.Error" Placement="Placement.Top">
-                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" Disabled="leave.Item.CancelLeaveAllows"></MudIconButton>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" Disabled="leave.Item.Status == LeaveStatus.Approved || leave.Item.Status == LeaveStatus.Rejected || leave.Item.Status == LeaveStatus.Deleted" OnClick="() => DeleteLeaveRequestAsync(leave.Item)"></MudIconButton>
                                                 </MudTooltip>
                                             </MudStack>
                                         </CellTemplate>
@@ -283,6 +288,42 @@
         await Dialog.ShowAsync<EditLeaveRequestDialog>($"Edit My Leave Request", parameters, _maxWidth);
     }
 
+    private async Task DeleteLeaveRequestAsync(BasicEmployeeLeaveRequestDTO request)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Delete Leave Request from {request.EmployeeName}" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Reject" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Error },
+            { "Icon", Icons.Material.Filled.Delete },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            LoadingService.Show();
+
+            var comment = result.Data as string;
+
+            var deleteResult = await LeaveRequestService.DeleteLeaveRequestAsync(request.Id, comment);
+
+            LeaveDashboardData = await LeaveAllocationService.GetMyLeaveDashboardData();
+            
+            await ShowSnackbar(deleteResult);
+
+            _dataGrid?.ReloadServerData();
+            StateHasChanged();
+
+            LoadingService.Hide();
+        }
+    }
+
     private async Task AddNewLeaveRequestAsync()
     {
         var parameters = new DialogParameters
@@ -309,8 +350,22 @@
 
     private async Task HandleEditDialogClosedAsync(bool result)
     {
+        LeaveDashboardData = await LeaveAllocationService.GetMyLeaveDashboardData();
+
         _dataGrid?.ReloadServerData();
         StateHasChanged();
+    }
+
+    async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
     }
 
     string GetDisplayNameByPropertyInfro(PropertyInfo prop)
@@ -325,10 +380,6 @@
         var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
         return displayAttribute?.Name ?? propertyName;
     }
-
-
-
-
 
 
     // Summary data

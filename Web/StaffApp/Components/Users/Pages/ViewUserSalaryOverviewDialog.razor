@@ -11,7 +11,7 @@
 <MudDialog>
     <DialogContent>
         <MudContainer MaxWidth="MaxWidth.Large" Class="pa-4">
-            <MudPaper Elevation="3" Class="pa-4">
+            <MudPaper Elevation="3" Class="pa-4" id="printable-dialog">
                 <!-- Header Section with Logo and Company Info -->
                 <MudGrid>
                     <MudItem xs="3">
@@ -279,12 +279,12 @@
                 <!-- Action Buttons -->
                 <MudGrid Class="mt-4">
                     <MudItem xs="12" Style="text-align: center;">
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Print" OnClick="@PrintSalarySlip">
+@*                         <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Print" OnClick="@PrintSalarySlip">
                             Print
-                        </MudButton>
-                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Email" Class="ml-2" OnClick="@EmailSalarySlip">
+                        </MudButton> *@
+@*                         <MudButton Variant="Variant.Filled" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.Email" Class="ml-2" OnClick="@EmailSalarySlip">
                             Email
-                        </MudButton>
+                        </MudButton> *@
                         <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.GetApp" Class="ml-2" OnClick="@DownloadPdf">
                             Download PDF
                         </MudButton>
@@ -299,6 +299,22 @@
         </MudPaper>
     </DialogActions>
 </MudDialog>
+
+<script>
+    window.sendPrintRequest = (elementId) => {
+
+
+        var content = document.getElementById(elementId).innerHTML;
+        var printWindow = window.open('', '_blank');
+        printWindow.document.write('<html><head><title>Print</title></head><body>');
+        printWindow.document.write(content);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
+    };
+</script>
 
 @code {
 
@@ -340,9 +356,10 @@
         return string.Format(CultureInfo.GetCultureInfo("en-US"),"${0:N2}",amount);
     }
 
-    private void PrintSalarySlip()
+    private async Task PrintSalarySlip()
     {
         // Logic to handle printing
+        await JSRuntime.InvokeVoidAsync("sendPrintRequest", "printable-dialog");
     }
 
     private void EmailSalarySlip()

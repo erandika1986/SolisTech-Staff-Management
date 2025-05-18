@@ -2,6 +2,7 @@
 @using StaffApp.Application.DTOs.EmploymentLeave
 @using StaffApp.Application.Extensions.Constants
 @using StaffApp.Application.Services
+@using StaffApp.Components.Shared
 @using StaffApp.Domain.Enum
 @using Microsoft.JSInterop
 @using StaffApp.Infrastructure.Services
@@ -12,6 +13,7 @@
 @inject IJSRuntime JSRuntime
 @inject ISnackbar Snackbar
 @inject LoadingService LoadingService
+@inject IDialogService Dialog
 
 <MudDialog>
     <DialogContent>
@@ -177,11 +179,11 @@
             }
             else if(IsApprovalView)
             {
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" Disabled="LeaveRequest.CurrentStatus != LeaveStatus.Pending" Class="mr-1">Approve</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.CheckCircle" Disabled="LeaveRequest.CurrentStatus != LeaveStatus.Pending" OnClick="() =>ApproveLeaveRequestAsync()" Class="mr-1">Approve</MudButton>
 
-                <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.NotInterested" Disabled="LeaveRequest.CurrentStatus != LeaveStatus.Pending" Class="mr-1">Reject</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Warning" StartIcon="@Icons.Material.Filled.NotInterested" Disabled="LeaveRequest.CurrentStatus != LeaveStatus.Pending" OnClick="() =>RejectLeaveRequestAsync()" Class="mr-1">Reject</MudButton>
 
-                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Disabled="LeaveRequest.CancelLeaveAllows" Class="mr-1">Delete</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Disabled="LeaveRequest.CancelLeaveAllows" Class="mr-1" OnClick="() =>DeleteLeaveRequestAsync()">Delete</MudButton>
             }
 
         </MudPaper>
@@ -216,6 +218,8 @@
     private IEnumerable<DropDownDTO> CompanyYears = new List<DropDownDTO>();
     private IEnumerable<DropDownDTO> HalfDaySessionTypes = new List<DropDownDTO>();
     private IEnumerable<DropDownDTO> ShortLeaveSessionTypes = new List<DropDownDTO>();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
 
     bool success;
     string[] errors = { };
@@ -343,8 +347,6 @@
     {
         LoadingService.Show();
 
-
-
         switch(changedValue.Id)
         {
             case (int)LeaveDuration.ShortLeave:
@@ -436,6 +438,114 @@
             //await ShowSnackbar(response);
         }
         LoadingService.Hide();
+        await OnDialogClosed.InvokeAsync(true); // Notify parent
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private async Task ApproveLeaveRequestAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Approve Leave Request from {LeaveRequest.EmployeeName}" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Approve" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Success },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            LoadingService.Show();
+
+            var comment = result.Data as string;
+
+            var response = await LeaveRequestService.ApproveLeaveRequestAsync(LeaveRequest.Id, comment);
+
+            await ShowSnackbar(response);
+
+            await OnDialogClosed.InvokeAsync(true); // Notify parent
+            MudDialog.Close(DialogResult.Ok(true));
+
+            LoadingService.Hide();
+        }
+    }
+
+    private async Task RejectLeaveRequestAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Reject Leave Request from {LeaveRequest.EmployeeName}" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Reject" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Error },
+            { "Icon", Icons.Material.Filled.Delete },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            LoadingService.Show();
+
+            var comment = result.Data as string;
+
+            var response = await LeaveRequestService.RejectLeaveRequestAsync(LeaveRequest.Id, comment);
+
+            await ShowSnackbar(response);
+
+            await OnDialogClosed.InvokeAsync(true); // Notify parent
+            MudDialog.Close(DialogResult.Ok(true));
+
+            LoadingService.Hide();
+        }
+    }
+
+    private async Task DeleteLeaveRequestAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Delete Leave Request from {LeaveRequest.EmployeeName}" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Reject" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Error },
+            { "Icon", Icons.Material.Filled.Delete },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            LoadingService.Show();
+
+            var comment = result.Data as string;
+
+            var deleteResult = await LeaveRequestService.DeleteLeaveRequestAsync(LeaveRequest.Id, comment);
+
+            await ShowSnackbar(deleteResult);
+
+            await OnDialogClosed.InvokeAsync(true); // Notify parent
+            MudDialog.Close(DialogResult.Ok(true));
+
+            LoadingService.Hide();
+        }
+    }
+
+    private async Task HandleConfirmationDialogClosedAsync(bool result)
+    {
         await OnDialogClosed.InvokeAsync(true); // Notify parent
         MudDialog.Close(DialogResult.Ok(true));
     }
