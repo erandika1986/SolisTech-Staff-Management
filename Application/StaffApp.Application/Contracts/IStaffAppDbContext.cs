@@ -32,6 +32,9 @@ namespace StaffApp.Application.Contracts
         DbSet<LeaveTypeConfig> LeaveTypesConfigs { get; }
         DbSet<LeaveTypeLogic> LeaveTypesLogics { get; }
         DbSet<TaxLogic> TaxLogics { get; }
+        DbSet<Project> Projects { get; }
+        DbSet<ProjectDocument> ProjectDocuments { get; }
+        DbSet<ProjectMember> ProjectMembers { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
         Task BeginTransactionAsync(CancellationToken cancellationToken);

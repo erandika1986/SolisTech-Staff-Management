@@ -130,5 +130,8 @@ namespace StaffApp.Infrastructure.Data
         public DbSet<EmployeeSalaryHistory> EmployeeSalaryHistories => Set<EmployeeSalaryHistory>();
         public DbSet<EmployeeSalaryAddonHistory> EmployeeSalaryAddonHistories => Set<EmployeeSalaryAddonHistory>();
         public DbSet<TaxLogic> TaxLogics => Set<TaxLogic>();
+        public DbSet<Project> Projects => Set<Project>();
+        public DbSet<ProjectDocument> ProjectDocuments => Set<ProjectDocument>();
+        public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
     }
 }
