@@ -19,7 +19,7 @@
                 <MudNavLink Href="CompanySettings/LeaveType/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Schedule">Leave Type</MudNavLink>
                 <MudNavLink Href="CompanySettings/CompanyYear/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">Company Years</MudNavLink>
                 <MudNavLink Href="CompanySettings/FinancialYear/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarToday">Financial Years</MudNavLink>
-                <MudNavLink Href="Project/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.WorkOutline">Projects</MudNavLink>
+@*                 <MudNavLink Href="Project/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.WorkOutline">Projects</MudNavLink> *@
                 <MudNavLink Href="CompanySettings/CompanySetting" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings">Company Settings</MudNavLink>
             </MudNavGroup>
         </Authorized>
@@ -62,6 +62,12 @@
     <AuthorizeView Roles="Admin,Director,Manager,Team Lead">
         <Authorized>
             <MudNavLink Href="EmployeeLeave/ManageEmployeeLeave" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Verified">Manage Employee Leaves</MudNavLink>
+        </Authorized>
+    </AuthorizeView>
+
+    <AuthorizeView>
+        <Authorized>
+                  <MudNavLink Href="Project/MyProjectList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AttachMoney"> Projects</MudNavLink>
         </Authorized>
     </AuthorizeView>
 

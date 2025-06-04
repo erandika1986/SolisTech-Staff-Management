@@ -1,0 +1,197 @@
+﻿@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.Project
+@using StaffApp.Application.DTOs.User
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+@using StaffApp.Components.Shared
+@using StaffApp.Infrastructure.Services
+@using static MudBlazor.CategoryTypes
+
+@inject IUserService UserService
+@inject IProjectService ProjectService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+@inject IJSRuntime JSRuntime
+@inject LoadingService LoadingService
+@inject IMasterDataService MasterDataService
+@inject IAzureBlobService AzureBlobService
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            @if(!IsReadOnly)
+            {
+                <MudItem xs="12" sm="6" md="6" lg="6">
+                    <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+                        <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFiles">
+                            <ActivatorContent>
+                                <MudButton Variant="Variant.Filled"
+                                           Color="Color.Primary"
+                                           StartIcon="@Icons.Material.Filled.CloudUpload">
+                                    Upload Support Files
+                                </MudButton>
+                            </ActivatorContent>
+                        </MudFileUpload>
+                    </MudPaper>
+                </MudItem>
+            }
+
+            <MudItem xs="12" sm="12">
+                <MudTable Items="ProjectDocuments">
+                    <HeaderContent>
+                        <MudTh>Original File Name</MudTh>
+                        <MudTh>Saved File Name</MudTh>
+                        <MudTh>Saved Path</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.OriginalFileName</MudTd>
+                        <MudTd>@context.SavedFileName</MudTd>
+                        <MudTd>@context.SavedPath</MudTd>
+                        <MudTd>
+                            <MudStack Row>
+                                <MudTooltip Text="Download document" Color="Color.Success" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.CloudDownload" Color="Color.Success" Variant="Variant.Filled" OnClick="@(() => DownloadFile(context))" />
+                                </MudTooltip>
+                                <MudTooltip Text="Delete document" Color="Color.Error" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteDocument(context)" Disabled="IsReadOnly"></MudIconButton>
+                                </MudTooltip>
+                            </MudStack>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+        </MudPaper>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public int ProjectId { get; set; }
+
+    [Parameter] public string ProjectName { get; set; }
+
+    [Parameter] public bool IsReadOnly { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
+    private long MaxFileSize = 100 * 1024 * 1024; // 100MB
+    public List<IBrowserFile> Files { get; set; } = new List<IBrowserFile> { };
+    public List<string> FileNames { get; set; } = new List<string>();
+
+    public IEnumerable<ProjectDocumentDTO> ProjectDocuments { get; set; } = new List<ProjectDocumentDTO>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await GetUploadedDocumentsAsync();
+    }
+
+
+    private async Task GetUploadedDocumentsAsync()
+    {
+        LoadingService.Show();
+
+        ProjectDocuments = await ProjectService.GetProjectDocuments(ProjectId);
+
+        LoadingService.Hide();
+    }
+
+    private async Task UploadFiles(IReadOnlyList<IBrowserFile> files)
+    {
+        foreach (var file in files)
+        {
+            if (file.Size > MaxFileSize)
+            {
+                Snackbar.Add($"{file.Name} exceeds the maximum file size (100MB).", Severity.Warning, c => c.SnackbarVariant = Variant.Filled);
+                continue;
+            }
+            try
+            {
+                var document = new ProjectDocumentAttachmentDTO();
+                document.ProjectId = ProjectId;
+                document.Files.Add(file);
+
+                Files.Add(file);
+                FileNames.Add(file.Name);
+
+                await UploadNewProjectDocument(document);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error uploading {file.Name}: {ex.Message}", Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+            }                                                                                                                                                                                                                                                                                  
+        }
+    }
+
+    private async Task UploadNewProjectDocument(ProjectDocumentAttachmentDTO document)
+    {
+        LoadingService.Show();
+
+        var result = await ProjectService.AddProjectDocument(document);
+
+        LoadingService.Hide();
+
+        await GetUploadedDocumentsAsync();
+
+       await ShowSnackbar(result);
+    }
+
+    private async Task DownloadFile(ProjectDocumentDTO file)
+    {
+        LoadingService.Show();
+        var sasUrl = await AzureBlobService.GenerateSasTokenForBlobAsync(file.SavedFileName, ApplicationConstants.AzureBlobStorageName, DateTimeOffset.UtcNow.AddMinutes(5));
+
+        LoadingService.Hide();
+        await JSRuntime.InvokeVoidAsync("open", sasUrl, "_blank");
+    }
+
+    private Task DeleteDocument(ProjectDocumentDTO document)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "Id", document.Id.ToString() },
+            { x => x.ContentText, "Do you really want to delete these records? This process cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error },
+             { "OnDialogClosed", EventCallback.Factory.Create<string>(this, HandleDeleteConfirmationDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        return Dialog.ShowAsync<ConfirmationDialog>("Delete", parameters, options);
+    }
+
+    private async Task HandleDeleteConfirmationDialogClosedAsync(string id)
+    {
+        LoadingService.Show();
+
+        var result = await ProjectService.DeleteProjectDocument(int.Parse(id));
+
+        LoadingService.Hide();
+
+        await GetUploadedDocumentsAsync();
+
+        await ShowSnackbar(result);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
+}

@@ -31,6 +31,7 @@ namespace StaffApp.Domain.Entity.Authentication
         public virtual ICollection<Project> Projects { get; set; } = new HashSet<Project>();
         public virtual ICollection<ProjectMember> ProjectMembers { get; set; } = new HashSet<ProjectMember>();
 
+        public virtual ICollection<TimeCard> TimeCards { get; set; } = new HashSet<TimeCard>();
         //public virtual ICollection<EmployeeLeaveRequest> CreatedEmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
         //public virtual ICollection<EmployeeLeaveRequest> UpdatedEmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
 

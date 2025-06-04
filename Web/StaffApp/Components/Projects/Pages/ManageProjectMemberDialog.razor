@@ -1,0 +1,185 @@
+﻿@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.Project
+@using StaffApp.Application.DTOs.User
+@using StaffApp.Application.Services
+@using StaffApp.Components.Shared
+@using StaffApp.Infrastructure.Services
+@using static MudBlazor.CategoryTypes
+
+@inject IUserService UserService
+@inject IProjectService ProjectService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+@inject IJSRuntime JSRuntime
+@inject LoadingService LoadingService
+@inject IMasterDataService MasterDataService
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            @if(!IsReadOnly)
+            {
+                <MudItem xs="12" sm="6" md="6" lg="6">
+                    <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+                        <MudSelect T="UserDropDownDTO" Label="Select Project Member" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="SelectedProjectMember">
+                            @foreach (var member in AvailableMembers)
+                            {
+                                <MudSelectItem T="UserDropDownDTO" Value="@member">@member.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudSelect T="RoleDTO" Label="Select Project Role" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="SelectedProjectRole">
+                            @foreach (var role in Roles)
+                            {
+                                <MudSelectItem T="RoleDTO" Value="@role">@role.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddNewMember">
+                            <MudIcon Icon="@Icons.Material.Filled.Add" /> Add
+                        </MudButton>
+                    </MudPaper>
+                </MudItem>
+            }
+            <MudItem xs="12" sm="12">
+                <MudTable Items="ProjectMembers">
+                    <HeaderContent>
+                        <MudTh>Project Member Name</MudTh>
+                        <MudTh>Project Role</MudTh>
+                        <MudTh>Allocated Date</MudTh>
+                        <MudTh>Deallocated Date</MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.MemberName</MudTd>
+                        <MudTd>@context.RoleName</MudTd>
+                        <MudTd>@context.AllocatedDate</MudTd>
+                        <MudTd>@context.DeAllocatedDate</MudTd>
+                        <MudTd>
+                            <MudStack Row>
+                                <MudTooltip Text="Deallocate project member" Color="Color.Error" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteMember(context)" Disabled="IsReadOnly"></MudIconButton>
+                                </MudTooltip>
+                            </MudStack>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+        </MudPaper>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public int ProjectId { get; set; }
+
+    [Parameter] public string ProjectName { get; set; }
+
+    [Parameter] public bool IsReadOnly { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
+    public IEnumerable<UserDropDownDTO> AvailableMembers { get; set; } = new HashSet<UserDropDownDTO>();
+    public UserDropDownDTO SelectedProjectMember { get; set; } = new();
+
+    public IEnumerable<RoleDTO> Roles { get; set; } = new HashSet<RoleDTO>();
+    public RoleDTO SelectedProjectRole { get; set; } = new();
+
+    public IEnumerable<ProjectMemberDTO> ProjectMembers { get; set; } = new List<ProjectMemberDTO>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await LoadInitialDataAsync();
+    }
+
+    private async Task LoadInitialDataAsync()
+    {
+        LoadingService.Show();
+        await GetAvailableRolesAsync();
+        await GetAvailableMembersAsync();
+        await GetProjectMembersAsync();
+
+        SelectedProjectMember = new();
+        SelectedProjectRole = new();
+
+        LoadingService.Hide();
+    }
+
+    private async Task GetAvailableMembersAsync()
+    {
+        AvailableMembers = await ProjectService.GetAvailableProjectMembers(ProjectId);
+    }
+
+    private async Task GetAvailableRolesAsync()
+    {
+        Roles = await UserService.GetAvailableRoles();
+    }
+
+    private async Task GetProjectMembersAsync()
+    {
+        ProjectMembers = await ProjectService.GetProjectMembers(ProjectId);
+    }
+
+    private async Task AddNewMember()
+    {
+        LoadingService.Show();
+
+        var result = await ProjectService.AddProjectMember(ProjectId, SelectedProjectMember.Id, SelectedProjectRole.Id);
+
+        LoadingService.Hide();
+
+        await LoadInitialDataAsync();
+
+        await ShowSnackbar(result);
+    }
+
+    private Task DeleteMember(ProjectMemberDTO member)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "Id", member.Id.ToString() },
+            { x => x.ContentText, "Do you really want to delete these records? This process cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error },
+             { "OnDialogClosed", EventCallback.Factory.Create<string>(this, HandleDeleteConfirmationDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        return Dialog.ShowAsync<ConfirmationDialog>("Delete", parameters, options);
+    }
+
+    private async Task HandleDeleteConfirmationDialogClosedAsync(string id)
+    {
+        LoadingService.Show();
+
+        var result = await ProjectService.DeleteProjectMember(int.Parse(id));
+
+        LoadingService.Hide();
+
+        await LoadInitialDataAsync();
+
+        await ShowSnackbar(result);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
+}

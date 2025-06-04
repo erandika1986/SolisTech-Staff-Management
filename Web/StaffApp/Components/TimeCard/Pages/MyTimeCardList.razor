@@ -1,0 +1,139 @@
+﻿@using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.TimeCard
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+@using StaffApp.Components.Shared
+
+@inject ITimeCardService TimeCardService
+@inject IDialogService Dialog
+
+@attribute [Authorize]
+
+@code {
+    private string _searchString = "";
+    private bool _loading = false;
+    private MudDataGrid<BasicTimeCardDTO> _dataGrid;
+
+    private DateTime StartDate = DateTime.Now.AddDays(-10);
+    private DateTime EndDate = DateTime.Now;
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    private void FromDateChanged(DateTime fromDate)
+    {
+
+        StartDate = fromDate;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private void ToDataChanged(DateTime toDate)
+    {
+        EndDate = toDate;
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task<GridData<BasicTimeCardDTO>> LoadData(GridState<BasicTimeCardDTO> state)
+    {
+        _loading = true;
+
+        try
+        {
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Call the service with parameters
+            var result = await TimeCardService.GetAllTimeCardAsync(
+                page,
+                pageSize,
+                fromDateTime,
+                toDateTime
+            );
+
+            // Return the result in GridData format
+            return new GridData<BasicTimeCardDTO>
+                {
+                    Items = result.Items,
+                    TotalItems = result.TotalItems
+                };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task EditTimeCardAsync(BasicTimeCardDTO timeCard)
+    {
+        var parameters = new DialogParameters
+        {
+            { "TimeCardId", timeCard.Id },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditTimeCardDialog>($"Edit Time Card", parameters, _maxWidth);
+    }
+
+    private async Task AddNewTimeCardAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "UserId", ApplicationConstants.Zero },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditTimeCardDialog>($"Add a new time card", parameters, _maxWidth);
+    }
+
+    private Task DeleteTimeCardAsync(BasicTimeCardDTO timeCard)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "Id", timeCard.Id.ToString() },
+            { x => x.ContentText, "Do you really want to delete these records? This process cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error },
+             { "OnDialogClosed", EventCallback.Factory.Create<string>(this, HandleDeleteConfirmationDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        return Dialog.ShowAsync<ConfirmationDialog>("Delete", parameters, options);
+    }
+
+    private async Task HandleEditDialogClosedAsync(bool result)
+    {
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task HandleDeleteConfirmationDialogClosedAsync(string id)
+    {
+        var result = await TimeCardService.DeleteTimeCardAsync(int.Parse(id));
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    private string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+}

@@ -29,6 +29,8 @@ Add-Migration 00026 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00027 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00028 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00029 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00030 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00031 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 
 Database Update Command
 ====================================================================================================

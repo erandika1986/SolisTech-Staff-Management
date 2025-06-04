@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StaffApp.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using StaffApp.Infrastructure.Data;
 namespace StaffApp.Infrastructure.Migrations
 {
     [DbContext(typeof(StaffAppDbContext))]
-    partial class StaffAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250520075445_00030")]
+    partial class _00030
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1602,70 +1605,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.ToTable("TaxLogic", (string)null);
                 });
 
-            modelBuilder.Entity("StaffApp.Domain.Entity.TimeCard", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("Date")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("EmployeeID")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("ManagerComment")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeID");
-
-                    b.ToTable("TimeCard", (string)null);
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.TimeCardEntry", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<double>("HoursWorked")
-                        .HasColumnType("float");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ProjectId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TimeCardId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProjectId");
-
-                    b.HasIndex("TimeCardId");
-
-                    b.ToTable("TimeCardEntry", (string)null);
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationRole", null)
@@ -2101,36 +2040,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("SalaryAddon");
                 });
 
-            modelBuilder.Entity("StaffApp.Domain.Entity.TimeCard", b =>
-                {
-                    b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "Employee")
-                        .WithMany("TimeCards")
-                        .HasForeignKey("EmployeeID")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.TimeCardEntry", b =>
-                {
-                    b.HasOne("StaffApp.Domain.Entity.Project", "Project")
-                        .WithMany("TimeCardEntries")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("StaffApp.Domain.Entity.TimeCard", "TimeCard")
-                        .WithMany("TimeCardEntries")
-                        .HasForeignKey("TimeCardId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Project");
-
-                    b.Navigation("TimeCard");
-                });
-
             modelBuilder.Entity("StaffApp.Domain.Entity.Authentication.ApplicationRole", b =>
                 {
                     b.Navigation("ProjectMembers");
@@ -2155,8 +2064,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("ProjectMembers");
 
                     b.Navigation("Projects");
-
-                    b.Navigation("TimeCards");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.CompanyLocation", b =>
@@ -2242,8 +2149,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("ProjectDocuments");
 
                     b.Navigation("ProjectMembers");
-
-                    b.Navigation("TimeCardEntries");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.SalaryAddon", b =>
@@ -2255,11 +2160,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("EmployeeSalaryAddons");
 
                     b.Navigation("TaxLogics");
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.TimeCard", b =>
-                {
-                    b.Navigation("TimeCardEntries");
                 });
 #pragma warning restore 612, 618
         }

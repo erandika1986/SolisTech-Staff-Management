@@ -1,5 +1,192 @@
-﻿<h3>EditProjectDialog</h3>
+﻿@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.Project
+@using StaffApp.Application.DTOs.User
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+@using System.ComponentModel.DataAnnotations
+
+@inject IUserService UserService
+@inject IMasterDataService MasterDataService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+@inject IJSRuntime JSRuntime
+@inject LoadingService LoadingService
+@inject IProjectService ProjectService
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-2">
+                    <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                        <MudGrid>
+
+                            <MudItem xs="12" sm="12" md="12" lg="12">
+                                <MudTextField T="string" Label="Project Name" @bind-Value="Project.Name" Required="true" RequiredError="Project name is required!" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="Client Name" @bind-Value="Project.ClientName" Required="true" RequiredError="Client name is required!" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="Client Address" @bind-Value="Project.ClientAddress" Required="true" RequiredError="Client address is required!" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="Client Name" @bind-Value="Project.ClientName" Required="true" RequiredError="Client name is required!" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudTextField T="string" Label="Client Email" @bind-Value="Project.ClientEmail" Required="true" RequiredError="Email is required!"
+                                Validation="@(new EmailAddressAttribute() {ErrorMessage = "The email address is invalid"})" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="4" md="4" lg="4">
+                                <MudTextField T="string" Label="Client Phone Number" @bind-Value="Project.ClientPhone" Required="true" RequiredError="Client phone number is required!" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="4" md="4" lg="4">
+                                <MudDatePicker xs="12" sm="6" Label="Start Date" @bind-Date="Project.StartDate"  />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="4" md="4" lg="4">
+                                <MudDatePicker xs="12" sm="6" Label="End Date" @bind-Date="Project.EndDate"/>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudSelect T="UserDropDownDTO" Label="Project Manager" MultiSelection="false" @bind-Value="Project.SelectedManager" Required="true" RequiredError="Project Manager is required!">
+                                    @foreach (var manager in AvailableManagers)
+                                    {
+                                        <MudSelectItem T="UserDropDownDTO" Value="@manager">@manager.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudSelect T="DropDownDTO" Label="Management Platform" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="Project.SelectedManagementPlatform" Required="true" RequiredError="Management Platform type is required!">
+                                    @foreach (var managementPlatform in ManagementPlatforms)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@managementPlatform">@managementPlatform.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="6" lg="6">
+                                <MudSelect T="DropDownDTO" Label="Project Status" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="Project.SelectedStatus" Required="true" RequiredError="Project status is required!">
+                                    @foreach (var projectStatus in ProjectStatuses)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@projectStatus">@projectStatus.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="12" md="12" lg="12">
+                                <MudTextField @bind-Value="Project.Description"
+                                Label="Project Description"
+                                Variant="Variant.Outlined"
+                                Margin="Margin.Dense"
+                                Class="mt-3"
+                                Lines="3"
+                                Required="true"
+                                RequiredError="Please provide a project description"
+                                Placeholder="Enter project description..." />
+                            </MudItem>
+
+
+
+                        </MudGrid>
+
+                    </MudForm>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" sm="12">
+                <MudPaper Class="pa-4 mud-height-full">
+                    <MudText Typo="Typo.subtitle2">@($"Errors ({errors.Length})")</MudText>
+                    @foreach (var error in errors)
+                    {
+                        <MudText Color="@Color.Error">@error</MudText>
+                    }
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" Disabled="@(!success)" Class="ml-auto">
+                @if (@ProjectId == 0)
+                {
+                    @("Register")
+                }
+                else
+                {
+                    @("Save")
+                }
+            </MudButton>
+        </MudPaper>
+    </DialogActions>
+</MudDialog>
 
 @code {
+    [Parameter] public int ProjectId { get; set; }
 
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
+    public ProjectDTO Project { get; set; } = new();
+
+    public IEnumerable<UserDropDownDTO> AvailableManagers { get; set; } = new HashSet<UserDropDownDTO>();
+
+    private IEnumerable<DropDownDTO> ProjectStatuses = new List<DropDownDTO>();
+
+    private IEnumerable<DropDownDTO> ManagementPlatforms = new List<DropDownDTO>();
+
+    bool success;
+    string[] errors = { };
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadingService.Show();
+
+        //Roles = await UserService.GetAvailableRoles();
+        ProjectStatuses =  MasterDataService.GetProjectStatus();
+        ManagementPlatforms = MasterDataService.GetProjectManagementPlatforms();
+        AvailableManagers = await UserService.GetManagerJobRoleUsersAsync(); 
+
+        if (ProjectId == ApplicationConstants.Zero)
+        {
+            Project = new ProjectDTO();
+            Project.SelectedStatus = ProjectStatuses.FirstOrDefault();
+            Project.SelectedManagementPlatform = ManagementPlatforms.FirstOrDefault();
+
+        }
+        else
+        {
+            Project = await ProjectService.GetProjectById(ProjectId);
+            Project.SelectedStatus = ProjectStatuses.FirstOrDefault(x => x.Id == Project.SelectedStatus.Id);
+            Project.SelectedManagementPlatform = ManagementPlatforms.FirstOrDefault(x => x.Id == Project.SelectedManagementPlatform.Id);
+            Project.SelectedManager = AvailableManagers.FirstOrDefault(x => x.Id == Project.SelectedManager.Id);
+        }
+
+        LoadingService.Hide();
+    }
+
+    private async Task Submit()
+    {
+        LoadingService.Show();
+
+        var result = await ProjectService.SaveProject(Project);
+
+        LoadingService.Hide();
+
+        await OnDialogClosed.InvokeAsync(true); // Notify parent
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
 }

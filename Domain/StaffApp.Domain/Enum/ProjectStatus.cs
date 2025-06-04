@@ -5,14 +5,14 @@ namespace StaffApp.Domain.Enum
     public enum ProjectStatus
     {
         [Description("Not Started")]
-        NotStarted = 0,
+        NotStarted = 1,
         [Description("In Progress")]
-        InProgress = 1,
+        InProgress = 2,
         [Description("Completed")]
-        Completed = 2,
+        Completed = 3,
         [Description("On Hold")]
-        OnHold = 3,
+        OnHold = 4,
         [Description("Cancelled")]
-        Cancelled = 4
+        Cancelled = 5
     }
 }

@@ -133,5 +133,7 @@ namespace StaffApp.Infrastructure.Data
         public DbSet<Project> Projects => Set<Project>();
         public DbSet<ProjectDocument> ProjectDocuments => Set<ProjectDocument>();
         public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
+        public DbSet<TimeCard> TimeCards => Set<TimeCard>();
+        public DbSet<TimeCardEntry> TimeCardEntries => Set<TimeCardEntry>();
     }
 }

@@ -1,4 +1,4 @@
-﻿@page "/Project/List"
+﻿@page "/Project/MyProjectList"
 @using Microsoft.AspNetCore.Authorization
 @using StaffApp.Application.DTOs.Common
 @using StaffApp.Application.DTOs.Project
@@ -15,7 +15,6 @@
 @inject IMasterDataService MasterDataService
 @inject LoadingService LoadingService
 @inject ISnackbar Snackbar
-@inject IJSRuntime JSRuntime
 
 @attribute [Authorize]
 <MudGrid>
@@ -69,19 +68,25 @@
                     <PropertyColumn Property="x=>x.StartDateText" Title="@GetDisplayName(typeof(ProjectDTO), nameof(ProjectDTO.StartDateText))" />
                     <PropertyColumn Property="x=>x.EndDateText" Title="@GetDisplayName(typeof(ProjectDTO), nameof(ProjectDTO.EndDateText))" />
                     <PropertyColumn Property="x=>x.ManagementPlatformName" Title="@GetDisplayName(typeof(ProjectDTO), nameof(ProjectDTO.ManagementPlatformName))" />
-                    @*                     <PropertyColumn Property="x=>x.StatusText" Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeSalaryBasicDTO.StatusText))" /> *@
                     <PropertyColumn Property="x=>x.ManagerName" Title="@GetDisplayName(typeof(ProjectDTO), nameof(ProjectDTO.ManagerName))" />
                     <PropertyColumn Property="x=>x.StatusName" Title="@GetDisplayName(typeof(ProjectDTO), nameof(ProjectDTO.StatusName))" />
                     <TemplateColumn CellClass="d-flex justify-end">
                         <CellTemplate Context="project">
 
                             <MudStack Row>
-                                <MudTooltip Text="Edit User" Color="Color.Primary" Placement="Placement.Top">
+                                <MudTooltip Text="Manage Project Members" Color="Color.Info" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Groups" Color="Color.Info" Variant="Variant.Filled" OnClick="() => ManageProjectMemberAsync(project.Item)"></MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Manage Project Documents" Color="Color.Success" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.DynamicFeed" Color="Color.Success" Variant="Variant.Filled" OnClick="() => ManageProjectDocumentAsync(project.Item)"></MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Edit Project" Color="Color.Primary" Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditProjectAsync(project.Item)"></MudIconButton>
                                 </MudTooltip>
-                                <MudTooltip Text="Delete User" Color="Color.Error" Placement="Placement.Top">
+                                <MudTooltip Text="Delete Project" Color="Color.Error" Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteProjectAsync(project.Item)"></MudIconButton>
                                 </MudTooltip>
+
                             </MudStack>
                         </CellTemplate>
                     </TemplateColumn>
@@ -98,6 +103,7 @@
 @code {
     private string _searchString = "";
     private bool _loading = false;
+    private bool _isReadOnly = false;
     private bool _isMasterDataLoaded = false;
     private MudDataGrid<ProjectDTO> _dataGrid;
 
@@ -132,6 +138,7 @@
 
     private async Task LoadMasterDataAsync()
     {
+
         try
         {
             LoadingService.Show();
@@ -140,7 +147,6 @@
             SelectedProjectStatus = ProjectStatuses.FirstOrDefault();
 
             _isMasterDataLoaded = true;
-            LoadingService.Hide();
             StateHasChanged();
         }
         catch (Exception ex)
@@ -148,15 +154,19 @@
             // Handle error
             Console.WriteLine($"Error loading master data: {ex.Message}");
         }
+        finally
+        {
+            LoadingService.Hide();
+        }
     }
 
     private async Task<GridData<ProjectDTO>> LoadData(GridState<ProjectDTO> state)
     {
         _loading = true;
         LoadingService.Show();
+
         try
         {
-
             // Extract paging parameters
             var page = state.Page + 1; // MudBlazor uses 0-based indexing
             var pageSize = state.PageSize;
@@ -175,6 +185,7 @@
                 sortDirection
             );
 
+            _isReadOnly = result.IsReadOnly;    
             // Return the result in GridData format
             return new GridData<ProjectDTO>
                 {
@@ -200,12 +211,6 @@
         await Dialog.ShowAsync<EditProjectDialog>($"Add a new Project", parameters, _maxWidth);
     }
 
-    private async Task HandleEditDialogClosedAsync(bool result)
-    {
-        _dataGrid?.ReloadServerData();
-        StateHasChanged();
-    }
-
     private async Task EditProjectAsync(ProjectDTO project)
     {
         var parameters = new DialogParameters
@@ -214,6 +219,31 @@
             { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
         };
         await Dialog.ShowAsync<EditProjectDialog>($"Edit Existing Project", parameters, _maxWidth);
+    }
+
+    private async Task ManageProjectDocumentAsync(ProjectDTO project)
+    {
+        var parameters = new DialogParameters
+        {
+            { "ProjectId", project.Id },
+            { "ProjectName", project.Name},
+            { "IsReadOnly", false },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<ManageProjectDocumentDialog>($"Manage Project Document For : {project.Name}", parameters, _maxWidth);
+    }
+
+    private async Task ManageProjectMemberAsync(ProjectDTO project)
+    {
+
+        var parameters = new DialogParameters
+        {
+            { "ProjectId", project.Id },
+            { "ProjectName", project.Name},
+            { "IsReadOnly", false },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<ManageProjectMemberDialog>($"Manage Project Team For : {project.Name}", parameters, _maxWidth);
     }
 
     private Task DeleteProjectAsync(ProjectDTO project)
@@ -245,17 +275,10 @@
         await ShowSnackbar(result);
     }
 
-    string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    private async Task HandleEditDialogClosedAsync(bool result)
     {
-        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
-        return displayAttribute?.Name ?? prop.Name;
-    }
-
-    string GetDisplayName(Type type, string propertyName)
-    {
-        var prop = type.GetProperty(propertyName);
-        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
-        return displayAttribute?.Name ?? propertyName;
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
     }
 
     private async Task ShowSnackbar(GeneralResponseDTO result)
@@ -268,5 +291,18 @@
         {
             Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
         }
+    }
+
+    string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
     }
 }

@@ -35,6 +35,8 @@ namespace StaffApp.Application.Contracts
         DbSet<Project> Projects { get; }
         DbSet<ProjectDocument> ProjectDocuments { get; }
         DbSet<ProjectMember> ProjectMembers { get; }
+        DbSet<TimeCard> TimeCards { get; }
+        DbSet<TimeCardEntry> TimeCardEntries { get; }
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
         Task BeginTransactionAsync(CancellationToken cancellationToken);

@@ -171,6 +171,17 @@ namespace StaffApp.Infrastructure.Services
             return response;
         }
 
+        public List<DropDownDTO> GetProjectManagementPlatforms(bool hasDefaultValue = false)
+        {
+            var response = new List<DropDownDTO>();
+            if (hasDefaultValue)
+                response.Add(new DropDownDTO() { Id = 0, Name = "All" });
+
+            response.AddRange(EnumHelper.GetDropDownList<ProjectManagementPlatform>());
+
+            return response;
+        }
+
         public List<DropDownDTO> GetEmployeeSalaryTransferStatus()
         {
             return EnumHelper.GetDropDownList<MonthlySalaryStatus>();
