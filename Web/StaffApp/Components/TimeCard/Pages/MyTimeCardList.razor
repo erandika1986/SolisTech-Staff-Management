@@ -1,4 +1,5 @@
-﻿@using Microsoft.AspNetCore.Authorization
+﻿@page "/TimeCard/MyTimeCardList"
+@using Microsoft.AspNetCore.Authorization
 @using StaffApp.Application.DTOs.TimeCard
 @using StaffApp.Application.Extensions.Constants
 @using StaffApp.Application.Services
@@ -10,6 +11,73 @@
 @inject IDialogService Dialog
 
 @attribute [Authorize]
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Manage Employee Leave Submissions</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12" md="12" lg="12">
+
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="12" lg="12">
+                            <MudGrid>
+                            <MudItem xs="12" sm="12">
+                                <MudTooltip Text="Apply For New Leave Request" Color="Color.Primary" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.AddTask" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => AddNewTimeCardAsync()"></MudIconButton>
+                                </MudTooltip>
+                            </MudItem>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                <MudDatePicker xs="12" sm="6" Label="From Date" Date="StartDate" DateChanged="StartDateChanged" />
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                <MudDatePicker xs="12" sm="6" Label="To Date" Date="EndDate" DateChanged="EndDataChanged" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="12" lg="12">
+                        <MudDataGrid @ref="_dataGrid" T="BasicTimeCardDTO" ServerData="@(LoadData)" Sortable="true"
+                                         Filterable="false"
+                                         Hideable="true"
+                                         Hover="true"
+                                         Striped="true"
+                                         Elevation="25"
+                                         Loading="@_loading">
+                                <Columns>
+                                <PropertyColumn Property="x=>x.Id" Title="@GetDisplayName(typeof(BasicTimeCardDTO), nameof(BasicTimeCardDTO.Id))" />
+                                <PropertyColumn Property="x=>x.Date" Title="@GetDisplayName(typeof(BasicTimeCardDTO), nameof(BasicTimeCardDTO.Date))" />
+                                <PropertyColumn Property="x=>x.StatusName" Title="@GetDisplayName(typeof(BasicTimeCardDTO), nameof(BasicTimeCardDTO.StatusName))" />
+                                <PropertyColumn Property="x=>x.NumberOfProjects" Title="@GetDisplayName(typeof(BasicTimeCardDTO), nameof(BasicTimeCardDTO.NumberOfProjects))" />
+                                <PropertyColumn Property="x=>x.TotalHours" Title="@GetDisplayName(typeof(BasicTimeCardDTO), nameof(BasicTimeCardDTO.TotalHours))" />
+                                    <TemplateColumn CellClass="d-flex justify-end">
+                                        <CellTemplate Context="timeCard">
+                                            <MudStack Row>
+                                                <MudTooltip Text="View Leave Request" Color="Color.Info" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled" OnClick="() => EditTimeCardAsync(timeCard.Item)"></MudIconButton>
+                                                </MudTooltip>
+
+                                                <MudTooltip Text="Delete Leave Request" Color="Color.Error" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() =>DeleteTimeCardAsync(timeCard.Item)"></MudIconButton>
+                                                </MudTooltip>
+                                            </MudStack>
+                                        </CellTemplate>
+                                    </TemplateColumn>
+                                </Columns>
+                                <PagerContent>
+                                    <MudDataGridPager T="BasicTimeCardDTO" />
+                                </PagerContent>
+                            </MudDataGrid>
+                        </MudItem>
+                    </MudGrid>
+
+                
+
+            </MudItem>
+        </MudGrid>
+    </MudCardContent>
+</MudCard>
 
 @code {
     private string _searchString = "";
@@ -26,18 +94,18 @@
 
     }
 
-    private void FromDateChanged(DateTime fromDate)
+    private void StartDateChanged(DateTime? fromDate)
     {
 
-        StartDate = fromDate;
+        StartDate = fromDate.Value;
 
         _dataGrid?.ReloadServerData();
         StateHasChanged();
     }
 
-    private void ToDataChanged(DateTime toDate)
+    private void EndDataChanged(DateTime? toDate)
     {
-        EndDate = toDate;
+        EndDate = toDate.Value;
         _dataGrid?.ReloadServerData();
         StateHasChanged();
     }
@@ -56,8 +124,8 @@
             var result = await TimeCardService.GetAllTimeCardAsync(
                 page,
                 pageSize,
-                fromDateTime,
-                toDateTime
+                StartDate,
+                EndDate
             );
 
             // Return the result in GridData format
