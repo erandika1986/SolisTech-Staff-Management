@@ -14,7 +14,9 @@ namespace StaffApp.Application.Services
             int pageSize,
             DateTime fromDate,
             DateTime toDate);
-        Task<GeneralResponseDTO> ApproveTimeCard(int timeCardId, string comment);
-        Task<GeneralResponseDTO> RejectTimeCard(int timeCardId, string comment);
+        Task<GeneralResponseDTO> ApproveTimeCard(int timeCardId, int timeCardEntryId, string comment);
+        Task<GeneralResponseDTO> RejectTimeCard(int timeCardId, int timeCardEntryId, string comment);
+        Task<GeneralResponseDTO> GenerateTimeCardForSelectedMonth(int companyYear, int companyMonth);
+        Task<GeneralResponseDTO> SetTimeCardOnHoliday(string employeeId, DateTime startDate, DateTime endDate);
     }
 }

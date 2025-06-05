@@ -2,6 +2,7 @@
 using StaffApp.Application.Contracts;
 using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.TimeCard;
+using StaffApp.Application.Extensions.Constants;
 using StaffApp.Application.Extensions.Helpers;
 using StaffApp.Application.Services;
 using StaffApp.Domain.Entity;
@@ -10,7 +11,7 @@ namespace StaffApp.Infrastructure.Services
 {
     public class TimeCardService(IStaffAppDbContext context, ICurrentUserService currentUserService) : ITimeCardService
     {
-        public async Task<GeneralResponseDTO> ApproveTimeCard(int timeCardId, string comment)
+        public async Task<GeneralResponseDTO> ApproveTimeCard(int timeCardId, int timeCardEntryId, string comment)
         {
             try
             {
@@ -25,8 +26,26 @@ namespace StaffApp.Infrastructure.Services
                     };
                 }
 
-                timeCard.Status = Domain.Enum.TimeCardStatus.Approved;
-                timeCard.ManagerComment = comment;
+                var timeCardEntry = timeCard.TimeCardEntries.FirstOrDefault(x => x.Id == timeCardEntryId);
+                timeCardEntry.ManagerComment = comment;
+                timeCardEntry.Status = Domain.Enum.TimeCardEntryStatus.Approved;
+
+                context.TimeCardEntries.Update(timeCardEntry);
+
+                if (timeCard.TimeCardEntries.Count() == ApplicationConstants.One ||
+                    timeCard.TimeCardEntries.Count(x => x.Status == Domain.Enum.TimeCardEntryStatus.Approved) == (timeCard.TimeCardEntries.Count - ApplicationConstants.One))
+                {
+                    timeCard.Status = Domain.Enum.TimeCardStatus.FullyApproved;
+                }
+                else if (timeCard.TimeCardEntries.Any(x => x.Status == Domain.Enum.TimeCardEntryStatus.Rejected))
+                {
+                    timeCard.Status = Domain.Enum.TimeCardStatus.PartiallyApprovedAndRejected;
+                }
+                else if (timeCard.TimeCardEntries.Any(x => x.Status == Domain.Enum.TimeCardEntryStatus.Submitted)
+                    && !(timeCard.TimeCardEntries.Any(x => x.Status == Domain.Enum.TimeCardEntryStatus.Rejected)))
+                {
+                    timeCard.Status = Domain.Enum.TimeCardStatus.PartiallyApproved;
+                }
 
                 context.TimeCards.Update(timeCard);
                 await context.SaveChangesAsync(CancellationToken.None);
@@ -87,6 +106,82 @@ namespace StaffApp.Infrastructure.Services
             }
         }
 
+        public async Task<GeneralResponseDTO> GenerateTimeCardForSelectedMonth(int companyYear, int companyMonth)
+        {
+            try
+            {
+                var activeEmployees = await context.ApplicationUsers
+                    .Where(x => x.IsActive)
+                    .ToListAsync();
+
+                foreach (var employee in activeEmployees)
+                {
+                    var existingTimeCards = await context.TimeCards
+                            .Where(x => x.EmployeeID == employee.Id && x.Date.Year == companyYear && x.Date.Month == companyMonth)
+                            .ToListAsync(CancellationToken.None);
+                    if (existingTimeCards.Count == 0)
+                    {
+                        DateTime startDate = new DateTime(companyYear, companyMonth, 1);
+                        int daysInMonth = DateTime.DaysInMonth(companyYear, companyMonth);
+
+                        for (int day = 0; day < daysInMonth; day++)
+                        {
+                            DateTime currentDate = startDate.AddDays(day);
+
+                            var approvedLeaveRequest = context.EmployeeLeaveRequests
+                                .FirstOrDefault(x => x.EmployeeId == employee.Id && x.StartDate <= currentDate && x.EndDate >= currentDate && x.CurrentStatus == Domain.Enum.LeaveStatus.Approved && x.LeaveDuration == Domain.Enum.LeaveDuration.FullDay);
+
+                            var newTimeCard = new TimeCard
+                            {
+                                EmployeeID = employee.Id,
+                                Date = currentDate,
+                                Status = approvedLeaveRequest is null ? Domain.Enum.TimeCardStatus.Pending : Domain.Enum.TimeCardStatus.OnLeave
+                            };
+                            context.TimeCards.Add(newTimeCard);
+                        }
+                    }
+                }
+
+                await context.SaveChangesAsync(CancellationToken.None);
+
+                return new GeneralResponseDTO
+                {
+                    Flag = true,
+                    Message = "Time cards have been generated for selected month."
+                };
+            }
+            catch (Exception ex)
+            {
+                return new GeneralResponseDTO
+                {
+                    Flag = false,
+                    Message = $"An error occurred while generating time cards: {ex.Message}"
+                };
+            }
+        }
+
+        public async Task<GeneralResponseDTO> SetTimeCardOnHoliday(string employeeId, DateTime startDate, DateTime endDate)
+        {
+            for (DateTime date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                var timeCard = context.TimeCards
+                    .FirstOrDefault(x => x.EmployeeID == employeeId && x.Date == date);
+
+                if (timeCard != null)
+                {
+                    timeCard.Status = Domain.Enum.TimeCardStatus.OnLeave;
+                    context.TimeCards.Update(timeCard);
+
+                    await context.SaveChangesAsync(CancellationToken.None);
+                }
+            }
+            return new GeneralResponseDTO
+            {
+                Flag = true,
+                Message = $"Time cards have been set to On Leave."
+            };
+        }
+
         public async Task<PaginatedResultDTO<BasicTimeCardDTO>> GetAllTimeCardAsync(int pageNumber, int pageSize, DateTime fromDate, DateTime toDate)
         {
             var query = context.TimeCards.Where(x => x.Date >= fromDate && x.Date <= toDate);
@@ -101,7 +196,7 @@ namespace StaffApp.Infrastructure.Services
                             Id = timeCard.Id,
                             EmployeeName = timeCard.Employee.FullName,
                             Date = timeCard.Date,
-                            Notes = timeCard.Notes,
+                            DateByString = timeCard.Date.ToString("dd/MM/yyyy"),
                             StatusName = EnumHelper.GetEnumDescription(timeCard.Status),
                             NumberOfProjects = timeCard.TimeCardEntries.Count,
                             TotalHours = timeCard.TimeCardEntries.Sum(x => x.HoursWorked)
@@ -119,6 +214,38 @@ namespace StaffApp.Infrastructure.Services
             return newResult;
         }
 
+        //public async Task<PaginatedResultDTO<BasicTimeCardDTO>> GetAllTimeCardAsync(int pageNumber, int pageSize, DateTime fromDate, DateTime toDate)
+        //{
+        //    var query = context.TimeCards.Where(x => x.Date >= fromDate && x.Date <= toDate);
+
+        //    int totalCount = await query.CountAsync();
+
+        //    var items = await query
+        //                .Skip((pageNumber - 1) * pageSize)
+        //                .Take(pageSize)
+        //                .Select(timeCard => new BasicTimeCardDTO
+        //                {
+        //                    Id = timeCard.Id,
+        //                    EmployeeName = timeCard.Employee.FullName,
+        //                    Date = timeCard.Date,
+        //                    DateByString = timeCard.Date.ToString("dd/MM/yyyy"),
+        //                    StatusName = EnumHelper.GetEnumDescription(timeCard.Status),
+        //                    NumberOfProjects = timeCard.TimeCardEntries.Count,
+        //                    TotalHours = timeCard.TimeCardEntries.Sum(x => x.HoursWorked)
+        //                })
+        //                .ToListAsync();
+
+        //    var newResult = new PaginatedResultDTO<BasicTimeCardDTO>
+        //    {
+        //        Items = items,
+        //        TotalItems = totalCount,
+        //        Page = pageNumber,
+        //        PageSize = pageSize
+        //    };
+
+        //    return newResult;
+        //}
+
         public async Task<TimeCardDTO> GetTimeCardByDateAsync(DateTime date)
         {
             var timeCard = await context.TimeCards.FirstOrDefaultAsync(x => x.Date == date);
@@ -134,16 +261,15 @@ namespace StaffApp.Infrastructure.Services
                 EmployeeID = timeCard.EmployeeID,
                 EmployeeName = timeCard.Employee?.FullName ?? "Unknown",
                 Date = timeCard.Date,
-                Notes = timeCard.Notes,
                 Status = timeCard.Status,
                 StatusName = timeCard.Status.ToString(),
-                ManagerComment = timeCard.ManagerComment,
                 TimeCardEntries = timeCard.TimeCardEntries.Select(x => new TimeCardEntryDTO
                 {
                     Id = x.Id,
                     ProjectId = x.ProjectId,
                     HoursWorked = x.HoursWorked,
-                    Notes = x.Notes
+                    Notes = x.Notes,
+                    ManagerComment = x.ManagerComment,
                 }).ToList()
             };
         }
@@ -163,21 +289,23 @@ namespace StaffApp.Infrastructure.Services
                 EmployeeID = timeCard.EmployeeID,
                 EmployeeName = timeCard.Employee?.FullName ?? "Unknown",
                 Date = timeCard.Date,
-                Notes = timeCard.Notes,
+                DateByString = timeCard.Date.ToString("dd/MM/yyyy"),
                 Status = timeCard.Status,
                 StatusName = timeCard.Status.ToString(),
-                ManagerComment = timeCard.ManagerComment,
                 TimeCardEntries = timeCard.TimeCardEntries.Select(x => new TimeCardEntryDTO
                 {
                     Id = x.Id,
                     ProjectId = x.ProjectId,
                     HoursWorked = x.HoursWorked,
-                    Notes = x.Notes
+                    Notes = x.Notes,
+                    ManagerComment = x.ManagerComment,
+                    ProjectName = x.Project?.Name ?? "Unknown Project",
+                    TimeCardId = timeCard.Id
                 }).ToList()
             };
         }
 
-        public async Task<GeneralResponseDTO> RejectTimeCard(int timeCardId, string comment)
+        public async Task<GeneralResponseDTO> RejectTimeCard(int timeCardId, int timeCardEntryId, string comment)
         {
             try
             {
@@ -192,8 +320,26 @@ namespace StaffApp.Infrastructure.Services
                     };
                 }
 
-                timeCard.Status = Domain.Enum.TimeCardStatus.Rejected;
-                timeCard.ManagerComment = comment;
+                var timeCardEntry = timeCard.TimeCardEntries.FirstOrDefault(x => x.Id == timeCardEntryId);
+                timeCardEntry.ManagerComment = comment;
+                timeCardEntry.Status = Domain.Enum.TimeCardEntryStatus.Rejected;
+
+                context.TimeCardEntries.Update(timeCardEntry);
+
+                if (timeCard.TimeCardEntries.Count() == ApplicationConstants.One ||
+                    timeCard.TimeCardEntries.Count(x => x.Status == Domain.Enum.TimeCardEntryStatus.Rejected) == (timeCard.TimeCardEntries.Count - ApplicationConstants.One))
+                {
+                    timeCard.Status = Domain.Enum.TimeCardStatus.FullyRejected;
+                }
+                else if (timeCard.TimeCardEntries.Any(x => x.Status == Domain.Enum.TimeCardEntryStatus.Approved))
+                {
+                    timeCard.Status = Domain.Enum.TimeCardStatus.PartiallyApprovedAndRejected;
+                }
+                else if (timeCard.TimeCardEntries.Any(x => x.Status == Domain.Enum.TimeCardEntryStatus.Submitted)
+                    && !(timeCard.TimeCardEntries.Any(x => x.Status == Domain.Enum.TimeCardEntryStatus.Approved)))
+                {
+                    timeCard.Status = Domain.Enum.TimeCardStatus.PartiallyRejected;
+                }
 
                 context.TimeCards.Update(timeCard);
                 await context.SaveChangesAsync(CancellationToken.None);
@@ -226,9 +372,7 @@ namespace StaffApp.Infrastructure.Services
                     {
                         EmployeeID = currentUserService.UserId,
                         Date = timeCardDTO.Date,
-                        Notes = timeCardDTO.Notes,
-                        Status = Domain.Enum.TimeCardStatus.Pending,
-                        ManagerComment = timeCardDTO.ManagerComment
+                        Status = Domain.Enum.TimeCardStatus.Submitted
                     };
 
                     foreach (var item in timeCardDTO.TimeCardEntries)
@@ -238,6 +382,7 @@ namespace StaffApp.Infrastructure.Services
                             ProjectId = item.ProjectId,
                             HoursWorked = item.HoursWorked,
                             Notes = item.Notes,
+                            Status = Domain.Enum.TimeCardEntryStatus.Submitted
                         });
                     }
 
@@ -253,7 +398,7 @@ namespace StaffApp.Infrastructure.Services
                 else
                 {
                     timeCard.Date = timeCardDTO.Date;
-                    timeCard.Notes = timeCardDTO.Notes;
+                    timeCard.Status = Domain.Enum.TimeCardStatus.Submitted;
 
                     var newlyAddedEntries = timeCardDTO.TimeCardEntries
                          .Where(x => x.Id == 0)
@@ -266,6 +411,7 @@ namespace StaffApp.Infrastructure.Services
                             ProjectId = item.ProjectId,
                             HoursWorked = item.HoursWorked,
                             Notes = item.Notes,
+                            Status = Domain.Enum.TimeCardEntryStatus.Submitted
                         });
                     }
 
@@ -284,6 +430,7 @@ namespace StaffApp.Infrastructure.Services
                             existingEntry.ProjectId = entry.ProjectId;
                             existingEntry.HoursWorked = entry.HoursWorked;
                             existingEntry.Notes = entry.Notes;
+                            existingEntry.Status = Domain.Enum.TimeCardEntryStatus.Submitted;
 
                             context.TimeCardEntries.Update(existingEntry);
                         }

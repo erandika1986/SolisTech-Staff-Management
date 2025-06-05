@@ -9,5 +9,6 @@
 
         public double HoursWorked { get; set; }
         public string Notes { get; set; }
+        public string ManagerComment { get; set; }
     }
 }

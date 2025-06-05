@@ -8,6 +8,7 @@ namespace StaffApp.Application.DTOs.TimeCard
         public string EmployeeID { get; set; }
         public string EmployeeName { get; set; }
         public DateTime Date { get; set; }
+        public string DateByString { get; set; }
         public string Notes { get; set; }
         public TimeCardStatus Status { get; set; }
         public string StatusName { get; set; }
