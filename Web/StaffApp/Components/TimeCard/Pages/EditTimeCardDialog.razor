@@ -1,5 +1,198 @@
-﻿<h3>EditTimeCardDialog</h3>
+﻿@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.TimeCard
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+
+
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+@inject LoadingService LoadingService
+@inject IDialogService Dialog
+@inject IProjectService ProjectService
+@inject ITimeCardService TimeCardService
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            @if (!IsReadOnly)
+            {
+                <MudItem xs="12" sm="6" md="6" lg="6">
+                    <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+                        <MudSelect T="DropDownDTO" Label="Select Project Member" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="SelectedProject">
+                            @foreach (var project in AssignedProjects)
+                            {
+                                <MudSelectItem T="DropDownDTO" Value="@project">@project.Name</MudSelectItem>
+                            }
+                        </MudSelect>
+@*                         <MudSelect T="RoleDTO" Label="Select Project Role" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="SelectedProjectRole">
+                            @foreach (var role in Roles)
+                            {
+                                <MudSelectItem T="RoleDTO" Value="@role">@role.Name</MudSelectItem>
+                            }
+                        </MudSelect> *@
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddNewTimeCardEntry">
+                            <MudIcon Icon="@Icons.Material.Filled.Add" /> Add
+                        </MudButton>
+                    </MudPaper>
+                </MudItem>
+            }
+            <MudItem xs="12" sm="12">
+                <MudTable Items="TimeCard.TimeCardEntries">
+                    <HeaderContent>
+                        <MudTh>Id</MudTh>
+                        <MudTh>Project Name</MudTh>
+                        <MudTh>Hours Worked</MudTh>
+                        <MudTh>Notes</MudTh>
+                        <MudTh>Manager Comment</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Id</MudTd>
+                        <MudTd>@context.ProjectName</MudTd>
+                        <MudTd>@context.HoursWorked</MudTd>
+                        <MudTd>@context.Notes</MudTd>
+                        <MudTd>@context.ManagerComment</MudTd>
+                        <MudTd>
+                            <MudStack Row>
+                                <MudTooltip Text="Deallocate project member" Color="Color.Error" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteTimeCardEntry(context)" Disabled="IsReadOnly"></MudIconButton>
+                                </MudTooltip>
+
+                                <MudTooltip Text="Edit Project" Color="Color.Primary" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditTimeCardEntry(context)"></MudIconButton>
+                                </MudTooltip>
+                            </MudStack>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+        </MudPaper>
+    </DialogActions>
+</MudDialog>
 
 @code {
+    [Parameter]
+    public int TimeCardId { get; set; }
 
+    [Parameter]
+    public bool IsReadOnly { get; set; }
+
+    [Parameter]
+    public bool IsApprovalView { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnDialogClosed { get; set; }
+
+    private TimeCardDTO TimeCard { get; set; } = new();
+
+    private int Id { get; set; } = 0;
+
+    private TimeCardEntryDTO SelectedTimeCardEntry = new();
+
+    private IEnumerable<DropDownDTO> AssignedProjects = new List<DropDownDTO>();
+    private DropDownDTO SelectedProject = new();
+
+    private string Note { get; set; } = string.Empty;
+
+    private string ManagerComment { get; set; } = string.Empty;
+
+    private double Hours { get; set; } = 0.0;
+
+
+
+
+    bool success;
+    string[] errors = { };
+    MudForm form;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadingService.Show();
+        AssignedProjects = await ProjectService.GetMyAssignedProjects();
+        TimeCard = await TimeCardService.GetTimeCardByIdAsync(TimeCardId);
+        LoadingService.Hide();
+    }
+
+    private void EditTimeCardEntry(TimeCardEntryDTO timeCardEntry)
+    {
+        Id = timeCardEntry.Id;
+        SelectedProject = AssignedProjects.FirstOrDefault(x => x.Id == timeCardEntry.ProjectId) ?? new DropDownDTO();
+        Note = timeCardEntry.Notes;
+        Hours = timeCardEntry.HoursWorked;
+        ManagerComment = timeCardEntry.ManagerComment ?? string.Empty;
+    }
+
+    private async Task AddNewTimeCardEntry()
+    {
+        if(Id == 0)
+        {
+            var timeCardEntry = TimeCard.TimeCardEntries.FirstOrDefault(x => x.ProjectId == SelectedProject.Id);
+            if (timeCardEntry is not null)
+            {
+               await ShowSnackbar(new GeneralResponseDTO()
+                    {
+                        Flag = false,
+                        Message = "Project already exists in the time card."
+                    });
+            }
+            else
+            {
+                TimeCard.TimeCardEntries.Add(new TimeCardEntryDTO
+                    {
+                        Id = 0, // New entry will have Id 0
+                        ProjectName = SelectedProject.Name,
+                        ProjectId = SelectedProject.Id,
+                        Notes = Note,
+                        HoursWorked = Hours,
+                        TimeCardId = TimeCard.Id
+                    });
+            }
+
+        }
+        else
+        {
+            var existingTimeCardEntry = TimeCard.TimeCardEntries.FirstOrDefault(x => x.Id == Id);
+            if (existingTimeCardEntry != null)
+            {
+                existingTimeCardEntry.ProjectId = SelectedProject.Id;
+                existingTimeCardEntry.Notes = Note;
+                existingTimeCardEntry.HoursWorked = Hours;
+            }
+        }
+    }
+
+    private void DeleteTimeCardEntry(TimeCardEntryDTO timeCardEntry)
+    {
+        TimeCard.TimeCardEntries.Remove(timeCardEntry);
+    }
+
+    private async Task SaveTimeCard()
+    {
+        LoadingService.Show();
+        var response = await TimeCardService.SaveTimeCardAsync(TimeCard);
+        await ShowSnackbar(response);
+        LoadingService.Hide();
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
 }

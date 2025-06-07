@@ -9,7 +9,7 @@ using StaffApp.Domain.Entity;
 
 namespace StaffApp.Infrastructure.Services
 {
-    public class TimeCardService(IStaffAppDbContext context, ICurrentUserService currentUserService) : ITimeCardService
+    public class TimeCardService(IStaffAppDbContext context, ICurrentUserService currentUserService, IUserService userService) : ITimeCardService
     {
         public async Task<GeneralResponseDTO> ApproveTimeCard(int timeCardId, int timeCardEntryId, string comment)
         {
@@ -214,37 +214,54 @@ namespace StaffApp.Infrastructure.Services
             return newResult;
         }
 
-        //public async Task<PaginatedResultDTO<BasicTimeCardDTO>> GetAllTimeCardAsync(int pageNumber, int pageSize, DateTime fromDate, DateTime toDate)
-        //{
-        //    var query = context.TimeCards.Where(x => x.Date >= fromDate && x.Date <= toDate);
+        public async Task<PaginatedResultDTO<BasicManagerTimeCardDTO>> GetMyEmployeeTimeCardsForSelectedDateAsync(int pageNumber, int pageSize, DateTime timeCardDate)
+        {
+            var assignedRoles = await userService
+                .GetLoggedInUserAssignedRoles(currentUserService.UserId);
 
-        //    int totalCount = await query.CountAsync();
+            var query = context.TimeCards
+                .Where(x => x.Date == timeCardDate)
+                .SelectMany(e => e.TimeCardEntries);
 
-        //    var items = await query
-        //                .Skip((pageNumber - 1) * pageSize)
-        //                .Take(pageSize)
-        //                .Select(timeCard => new BasicTimeCardDTO
-        //                {
-        //                    Id = timeCard.Id,
-        //                    EmployeeName = timeCard.Employee.FullName,
-        //                    Date = timeCard.Date,
-        //                    DateByString = timeCard.Date.ToString("dd/MM/yyyy"),
-        //                    StatusName = EnumHelper.GetEnumDescription(timeCard.Status),
-        //                    NumberOfProjects = timeCard.TimeCardEntries.Count,
-        //                    TotalHours = timeCard.TimeCardEntries.Sum(x => x.HoursWorked)
-        //                })
-        //                .ToListAsync();
+            if (!assignedRoles.Any(x => x == RoleConstants.Admin) &&
+                !assignedRoles.Any(x => x == RoleConstants.Director) &&
+                (assignedRoles.Any(x => x == RoleConstants.Manager) || assignedRoles.Any(x => x == RoleConstants.TeamLead)))
+            {
+                query = query
+                    .Where(x => x.Project.ManagerId == currentUserService.UserId);
+            }
 
-        //    var newResult = new PaginatedResultDTO<BasicTimeCardDTO>
-        //    {
-        //        Items = items,
-        //        TotalItems = totalCount,
-        //        Page = pageNumber,
-        //        PageSize = pageSize
-        //    };
 
-        //    return newResult;
-        //}
+
+            int totalCount = await query.CountAsync();
+
+            var items = await query
+                        .Skip((pageNumber - 1) * pageSize)
+                        .Take(pageSize)
+                        .Select(tce => new BasicManagerTimeCardDTO
+                        {
+                            TimeCardId = tce.TimeCard.Id,
+                            TimeCardEntryId = tce.Id,
+                            EmployeeName = tce.TimeCard.EmployeeID,
+                            Date = tce.TimeCard.Date,
+                            DateByString = tce.TimeCard.Date.ToString("dd/MM/yyyy"),
+                            StatusName = EnumHelper.GetEnumDescription(tce.Status),
+                            Status = tce.Status,
+                            ProjectName = tce.Project.Name,
+                            TotalHours = tce.HoursWorked,
+                        })
+                        .ToListAsync();
+
+            var newResult = new PaginatedResultDTO<BasicManagerTimeCardDTO>
+            {
+                Items = items,
+                TotalItems = totalCount,
+                Page = pageNumber,
+                PageSize = pageSize
+            };
+
+            return newResult;
+        }
 
         public async Task<TimeCardDTO> GetTimeCardByDateAsync(DateTime date)
         {

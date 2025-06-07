@@ -658,5 +658,18 @@ namespace StaffApp.Infrastructure.Services
 
             return projectDto;
         }
+        public async Task<List<DropDownDTO>> GetMyAssignedProjects()
+        {
+            var assignedProjects = await context
+                .ProjectMembers
+                .Where(x => x.IsActive && x.MemberId == currentUserService.UserId)
+                .Select(x => new DropDownDTO()
+                {
+                    Id = x.ProjectId,
+                    Name = x.Project.Name
+                }).ToListAsync(CancellationToken.None);
+
+            return assignedProjects;
+        }
     }
 }

@@ -18,5 +18,6 @@ namespace StaffApp.Application.Services
         Task<GeneralResponseDTO> DeleteProjectDocument(int projectDocumentId);
         Task<List<ProjectDocumentDTO>> GetProjectDocuments(int projectId);
         Task<ProjectDTO> GetProjectById(int projectId);
+        Task<List<DropDownDTO>> GetMyAssignedProjects();
     }
 }

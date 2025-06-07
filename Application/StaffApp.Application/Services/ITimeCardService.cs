@@ -14,6 +14,12 @@ namespace StaffApp.Application.Services
             int pageSize,
             DateTime fromDate,
             DateTime toDate);
+
+        Task<PaginatedResultDTO<BasicManagerTimeCardDTO>> GetMyEmployeeTimeCardsForSelectedDateAsync(
+            int pageNumber,
+            int pageSize,
+            DateTime timeCardDate);
+
         Task<GeneralResponseDTO> ApproveTimeCard(int timeCardId, int timeCardEntryId, string comment);
         Task<GeneralResponseDTO> RejectTimeCard(int timeCardId, int timeCardEntryId, string comment);
         Task<GeneralResponseDTO> GenerateTimeCardForSelectedMonth(int companyYear, int companyMonth);
