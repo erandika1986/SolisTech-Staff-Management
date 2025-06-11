@@ -184,7 +184,7 @@ namespace StaffApp.Infrastructure.Services
 
         public async Task<PaginatedResultDTO<BasicTimeCardDTO>> GetAllTimeCardAsync(int pageNumber, int pageSize, DateTime fromDate, DateTime toDate)
         {
-            var query = context.TimeCards.Where(x => x.Date >= fromDate && x.Date <= toDate);
+            var query = context.TimeCards.Where(x => x.Date >= fromDate && x.Date <= toDate && x.EmployeeID == currentUserService.UserId);
 
             int totalCount = await query.CountAsync();
 
@@ -230,8 +230,6 @@ namespace StaffApp.Infrastructure.Services
                 query = query
                     .Where(x => x.Project.ManagerId == currentUserService.UserId);
             }
-
-
 
             int totalCount = await query.CountAsync();
 
@@ -483,6 +481,36 @@ namespace StaffApp.Infrastructure.Services
                 };
             }
 
+        }
+
+        public async Task<PaginatedResultDTO<MonthlyTimeCardDTO>> GetTimeCardsByMonthAsync(int pageNumber, int pageSize, int CompanyYearId, int MonthId)
+        {
+            var query = context.TimeCards.Where(x => x.Date.Year == CompanyYearId && x.Date.Month == MonthId);
+
+            int totalCount = await query.CountAsync();
+
+            var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(tce => new MonthlyTimeCardDTO
+            {
+                TimeCardId = tce.Id,
+                CompanyYear = tce.Date.Year,
+                Month = tce.Date.Month,
+                EmployeeName = tce.Employee.FullName,
+                Day = tce.Date.Day,
+            })
+            .ToListAsync();
+
+            var newResult = new PaginatedResultDTO<MonthlyTimeCardDTO>
+            {
+                Items = items,
+                TotalItems = totalCount,
+                Page = pageNumber,
+                PageSize = pageSize
+            };
+
+            return newResult;
         }
     }
 }

@@ -12,6 +12,6 @@ namespace StaffApp.Domain.Entity
 
         public virtual Project Project { get; set; }
         public virtual ApplicationUser Member { get; set; }
-        public virtual ApplicationRole Role { get; set; }
+        //public virtual ApplicationRole Role { get; set; }
     }
 }

@@ -30,12 +30,12 @@ namespace StaffApp.Infrastructure.Data.Configurations
                .OnDelete(DeleteBehavior.Restrict)
                .IsRequired(true);
 
-            builder
-               .HasOne<ApplicationRole>(c => c.Role)
-               .WithMany(c => c.ProjectMembers)
-               .HasForeignKey(c => c.RoleId)
-               .OnDelete(DeleteBehavior.Restrict)
-               .IsRequired(true);
+            //builder
+            //   .HasOne<ApplicationRole>(c => c.Role)
+            //   .WithMany(c => c.ProjectMembers)
+            //   .HasForeignKey(c => c.RoleId)
+            //   .OnDelete(DeleteBehavior.Restrict)
+            //   .IsRequired(true);
         }
     }
 }

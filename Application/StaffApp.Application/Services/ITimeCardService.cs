@@ -24,5 +24,10 @@ namespace StaffApp.Application.Services
         Task<GeneralResponseDTO> RejectTimeCard(int timeCardId, int timeCardEntryId, string comment);
         Task<GeneralResponseDTO> GenerateTimeCardForSelectedMonth(int companyYear, int companyMonth);
         Task<GeneralResponseDTO> SetTimeCardOnHoliday(string employeeId, DateTime startDate, DateTime endDate);
+        Task<PaginatedResultDTO<MonthlyTimeCardDTO>> GetTimeCardsByMonthAsync(
+            int pageNumber,
+            int pageSize,
+            int CompanyYearId,
+            int MonthId);
     }
 }

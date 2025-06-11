@@ -16,20 +16,45 @@
         <MudGrid>
             @if (!IsReadOnly)
             {
-                <MudItem xs="12" sm="6" md="6" lg="6">
+                <MudItem xs="12" sm="12" md="12" lg="12">
+
+                    <MudPaper Class="pa-2">
+                        <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                            <MudGrid>
+                                <MudItem xs="6" sm="6" md="6" lg="6">
+                                    <MudSelect T="DropDownDTO" Label="Assigned Projects" Variant="Variant.Outlined"
+                                    Adornment="Adornment.End" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="SelectedProject">
+                                        @foreach (var project in AssignedProjects)
+                                        {
+                                            <MudSelectItem T="DropDownDTO" Value="@project">@project.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="6" sm="6" md="6" lg="6">
+                                    <MudNumericField T="double"
+                                    Label="Total Work Hours"
+                                    @bind-Value="Hours"
+                                    Variant="Variant.Outlined"
+                                    Adornment="Adornment.End"
+                                    AdornmentText="hrs"
+                                    Step="0.25"
+                                    Min="0"
+                                    Max="24"
+                                    Immediate="true"
+                                    DecimalPlaces="2" />
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="12" lg="12">
+                                    <MudTextField T="string" Variant="Variant.Outlined"
+                                    Adornment="Adornment.End" Label="Task Description" @bind-Value="Note" Required="true" RequiredError="Task Description is required." Lines="3" />
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="12" lg="12">
+                                    <MudTextField T="string" Variant="Variant.Outlined"
+                                    Adornment="Adornment.End" Label="Manager Comments" @bind-Value="ManagerComment" ReadOnly="true" Lines="3" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudForm>
+                    </MudPaper>
                     <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
-                        <MudSelect T="DropDownDTO" Label="Select Project Member" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="SelectedProject">
-                            @foreach (var project in AssignedProjects)
-                            {
-                                <MudSelectItem T="DropDownDTO" Value="@project">@project.Name</MudSelectItem>
-                            }
-                        </MudSelect>
-@*                         <MudSelect T="RoleDTO" Label="Select Project Role" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="SelectedProjectRole">
-                            @foreach (var role in Roles)
-                            {
-                                <MudSelectItem T="RoleDTO" Value="@role">@role.Name</MudSelectItem>
-                            }
-                        </MudSelect> *@
                         <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddNewTimeCardEntry">
                             <MudIcon Icon="@Icons.Material.Filled.Add" /> Add
                         </MudButton>
@@ -37,7 +62,7 @@
                 </MudItem>
             }
             <MudItem xs="12" sm="12">
-                <MudTable Items="TimeCard.TimeCardEntries">
+                <MudTable Items="TimeCardEntries">
                     <HeaderContent>
                         <MudTh>Id</MudTh>
                         <MudTh>Project Name</MudTh>
@@ -70,6 +95,7 @@
     <DialogActions>
         <MudPaper Class="pa-2">
             <MudButton OnClick="Cancel">Cancel</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveTimeCard" Disabled="@(!success)" Class="ml-auto">Register</MudButton>
         </MudPaper>
     </DialogActions>
 </MudDialog>
@@ -92,11 +118,14 @@
 
     private TimeCardDTO TimeCard { get; set; } = new();
 
+    private List<TimeCardEntryDTO> TimeCardEntries { get; set; } = new List<TimeCardEntryDTO>();
+
     private int Id { get; set; } = 0;
 
     private TimeCardEntryDTO SelectedTimeCardEntry = new();
 
     private IEnumerable<DropDownDTO> AssignedProjects = new List<DropDownDTO>();
+
     private DropDownDTO SelectedProject = new();
 
     private string Note { get; set; } = string.Empty;
@@ -118,6 +147,17 @@
         LoadingService.Show();
         AssignedProjects = await ProjectService.GetMyAssignedProjects();
         TimeCard = await TimeCardService.GetTimeCardByIdAsync(TimeCardId);
+        if (TimeCard is not null)
+        {
+            if (TimeCard.TimeCardEntries.Count > 0)
+            {
+                TimeCardEntries.AddRange(TimeCard.TimeCardEntries);
+            }
+        }
+        else
+        {
+            TimeCard = new();
+        }
         LoadingService.Hide();
     }
 
@@ -132,34 +172,31 @@
 
     private async Task AddNewTimeCardEntry()
     {
-        if(Id == 0)
+        if (Id == 0)
         {
-            var timeCardEntry = TimeCard.TimeCardEntries.FirstOrDefault(x => x.ProjectId == SelectedProject.Id);
+            var timeCardEntry = TimeCardEntries.FirstOrDefault(x => x.ProjectId == SelectedProject.Id);
             if (timeCardEntry is not null)
             {
-               await ShowSnackbar(new GeneralResponseDTO()
-                    {
-                        Flag = false,
-                        Message = "Project already exists in the time card."
-                    });
+                timeCardEntry.ProjectId = SelectedProject.Id;
+                timeCardEntry.Notes = Note;
+                timeCardEntry.HoursWorked = Hours;
+
             }
             else
             {
-                TimeCard.TimeCardEntries.Add(new TimeCardEntryDTO
+                TimeCardEntries.Add(new TimeCardEntryDTO
                     {
                         Id = 0, // New entry will have Id 0
                         ProjectName = SelectedProject.Name,
                         ProjectId = SelectedProject.Id,
                         Notes = Note,
-                        HoursWorked = Hours,
-                        TimeCardId = TimeCard.Id
+                        HoursWorked = Hours
                     });
             }
-
         }
         else
         {
-            var existingTimeCardEntry = TimeCard.TimeCardEntries.FirstOrDefault(x => x.Id == Id);
+            var existingTimeCardEntry = TimeCardEntries.FirstOrDefault(x => x.Id == Id);
             if (existingTimeCardEntry != null)
             {
                 existingTimeCardEntry.ProjectId = SelectedProject.Id;
@@ -167,6 +204,12 @@
                 existingTimeCardEntry.HoursWorked = Hours;
             }
         }
+
+        SelectedProject = null;
+        Id = 0; // Reset Id for new entries
+        Note = string.Empty;
+        Hours = 0;
+        ManagerComment = string.Empty;
     }
 
     private void DeleteTimeCardEntry(TimeCardEntryDTO timeCardEntry)
@@ -177,6 +220,7 @@
     private async Task SaveTimeCard()
     {
         LoadingService.Show();
+        TimeCard.TimeCardEntries = TimeCardEntries;
         var response = await TimeCardService.SaveTimeCardAsync(TimeCard);
         await ShowSnackbar(response);
         LoadingService.Hide();

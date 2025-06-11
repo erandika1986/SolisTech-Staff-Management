@@ -24,11 +24,6 @@
                     <MudGrid>
                         <MudItem xs="12" sm="12" md="12" lg="12">
                             <MudGrid>
-                            <MudItem xs="12" sm="12">
-                                <MudTooltip Text="Apply For New Leave Request" Color="Color.Primary" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.AddTask" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => AddNewTimeCardAsync()"></MudIconButton>
-                                </MudTooltip>
-                            </MudItem>
                                 <MudItem xs="12" sm="12" md="2" lg="2">
                                 <MudDatePicker xs="12" sm="6" Label="From Date" Date="StartDate" DateChanged="StartDateChanged" />
                                 </MudItem>
@@ -54,13 +49,10 @@
                                     <TemplateColumn CellClass="d-flex justify-end">
                                         <CellTemplate Context="timeCard">
                                             <MudStack Row>
-                                                <MudTooltip Text="View Leave Request" Color="Color.Info" Placement="Placement.Top">
-                                                <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled" OnClick="() => EditTimeCardAsync(timeCard.Item)"></MudIconButton>
+                                                <MudTooltip Text="Edit Leave Request" Color="Color.Info" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Variant="Variant.Filled" OnClick="() => EditTimeCardAsync(timeCard.Item)"></MudIconButton>
                                                 </MudTooltip>
 
-                                                <MudTooltip Text="Delete Leave Request" Color="Color.Error" Placement="Placement.Top">
-                                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() =>DeleteTimeCardAsync(timeCard.Item)"></MudIconButton>
-                                                </MudTooltip>
                                             </MudStack>
                                         </CellTemplate>
                                     </TemplateColumn>
@@ -156,7 +148,9 @@
     {
         var parameters = new DialogParameters
         {
-            { "UserId", ApplicationConstants.Zero },
+            { "TimeCardId", ApplicationConstants.Zero },
+            { "IsReadOnly", false },
+            { "IsApprovalView", false },
             { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
         };
         await Dialog.ShowAsync<EditTimeCardDialog>($"Add a new time card", parameters, _maxWidth);

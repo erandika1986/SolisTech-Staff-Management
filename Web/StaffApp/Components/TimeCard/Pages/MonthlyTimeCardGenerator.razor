@@ -1,0 +1,283 @@
+﻿@page "/TimeCard/MonthlyTimeCardList"
+@using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.TimeCard
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@inject ITimeCardService TimeCardService
+@inject IMasterDataService MasterDataService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+@inject IJSRuntime JSRuntime
+@inject LoadingService LoadingService
+
+@attribute [Authorize]
+<MudGrid>
+    <MudItem xs="12" sm="12" md="12" lg="12">
+        @if (!_isMasterDataLoaded)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudText>Loading master data...</MudText>
+        }
+        else
+        {
+            <MudDataGrid @ref="_dataGrid" T="MonthlyTimeCardDTO" ServerData="@(LoadData)" Sortable="true"
+                         Filterable="false"
+                         Hideable="true"
+                         Hover="true"
+                         Striped="true"
+                         Elevation="25"
+                         Loading="@_loading">
+                <ToolBarContent>
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="4" lg="4">
+                            <MudText Typo="Typo.h6">Employee Monthly Time Cards</MudText>
+                            <MudSpacer />
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="8" lg="8">
+
+                            <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+                                <MudSelect T="DropDownDTO"
+                                           Label="Company Year"
+                                           Class="mt-0"
+                                           ToStringFunc="(item) => item  is not null? item.Name:string.Empty"
+                                           MultiSelection="false" Value="SelectedCompanyYear"
+                                           ValueChanged="@CompanyYearChanged"
+                                           Style="padding-right:2px;">
+                                    @foreach (var companyYear in CompanyYears)
+                                    {
+                                        <MudSelectItem T="DropDownDTO"
+                                                       Value="@companyYear">
+                                            @companyYear.Name
+                                        </MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudSelect T="DropDownDTO"
+                                           Label="Month"
+                                           Class="mt-0"
+                                           ToStringFunc="(item) => item  is not null? item.Name:string.Empty"
+                                           MultiSelection="false" Value="SelectedMonth"
+                                           ValueChanged="@MonthChanged"
+                                           Style="padding-right:2px;">
+                                    @foreach (var month in Months)
+                                    {
+                                        <MudSelectItem T="DropDownDTO"
+                                                       Value="@month">
+                                            @month.Name
+                                        </MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudTooltip Text="Generate Monthly Salary"
+                                            Color="Color.Info"
+                                            Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.PlayCircleFilled"
+                                                   Color="Color.Info"
+                                                   Variant="Variant.Filled"
+                                                   Disabled="_isTimeCardGenerated"
+                                                   OnClick=" ()=> GenerateMonthlyTimeCardAsync()">
+                                    </MudIconButton>
+                                </MudTooltip>
+                            </MudPaper>
+
+                        </MudItem>
+                    </MudGrid>
+
+                </ToolBarContent>
+                <Columns>
+
+                    <PropertyColumn Property="x=>x.TimeCardId"
+                                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.TimeCardId))" />
+                    <PropertyColumn Property="x=>x.CompanyYear"
+                                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.CompanyYear))" />
+                    <PropertyColumn Property="x=>x.Month"
+                                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.Month))" />
+                    <PropertyColumn Property="x=>x.Day"
+                                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.Day))" />
+                    <PropertyColumn Property="x=>x.EmployeeName"
+                                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.EmployeeName))" />
+
+                    <TemplateColumn CellClass="d-flex justify-end">
+                        <CellTemplate Context="timeCard">
+                            <MudStack Row>
+                                <MudTooltip Text="View Salary"
+                                            Color="Color.Info"
+                                            Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye"
+                                                   Color="Color.Info" Variant="Variant.Filled"
+                                                   ></MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Edit Salary"
+                                            Color="Color.Primary"
+                                            Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Color="Color.Primary"
+                                                   Variant="Variant.Filled"
+                                                   ></MudIconButton>
+                                </MudTooltip>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="MonthlyTimeCardDTO" />
+                </PagerContent>
+            </MudDataGrid>
+        }
+
+    </MudItem>
+</MudGrid>
+
+@code {
+    private string _searchString = "";
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = false;
+    private bool _isTimeCardGenerated = false;
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
+    private MudDataGrid<MonthlyTimeCardDTO> _dataGrid;
+
+    private IEnumerable<DropDownDTO> CompanyYears = new List<DropDownDTO>();
+    private DropDownDTO SelectedCompanyYear = new DropDownDTO();
+
+    private IEnumerable<DropDownDTO> Months = new List<DropDownDTO>();
+    private DropDownDTO SelectedMonth = new DropDownDTO();
+
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMasterDataAsync();
+    }
+
+    private async Task CompanyYearChanged(DropDownDTO changedValue)
+    {
+        SelectedCompanyYear = changedValue;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+
+    private async Task MonthChanged(DropDownDTO changedValue)
+    {
+        SelectedMonth = changedValue;
+
+        //MonthlySalarySummary = await UserSalaryService.GetEmployeeMonthlySalaryStatus(SelectedCompanyYear.Id, SelectedMonth.Id);
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task LoadMasterDataAsync()
+    {
+        try
+        {
+            // Load your master data
+            CompanyYears = await MasterDataService.GetAvailableCompanyYears();
+            SelectedCompanyYear = CompanyYears.FirstOrDefault();
+
+            Months = MasterDataService.GetAvailableMonths();
+            SelectedMonth = Months.FirstOrDefault();
+
+            _isMasterDataLoaded = true;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine($"Error loading master data: {ex.Message}");
+        }
+    }
+
+    private async Task<GridData<MonthlyTimeCardDTO>> LoadData(GridState<MonthlyTimeCardDTO> state)
+    {
+        _loading = true;
+
+        try
+        {
+            //MonthlySalarySummary = await UserSalaryService.GetEmployeeMonthlySalaryStatus(SelectedCompanyYear.Id, SelectedMonth.Id);
+
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Call the service with parameters
+            var result = await TimeCardService.GetTimeCardsByMonthAsync(
+                page,
+                pageSize,
+                SelectedCompanyYear.Id,
+                SelectedMonth.Id
+            );
+
+            if (result.Items == null || !result.Items.Any())
+            {
+                _isTimeCardGenerated = false;
+                Snackbar.Add("No data found for the selected filters.", Severity.Warning);
+            }
+            else
+            {
+                _isTimeCardGenerated = true;
+            }
+
+            // Return the result in GridData format
+            return new GridData<MonthlyTimeCardDTO>
+                {
+                    Items = result.Items,
+                    TotalItems = result.TotalItems
+                };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task GenerateMonthlyTimeCardAsync()
+    {
+        LoadingService.Show();
+        var result = await TimeCardService.GenerateTimeCardForSelectedMonth(SelectedCompanyYear.Id, SelectedMonth.Id);
+        if (result.Flag)
+        {
+            _loading = false;
+            _dataGrid?.ReloadServerData();
+            StateHasChanged();
+        }
+        await ShowSnackbar(result);
+        LoadingService.Hide();
+    }
+
+    private async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
+
+    private string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    private string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+}

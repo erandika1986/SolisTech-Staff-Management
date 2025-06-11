@@ -13,6 +13,7 @@ namespace StaffApp.Infrastructure.Services
 {
     public class ProjectService(IStaffAppDbContext context,
         IUserService userService,
+        IRoleService roleServices,
         ICurrentUserService currentUserService,
         IAzureBlobService azureBlobService,
         ILogger<IProjectService> logger) : IProjectService
@@ -535,19 +536,35 @@ namespace StaffApp.Infrastructure.Services
 
         public async Task<List<ProjectMemberDTO>> GetProjectMembers(int projectId)
         {
-            var projectMembers = await context.ProjectMembers
-                .Where(x => x.ProjectId == projectId && x.IsActive)
-                .Select(x => new ProjectMemberDTO
+            var allRoles = (await roleServices.GetAllRolesAsync()).ToList();
+            var assignedProjectMembers = await context.ProjectMembers.Where(x => x.ProjectId == projectId && x.IsActive)
+                .Select(pm => new
                 {
-                    Id = x.Id,
-                    ProjectId = x.ProjectId,
-                    MemberId = x.MemberId,
-                    MemberName = x.Member.FullName,
-                    RoleId = x.RoleId,
-                    RoleName = x.Role.Name,
-                    AllocatedDate = x.CreatedDate.ToString("MM/dd/yyyy"),
-                    DeAllocatedDate = x.IsActive ? "Still Active" : x.UpdateDate.Value.ToString("MM/dd/yyyy")
-                }).ToListAsync();
+                    Id = pm.Id,
+                    ProjectId = pm.ProjectId,
+                    MemberId = pm.MemberId,
+                    MemberName = pm.Member.FullName,
+                    RoleId = pm.RoleId,
+                    AllocatedDate = pm.CreatedDate.ToString("MM/dd/yyyy"),
+                    DeAllocatedDate = pm.IsActive ? "Still Active" : pm.UpdateDate.Value.ToString("MM/dd/yyyy")
+                })
+                .ToListAsync(CancellationToken.None);
+            var projectMembers = (from pm in assignedProjectMembers
+                                  join r in allRoles
+                                  on pm.RoleId equals r.Id
+                                  select new ProjectMemberDTO
+                                  {
+                                      Id = pm.Id,
+                                      ProjectId = pm.ProjectId,
+                                      MemberId = pm.MemberId,
+                                      MemberName = pm.MemberName,
+                                      RoleId = pm.RoleId,
+                                      RoleName = r.Name,
+                                      AllocatedDate = pm.AllocatedDate,
+                                      DeAllocatedDate = pm.DeAllocatedDate
+                                  }).ToList();
+
+
 
             return projectMembers;
         }

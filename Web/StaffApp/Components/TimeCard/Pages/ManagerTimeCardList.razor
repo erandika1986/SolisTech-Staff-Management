@@ -1,5 +1,206 @@
-﻿<h3>ManagerTimeCardList</h3>
+﻿@page "/TimeCard/EmployeeTimeCardList"
+@using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.TimeCard
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@inject ITimeCardService TimeCardService
+@inject IMasterDataService MasterDataService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+@inject IJSRuntime JSRuntime
+@inject LoadingService LoadingService
+
+@attribute [Authorize]
+<MudGrid>
+        <MudItem xs="12" sm="12" md="12" lg="12">
+        @if (!_isMasterDataLoaded)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudText>Loading master data...</MudText>
+        }
+        else
+        {
+            <MudDataGrid @ref="_dataGrid" T="BasicManagerTimeCardDTO" ServerData="@(LoadData)" Sortable="true"
+                         Filterable="false"
+                         Hideable="true"
+                         Hover="true"
+                         Striped="true"
+                         Elevation="25"
+                         Loading="@_loading">
+                <ToolBarContent>
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="4" lg="4">
+                            <MudText Typo="Typo.h6">Manage Monthly Salaries</MudText>
+                            <MudSpacer />
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="8" lg="8">
+
+                            <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+                                <MudDatePicker xs="12" sm="6" Label="From Date" Date="TimeCardDate" DateChanged="TimeDateChanged" />
+                            </MudPaper>
+                        </MudItem>
+                    </MudGrid>
+
+                </ToolBarContent>
+                <Columns>
+                    <PropertyColumn Property="x=>x.TimeCardId" Title="@GetDisplayName(typeof(BasicManagerTimeCardDTO), nameof(BasicManagerTimeCardDTO.TimeCardId))" />
+                    <PropertyColumn Property="x=>x.EmployeeName" Title="@GetDisplayName(typeof(BasicManagerTimeCardDTO), nameof(BasicManagerTimeCardDTO.EmployeeName))" />
+                    <PropertyColumn Property="x=>x.StatusName" Title="@GetDisplayName(typeof(BasicManagerTimeCardDTO), nameof(BasicManagerTimeCardDTO.StatusName))" />
+                    <PropertyColumn Property="x=>x.DateByString" Title="@GetDisplayName(typeof(BasicManagerTimeCardDTO), nameof(BasicManagerTimeCardDTO.DateByString))" />
+                    <PropertyColumn Property="x=>x.ProjectName" Title="@GetDisplayName(typeof(BasicManagerTimeCardDTO), nameof(BasicManagerTimeCardDTO.ProjectName))" />
+                    <PropertyColumn Property="x=>x.TotalHours" Title="@GetDisplayName(typeof(BasicManagerTimeCardDTO), nameof(BasicManagerTimeCardDTO.TotalHours))" />
+                    <TemplateColumn CellClass="d-flex justify-end">
+                        <CellTemplate Context="timeCard">
+                            <MudStack Row>
+                                <MudTooltip Text="View Leave Request" Color="Color.Info" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled"></MudIconButton>
+                                </MudTooltip>
+
+                                <MudTooltip Text="Delete Leave Request" Color="Color.Error" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled"></MudIconButton>
+                                </MudTooltip>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="BasicManagerTimeCardDTO" />
+                </PagerContent>
+            </MudDataGrid>
+        }
+
+
+        </MudItem>
+</MudGrid>
 
 @code {
 
+    private string _searchString = "";
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = false;
+    private bool _isTimeCardGenerated = false;
+    private MudDataGrid<BasicManagerTimeCardDTO> _dataGrid;
+
+    // private IEnumerable<DropDownDTO> CompanyYears = new List<DropDownDTO>();
+    // private DropDownDTO SelectedCompanyYear = new DropDownDTO();
+
+    // private IEnumerable<DropDownDTO> Months = new List<DropDownDTO>();
+    // private DropDownDTO SelectedMonth = new DropDownDTO();
+
+    private DateTime? TimeCardDate = DateTime.Now;
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMasterDataAsync();
+    }
+
+    private async Task LoadMasterDataAsync()
+    {
+        try
+        {
+            // Load your master data
+            // CompanyYears = await MasterDataService.GetAvailableCompanyYears();
+            // SelectedCompanyYear = CompanyYears.FirstOrDefault();
+
+            // Months = MasterDataService.GetAvailableMonths();
+            // SelectedMonth = Months.FirstOrDefault();
+
+            //MonthlySalarySummary = await UserSalaryService.GetEmployeeMonthlySalaryStatus(SelectedCompanyYear.Id, SelectedMonth.Id);
+
+            _isMasterDataLoaded = true;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine($"Error loading master data: {ex.Message}");
+        }
+    }
+
+    private void TimeDateChanged(DateTime? timeCardSelectedDate)
+    {
+        TimeCardDate = timeCardSelectedDate;
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task<GridData<BasicManagerTimeCardDTO>> LoadData(GridState<BasicManagerTimeCardDTO> state)
+    {
+        _loading = true;
+
+        try
+        {
+            //MonthlySalarySummary = await UserSalaryService.GetEmployeeMonthlySalaryStatus(SelectedCompanyYear.Id, SelectedMonth.Id);
+
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            // Call the service with parameters
+            var result = await TimeCardService.GetMyEmployeeTimeCardsForSelectedDateAsync(
+                page,
+                pageSize,
+                TimeCardDate.Value
+            );
+
+            if (result.Items == null || !result.Items.Any())
+            {
+                _isTimeCardGenerated = false;
+                Snackbar.Add("No data found for the selected filters.", Severity.Warning);
+            }
+            else
+            {
+                _isTimeCardGenerated = true;
+            }
+
+            // Return the result in GridData format
+            return new GridData<BasicManagerTimeCardDTO>
+                {
+                    Items = result.Items,
+                    TotalItems = result.TotalItems
+                };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+
+    private async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
+
+    private string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    private string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
 }

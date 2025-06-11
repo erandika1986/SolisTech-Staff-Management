@@ -29,6 +29,7 @@
         <Authorized>
             <MudNavGroup Title="HR" Expanded="true" Icon="@Icons.Material.Filled.Groups">
                   <MudNavLink Href="Users/MonthlySalaryGeneration" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AttachMoney">Generate Monthly Salaries</MudNavLink>
+                  <MudNavLink Href="TimeCard/MonthlyTimeCardList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AttachMoney">Generate Time Card</MudNavLink>
                   <MudNavLink Href="Users/MonthlySalaryGeneration" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Commute">Manage Transport</MudNavLink>
                   <MudNavLink Href="Users/MonthlySalaryGeneration" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Restaurant">Manage Meal</MudNavLink>
                   <MudNavLink Href="Users/MonthlySalaryGeneration" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Celebration">Manage Events</MudNavLink>
@@ -62,6 +63,7 @@
     <AuthorizeView Roles="Admin,Director,Manager,Team Lead">
         <Authorized>
             <MudNavLink Href="EmployeeLeave/ManageEmployeeLeave" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Verified">Manage Employee Leaves</MudNavLink>
+            <MudNavLink Href="TimeCard/EmployeeTimeCardList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Verified">Manage Employee Time Card</MudNavLink>
         </Authorized>
     </AuthorizeView>
 
