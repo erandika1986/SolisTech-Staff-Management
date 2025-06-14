@@ -23,7 +23,7 @@
                             <MudGrid>
                                 <MudItem xs="6" sm="6" md="6" lg="6">
                                     <MudSelect T="DropDownDTO" Label="Assigned Projects" Variant="Variant.Outlined"
-                                    Adornment="Adornment.End" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="SelectedProject">
+                                    Adornment="Adornment.End" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="SelectedProject" Disabled=" IsReadOnly">
                                         @foreach (var project in AssignedProjects)
                                         {
                                             <MudSelectItem T="DropDownDTO" Value="@project">@project.Name</MudSelectItem>
@@ -41,11 +41,11 @@
                                     Min="0"
                                     Max="24"
                                     Immediate="true"
-                                    DecimalPlaces="2" />
+                                    DecimalPlaces="2" Disabled=" IsReadOnly" />
                                 </MudItem>
                                 <MudItem xs="12" sm="12" md="12" lg="12">
                                     <MudTextField T="string" Variant="Variant.Outlined"
-                                    Adornment="Adornment.End" Label="Task Description" @bind-Value="Note" Required="true" RequiredError="Task Description is required." Lines="3" />
+                                    Adornment="Adornment.End" Label="Task Description" @bind-Value="Note" Required="true" RequiredError="Task Description is required." Lines="3" Disabled=" IsReadOnly" />
                                 </MudItem>
                                 <MudItem xs="12" sm="12" md="12" lg="12">
                                     <MudTextField T="string" Variant="Variant.Outlined"
@@ -55,7 +55,7 @@
                         </MudForm>
                     </MudPaper>
                     <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddNewTimeCardEntry">
+                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddNewTimeCardEntry" Disabled=" IsReadOnly">
                             <MudIcon Icon="@Icons.Material.Filled.Add" /> Add
                         </MudButton>
                     </MudPaper>
@@ -66,6 +66,7 @@
                     <HeaderContent>
                         <MudTh>Id</MudTh>
                         <MudTh>Project Name</MudTh>
+                        <MudTh>Status</MudTh>
                         <MudTh>Hours Worked</MudTh>
                         <MudTh>Notes</MudTh>
                         <MudTh>Manager Comment</MudTh>
@@ -73,6 +74,7 @@
                     <RowTemplate>
                         <MudTd>@context.Id</MudTd>
                         <MudTd>@context.ProjectName</MudTd>
+                        <MudTd>@context.StatusName</MudTd>
                         <MudTd>@context.HoursWorked</MudTd>
                         <MudTd>@context.Notes</MudTd>
                         <MudTd>@context.ManagerComment</MudTd>
@@ -83,7 +85,7 @@
                                 </MudTooltip>
 
                                 <MudTooltip Text="Edit Project" Color="Color.Primary" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditTimeCardEntry(context)"></MudIconButton>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditTimeCardEntry(context)" Disabled=" IsReadOnly"></MudIconButton>
                                 </MudTooltip>
                             </MudStack>
                         </MudTd>
@@ -95,7 +97,7 @@
     <DialogActions>
         <MudPaper Class="pa-2">
             <MudButton OnClick="Cancel">Cancel</MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveTimeCard" Disabled="@(!success)" Class="ml-auto">Register</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveTimeCard" Disabled="@(!success && IsReadOnly == true)" Class="ml-auto">Save</MudButton>
         </MudPaper>
     </DialogActions>
 </MudDialog>
@@ -202,6 +204,7 @@
                 existingTimeCardEntry.ProjectId = SelectedProject.Id;
                 existingTimeCardEntry.Notes = Note;
                 existingTimeCardEntry.HoursWorked = Hours;
+                existingTimeCardEntry.IsModified = true;
             }
         }
 
@@ -214,7 +217,8 @@
 
     private void DeleteTimeCardEntry(TimeCardEntryDTO timeCardEntry)
     {
-        TimeCard.TimeCardEntries.Remove(timeCardEntry);
+        TimeCardEntries.Remove(timeCardEntry);
+        success = true;
     }
 
     private async Task SaveTimeCard()
@@ -224,6 +228,9 @@
         var response = await TimeCardService.SaveTimeCardAsync(TimeCard);
         await ShowSnackbar(response);
         LoadingService.Hide();
+
+        await OnDialogClosed.InvokeAsync(true); // Notify parent
+        MudDialog.Close(DialogResult.Ok(true));
     }
 
     private void Cancel() => MudDialog.Cancel();

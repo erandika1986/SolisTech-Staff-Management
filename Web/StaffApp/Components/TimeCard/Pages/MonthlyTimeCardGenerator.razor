@@ -25,12 +25,12 @@
         else
         {
             <MudDataGrid @ref="_dataGrid" T="MonthlyTimeCardDTO" ServerData="@(LoadData)" Sortable="true"
-                         Filterable="false"
-                         Hideable="true"
-                         Hover="true"
-                         Striped="true"
-                         Elevation="25"
-                         Loading="@_loading">
+            Filterable="false"
+            Hideable="true"
+            Hover="true"
+            Striped="true"
+            Elevation="25"
+            Loading="@_loading">
                 <ToolBarContent>
                     <MudGrid>
                         <MudItem xs="12" sm="12" md="4" lg="4">
@@ -41,43 +41,43 @@
 
                             <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
                                 <MudSelect T="DropDownDTO"
-                                           Label="Company Year"
-                                           Class="mt-0"
-                                           ToStringFunc="(item) => item  is not null? item.Name:string.Empty"
-                                           MultiSelection="false" Value="SelectedCompanyYear"
-                                           ValueChanged="@CompanyYearChanged"
-                                           Style="padding-right:2px;">
+                                Label="Company Year"
+                                Class="mt-0"
+                                ToStringFunc="(item) => item  is not null? item.Name:string.Empty"
+                                MultiSelection="false" Value="SelectedCompanyYear"
+                                ValueChanged="@CompanyYearChanged"
+                                Style="padding-right:2px;">
                                     @foreach (var companyYear in CompanyYears)
                                     {
                                         <MudSelectItem T="DropDownDTO"
-                                                       Value="@companyYear">
+                                        Value="@companyYear">
                                             @companyYear.Name
                                         </MudSelectItem>
                                     }
                                 </MudSelect>
                                 <MudSelect T="DropDownDTO"
-                                           Label="Month"
-                                           Class="mt-0"
-                                           ToStringFunc="(item) => item  is not null? item.Name:string.Empty"
-                                           MultiSelection="false" Value="SelectedMonth"
-                                           ValueChanged="@MonthChanged"
-                                           Style="padding-right:2px;">
+                                Label="Month"
+                                Class="mt-0"
+                                ToStringFunc="(item) => item  is not null? item.Name:string.Empty"
+                                MultiSelection="false" Value="SelectedMonth"
+                                ValueChanged="@MonthChanged"
+                                Style="padding-right:2px;">
                                     @foreach (var month in Months)
                                     {
                                         <MudSelectItem T="DropDownDTO"
-                                                       Value="@month">
+                                        Value="@month">
                                             @month.Name
                                         </MudSelectItem>
                                     }
                                 </MudSelect>
                                 <MudTooltip Text="Generate Monthly Salary"
-                                            Color="Color.Info"
-                                            Placement="Placement.Top">
+                                Color="Color.Info"
+                                Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.PlayCircleFilled"
-                                                   Color="Color.Info"
-                                                   Variant="Variant.Filled"
-                                                   Disabled="_isTimeCardGenerated"
-                                                   OnClick=" ()=> GenerateMonthlyTimeCardAsync()">
+                                    Color="Color.Info"
+                                    Variant="Variant.Filled"
+                                    Disabled="_isTimeCardGenerated"
+                                    OnClick=" ()=> GenerateMonthlyTimeCardAsync()">
                                     </MudIconButton>
                                 </MudTooltip>
                             </MudPaper>
@@ -89,34 +89,40 @@
                 <Columns>
 
                     <PropertyColumn Property="x=>x.TimeCardId"
-                                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.TimeCardId))" />
+                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.TimeCardId))" />
                     <PropertyColumn Property="x=>x.CompanyYear"
-                                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.CompanyYear))" />
+                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.CompanyYear))" />
                     <PropertyColumn Property="x=>x.Month"
-                                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.Month))" />
+                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.Month))" />
                     <PropertyColumn Property="x=>x.Day"
-                                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.Day))" />
+                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.Day))" />
                     <PropertyColumn Property="x=>x.EmployeeName"
-                                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.EmployeeName))" />
-
+                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.EmployeeName))" />
+                    <PropertyColumn Property="x=>x.StatusName"
+                    Title="@GetDisplayName(typeof(MonthlyTimeCardDTO), nameof(MonthlyTimeCardDTO.StatusName))" />
                     <TemplateColumn CellClass="d-flex justify-end">
                         <CellTemplate Context="timeCard">
                             <MudStack Row>
-                                <MudTooltip Text="View Salary"
-                                            Color="Color.Info"
-                                            Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye"
-                                                   Color="Color.Info" Variant="Variant.Filled"
-                                                   ></MudIconButton>
-                                </MudTooltip>
-                                <MudTooltip Text="Edit Salary"
-                                            Color="Color.Primary"
-                                            Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                   Color="Color.Primary"
-                                                   Variant="Variant.Filled"
-                                                   ></MudIconButton>
-                                </MudTooltip>
+                                @if (timeCard.Item.Status != Domain.Enum.TimeCardStatus.OnLeave)
+                                {
+                                    <MudTooltip Text="Mark as Absent"
+                                                Color="Color.Info"
+                                                Placement="Placement.Top">
+                                        <MudIconButton Icon="@Icons.Material.Filled.GroupOff"
+                                                       Color="Color.Info" Variant="Variant.Filled"></MudIconButton>
+                                    </MudTooltip>
+                                }
+
+                                @if (timeCard.Item.Status == Domain.Enum.TimeCardStatus.OnLeave)
+                                {
+                                    <MudTooltip Text="Mark as Present"
+                                                Color="Color.Info"
+                                                Placement="Placement.Top">
+                                        <MudIconButton Icon="@Icons.Material.Filled.CheckCircle"
+                                                       Color="Color.Info" Variant="Variant.Filled"></MudIconButton>
+                                    </MudTooltip>
+                                }
+
                             </MudStack>
                         </CellTemplate>
                     </TemplateColumn>

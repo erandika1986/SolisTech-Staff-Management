@@ -29,11 +29,12 @@ namespace StaffApp.Infrastructure.Services
                 var timeCardEntry = timeCard.TimeCardEntries.FirstOrDefault(x => x.Id == timeCardEntryId);
                 timeCardEntry.ManagerComment = comment;
                 timeCardEntry.Status = Domain.Enum.TimeCardEntryStatus.Approved;
+                await context.SaveChangesAsync(CancellationToken.None);
 
                 context.TimeCardEntries.Update(timeCardEntry);
 
                 if (timeCard.TimeCardEntries.Count() == ApplicationConstants.One ||
-                    timeCard.TimeCardEntries.Count(x => x.Status == Domain.Enum.TimeCardEntryStatus.Approved) == (timeCard.TimeCardEntries.Count - ApplicationConstants.One))
+                    timeCard.TimeCardEntries.Count(x => x.Status == Domain.Enum.TimeCardEntryStatus.Approved) == timeCard.TimeCardEntries.Count)
                 {
                     timeCard.Status = Domain.Enum.TimeCardStatus.FullyApproved;
                 }
@@ -198,6 +199,7 @@ namespace StaffApp.Infrastructure.Services
                             Date = timeCard.Date,
                             DateByString = timeCard.Date.ToString("dd/MM/yyyy"),
                             StatusName = EnumHelper.GetEnumDescription(timeCard.Status),
+                            Status = timeCard.Status,
                             NumberOfProjects = timeCard.TimeCardEntries.Count,
                             TotalHours = timeCard.TimeCardEntries.Sum(x => x.HoursWorked)
                         })
@@ -240,7 +242,7 @@ namespace StaffApp.Infrastructure.Services
                         {
                             TimeCardId = tce.TimeCard.Id,
                             TimeCardEntryId = tce.Id,
-                            EmployeeName = tce.TimeCard.EmployeeID,
+                            EmployeeName = tce.TimeCard.Employee.FullName,
                             Date = tce.TimeCard.Date,
                             DateByString = tce.TimeCard.Date.ToString("dd/MM/yyyy"),
                             StatusName = EnumHelper.GetEnumDescription(tce.Status),
@@ -315,7 +317,9 @@ namespace StaffApp.Infrastructure.Services
                     Notes = x.Notes,
                     ManagerComment = x.ManagerComment,
                     ProjectName = x.Project?.Name ?? "Unknown Project",
-                    TimeCardId = timeCard.Id
+                    TimeCardId = timeCard.Id,
+                    Status = x.Status,
+                    StatusName = EnumHelper.GetEnumDescription(x.Status)
                 }).ToList()
             };
         }
@@ -338,11 +342,12 @@ namespace StaffApp.Infrastructure.Services
                 var timeCardEntry = timeCard.TimeCardEntries.FirstOrDefault(x => x.Id == timeCardEntryId);
                 timeCardEntry.ManagerComment = comment;
                 timeCardEntry.Status = Domain.Enum.TimeCardEntryStatus.Rejected;
+                await context.SaveChangesAsync(CancellationToken.None);
 
                 context.TimeCardEntries.Update(timeCardEntry);
 
                 if (timeCard.TimeCardEntries.Count() == ApplicationConstants.One ||
-                    timeCard.TimeCardEntries.Count(x => x.Status == Domain.Enum.TimeCardEntryStatus.Rejected) == (timeCard.TimeCardEntries.Count - ApplicationConstants.One))
+                    timeCard.TimeCardEntries.Count(x => x.Status == Domain.Enum.TimeCardEntryStatus.Rejected) == timeCard.TimeCardEntries.Count)
                 {
                     timeCard.Status = Domain.Enum.TimeCardStatus.FullyRejected;
                 }
@@ -419,6 +424,14 @@ namespace StaffApp.Infrastructure.Services
                          .Where(x => x.Id == 0)
                          .ToList();
 
+                    var deletedEntries = (from d in timeCard.TimeCardEntries
+                                          where !timeCardDTO.TimeCardEntries.Any(x => x.Id == d.Id)
+                                          select d).ToList();
+
+                    var updatedEntries = timeCardDTO.TimeCardEntries
+                        .Where(x => x.Id > 0 && x.IsModified == true)
+                        .ToList();
+
                     foreach (var item in newlyAddedEntries)
                     {
                         timeCard.TimeCardEntries.Add(new TimeCardEntry
@@ -433,9 +446,6 @@ namespace StaffApp.Infrastructure.Services
                     context.TimeCards.Update(timeCard);
                     await context.SaveChangesAsync(CancellationToken.None);
 
-                    var updatedEntries = timeCardDTO.TimeCardEntries
-                        .Where(x => x.Id > 0)
-                        .ToList();
 
                     foreach (var entry in updatedEntries)
                     {
@@ -453,9 +463,6 @@ namespace StaffApp.Infrastructure.Services
 
                     await context.SaveChangesAsync(CancellationToken.None);
 
-                    var deletedEntries = (from d in timeCard.TimeCardEntries
-                                          where !timeCardDTO.TimeCardEntries.Any(x => x.Id == d.Id)
-                                          select d).ToList();
 
                     foreach (var entry in deletedEntries)
                     {
@@ -499,6 +506,8 @@ namespace StaffApp.Infrastructure.Services
                 Month = tce.Date.Month,
                 EmployeeName = tce.Employee.FullName,
                 Day = tce.Date.Day,
+                Status = tce.Status,
+                StatusName = EnumHelper.GetEnumDescription(tce.Status)
             })
             .ToListAsync();
 

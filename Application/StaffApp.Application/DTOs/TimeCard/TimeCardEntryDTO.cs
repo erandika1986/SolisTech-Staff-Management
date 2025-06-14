@@ -1,4 +1,6 @@
-﻿namespace StaffApp.Application.DTOs.TimeCard
+﻿using StaffApp.Domain.Enum;
+
+namespace StaffApp.Application.DTOs.TimeCard
 {
     public class TimeCardEntryDTO
     {
@@ -10,5 +12,8 @@
         public double HoursWorked { get; set; }
         public string Notes { get; set; }
         public string ManagerComment { get; set; }
+        public TimeCardEntryStatus Status { get; set; }
+        public string StatusName { get; set; }
+        public bool IsModified { get; set; }
     }
 }

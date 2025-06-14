@@ -49,8 +49,12 @@
                                     <TemplateColumn CellClass="d-flex justify-end">
                                         <CellTemplate Context="timeCard">
                                             <MudStack Row>
+                                            <MudTooltip Text="View Leave Request" Color="Color.Info" Placement="Placement.Top">
+                                                <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled" OnClick="() => ViewTimeCardAsync(timeCard.Item)"></MudIconButton>
+                                            </MudTooltip>
                                                 <MudTooltip Text="Edit Leave Request" Color="Color.Info" Placement="Placement.Top">
-                                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Variant="Variant.Filled" OnClick="() => EditTimeCardAsync(timeCard.Item)"></MudIconButton>
+                                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Variant="Variant.Filled" OnClick="() => EditTimeCardAsync(timeCard.Item)"
+                                                               Disabled="timeCard.Item.Status == Domain.Enum.TimeCardStatus.FullyApproved || timeCard.Item.Status == Domain.Enum.TimeCardStatus.OnLeave"></MudIconButton>
                                                 </MudTooltip>
 
                                             </MudStack>
@@ -139,9 +143,21 @@
         var parameters = new DialogParameters
         {
             { "TimeCardId", timeCard.Id },
+            { "IsReadOnly", false},
             { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
         };
         await Dialog.ShowAsync<EditTimeCardDialog>($"Edit Time Card", parameters, _maxWidth);
+    }
+
+    private async Task ViewTimeCardAsync(BasicTimeCardDTO timeCard)
+    {
+        var parameters = new DialogParameters
+        {
+            { "TimeCardId", timeCard.Id },
+            { "IsReadOnly", true},
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditTimeCardDialog>($"View Time Card", parameters, _maxWidth);
     }
 
     private async Task AddNewTimeCardAsync()

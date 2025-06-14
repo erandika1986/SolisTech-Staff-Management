@@ -29,7 +29,7 @@
         <Authorized>
             <MudNavGroup Title="HR" Expanded="true" Icon="@Icons.Material.Filled.Groups">
                   <MudNavLink Href="Users/MonthlySalaryGeneration" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AttachMoney">Generate Monthly Salaries</MudNavLink>
-                  <MudNavLink Href="TimeCard/MonthlyTimeCardList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AttachMoney">Generate Time Card</MudNavLink>
+                  <MudNavLink Href="TimeCard/MonthlyTimeCardList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">Generate Time Card</MudNavLink>
                   <MudNavLink Href="Users/MonthlySalaryGeneration" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Commute">Manage Transport</MudNavLink>
                   <MudNavLink Href="Users/MonthlySalaryGeneration" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Restaurant">Manage Meal</MudNavLink>
                   <MudNavLink Href="Users/MonthlySalaryGeneration" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Celebration">Manage Events</MudNavLink>
@@ -52,7 +52,7 @@
 
     <AuthorizeView Roles="Admin,Director">
         <Authorized>
-            <MudNavGroup Title="Salaries" Expanded="true" Icon="@Icons.Material.Filled.MonetizationOn">
+            <MudNavGroup Title="Manage Salaries" Expanded="true" Icon="@Icons.Material.Filled.MonetizationOn">
                   <MudNavLink Href="Users/Salaries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Money">Manage Employee Salaries</MudNavLink>
                   <MudNavLink Href="Users/MonthlySalaries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AttachMoney">Manage Monthly Salaries</MudNavLink>
              </MudNavGroup>
@@ -62,22 +62,23 @@
 
     <AuthorizeView Roles="Admin,Director,Manager,Team Lead">
         <Authorized>
-            <MudNavLink Href="EmployeeLeave/ManageEmployeeLeave" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Verified">Manage Employee Leaves</MudNavLink>
-            <MudNavLink Href="TimeCard/EmployeeTimeCardList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Verified">Manage Employee Time Card</MudNavLink>
+            <MudNavLink Href="EmployeeLeave/ManageEmployeeLeave" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">Manage Employee Leaves</MudNavLink>
+            <MudNavLink Href="TimeCard/EmployeeTimeCardList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.MoreTime">Manage Employee Time Cards</MudNavLink>
+            <MudNavLink Href="Project/MyProjectList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AttachMoney">Manage Projects</MudNavLink>
         </Authorized>
     </AuthorizeView>
 
-    <AuthorizeView>
+@*     <AuthorizeView>
         <Authorized>
-                  <MudNavLink Href="Project/MyProjectList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AttachMoney"> Projects</MudNavLink>
+                  <MudNavLink Href="Project/MyProjectList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AttachMoney">Manage Projects</MudNavLink>
         </Authorized>
-    </AuthorizeView>
+    </AuthorizeView *@>
 
     <AuthorizeView>
         <Authorized>
             <MudNavLink Href="Users/MySalaries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Money">My Salaries</MudNavLink>
             <MudNavLink Href="EmployeeLeave/MyLeaveList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.WorkOff">My Leaves</MudNavLink>
-            <MudNavLink Href="TimeCard/MyTimeCardList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.WorkOff">My Time Cards</MudNavLink>
+            <MudNavLink Href="TimeCard/MyTimeCardList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AccessTime">My Time Cards</MudNavLink>
             <MudNavLink Href="EmployeeLeave/MyLeaveList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Restaurant">My Meals</MudNavLink>
             <MudNavLink Href="EmployeeLeave/MyLeaveList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Celebration">Upcoming Events</MudNavLink>
             <MudNavLink Href="EmployeeLeave/MyLeaveList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Commute">My Transport</MudNavLink>

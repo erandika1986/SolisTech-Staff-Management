@@ -3,6 +3,7 @@
 @using StaffApp.Application.DTOs.Common
 @using StaffApp.Application.DTOs.TimeCard
 @using StaffApp.Application.Services
+@using StaffApp.Components.Shared
 @using StaffApp.Infrastructure.Services
 @using System.Reflection
 @using System.ComponentModel.DataAnnotations
@@ -56,12 +57,16 @@
                     <TemplateColumn CellClass="d-flex justify-end">
                         <CellTemplate Context="timeCard">
                             <MudStack Row>
-                                <MudTooltip Text="View Leave Request" Color="Color.Info" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled"></MudIconButton>
+                                <MudTooltip Text="Approve Time Card" Color="Color.Success" Placement="Placement.Top">
+                                    <MudIconButton 
+                                        Icon="@Icons.Material.Filled.CheckCircle" 
+                                        Color="Color.Success" 
+                                        Variant="Variant.Filled"
+                                                   OnClick="() => ApproveTimeCardAsync(timeCard.Item)" Disabled="timeCard.Item.Status == Domain.Enum.TimeCardEntryStatus.Approved"></MudIconButton>
                                 </MudTooltip>
 
-                                <MudTooltip Text="Delete Leave Request" Color="Color.Error" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled"></MudIconButton>
+                                <MudTooltip Text="Reject Time Card" Color="Color.Error" Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Block" Color="Color.Error" Variant="Variant.Filled" OnClick="() => RejectTimeCardAsync(timeCard.Item)" Disabled="timeCard.Item.Status == Domain.Enum.TimeCardEntryStatus.Rejected"></MudIconButton>
                                 </MudTooltip>
                             </MudStack>
                         </CellTemplate>
@@ -85,12 +90,6 @@
     private bool _isTimeCardGenerated = false;
     private MudDataGrid<BasicManagerTimeCardDTO> _dataGrid;
 
-    // private IEnumerable<DropDownDTO> CompanyYears = new List<DropDownDTO>();
-    // private DropDownDTO SelectedCompanyYear = new DropDownDTO();
-
-    // private IEnumerable<DropDownDTO> Months = new List<DropDownDTO>();
-    // private DropDownDTO SelectedMonth = new DropDownDTO();
-
     private DateTime? TimeCardDate = DateTime.Now;
 
     private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Large, FullWidth = true };
@@ -104,22 +103,12 @@
     {
         try
         {
-            // Load your master data
-            // CompanyYears = await MasterDataService.GetAvailableCompanyYears();
-            // SelectedCompanyYear = CompanyYears.FirstOrDefault();
-
-            // Months = MasterDataService.GetAvailableMonths();
-            // SelectedMonth = Months.FirstOrDefault();
-
-            //MonthlySalarySummary = await UserSalaryService.GetEmployeeMonthlySalaryStatus(SelectedCompanyYear.Id, SelectedMonth.Id);
-
             _isMasterDataLoaded = true;
 
             StateHasChanged();
         }
         catch (Exception ex)
         {
-            // Handle error
             Console.WriteLine($"Error loading master data: {ex.Message}");
         }
     }
@@ -178,6 +167,67 @@
         }
     }
 
+    private async Task ApproveTimeCardAsync(BasicManagerTimeCardDTO request)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Approve Leave Request from {request.EmployeeName}" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Approve" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Success },
+            { "Icon", Icons.Material.Filled.CheckCircle },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var response = await TimeCardService.ApproveTimeCard(request.TimeCardId,request.TimeCardEntryId, comment);
+
+            await ShowSnackbar(response);
+
+            _dataGrid?.ReloadServerData();
+            StateHasChanged();
+
+        }
+    }
+
+    private async Task RejectTimeCardAsync(BasicManagerTimeCardDTO request)
+    {
+        var parameters = new DialogParameters
+        {
+            { "Title", $"Reject Leave Request from {request.EmployeeName}" },
+            { "ContentText", "Are you sure you want to perform this operation?." },
+            { "ConfirmText", "Reject" },
+            { "CancelText", "Cancel" },
+            { "Color", Color.Error },
+            { "Icon", Icons.Material.Filled.Delete },
+            { "ShowCommentInput", true },
+            { "CommentRequired", true }
+        };
+
+        var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            var comment = result.Data as string;
+
+            var response = await TimeCardService.RejectTimeCard(request.TimeCardId, request.TimeCardEntryId, comment);
+
+            await ShowSnackbar(response);
+
+            _dataGrid?.ReloadServerData();
+            StateHasChanged();
+
+        }
+    }
 
     private async Task ShowSnackbar(GeneralResponseDTO result)
     {
