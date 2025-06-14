@@ -37,6 +37,14 @@ namespace StaffApp.Application.Contracts
         DbSet<ProjectMember> ProjectMembers { get; }
         DbSet<TimeCard> TimeCards { get; }
         DbSet<TimeCardEntry> TimeCardEntries { get; }
+        DbSet<Expense> Expenses { get; }
+        DbSet<SupportAttachment> SupportAttachments { get; }
+        DbSet<ExpenseType> ExpenseTypes { get; }
+        DbSet<ExpenseSupportAttachment> ExpenseSupportAttachments { get; }
+        DbSet<Income> Incomes { get; }
+        DbSet<IncomeType> IncomeTypes { get; }
+        DbSet<IncomeSupportAttachment> IncomeSupportAttachments { get; }
+
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
         Task BeginTransactionAsync(CancellationToken cancellationToken);

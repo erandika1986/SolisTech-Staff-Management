@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StaffApp.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using StaffApp.Infrastructure.Data;
 namespace StaffApp.Infrastructure.Migrations
 {
     [DbContext(typeof(StaffAppDbContext))]
-    partial class StaffAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250614045212_00034")]
+    partial class _00034
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1192,27 +1195,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.ToTable("Expense", (string)null);
                 });
 
-            modelBuilder.Entity("StaffApp.Domain.Entity.ExpenseSupportAttachment", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    b.Property<int>("ExpenseId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SupportAttachmentId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ExpenseId");
-
-                    b.HasIndex("SupportAttachmentId");
-
-                    b.ToTable("ExpenseSupportAttachment", (string)null);
-                });
-
             modelBuilder.Entity("StaffApp.Domain.Entity.ExpenseType", b =>
                 {
                     b.Property<int>("Id")
@@ -1270,27 +1252,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.HasIndex("IncomeTypeId");
 
                     b.ToTable("Income", (string)null);
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.IncomeSupportAttachment", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    b.Property<int>("IncomeId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("SupportAttachmentId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("IncomeId");
-
-                    b.HasIndex("SupportAttachmentId");
-
-                    b.ToTable("IncomeSupportAttachment", (string)null);
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.IncomeType", b =>
@@ -1732,29 +1693,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.ToTable("SalaryAddon", (string)null);
                 });
 
-            modelBuilder.Entity("StaffApp.Domain.Entity.SupportAttachment", b =>
-                {
-                    b.Property<int>("Id")
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    b.Property<string>("OriginalFileName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SaveFileURL")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SavedFileName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("SupportAttachment", (string)null);
-                });
-
             modelBuilder.Entity("StaffApp.Domain.Entity.TaxLogic", b =>
                 {
                     b.Property<int>("Id")
@@ -2168,25 +2106,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("ExpenseType");
                 });
 
-            modelBuilder.Entity("StaffApp.Domain.Entity.ExpenseSupportAttachment", b =>
-                {
-                    b.HasOne("StaffApp.Domain.Entity.Expense", "Expense")
-                        .WithMany("ExpenseSupportAttachments")
-                        .HasForeignKey("ExpenseId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("StaffApp.Domain.Entity.SupportAttachment", "SupportAttachment")
-                        .WithMany("ExpenseSupportAttachments")
-                        .HasForeignKey("SupportAttachmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Expense");
-
-                    b.Navigation("SupportAttachment");
-                });
-
             modelBuilder.Entity("StaffApp.Domain.Entity.Income", b =>
                 {
                     b.HasOne("StaffApp.Domain.Entity.IncomeType", "IncomeType")
@@ -2196,25 +2115,6 @@ namespace StaffApp.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("IncomeType");
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.IncomeSupportAttachment", b =>
-                {
-                    b.HasOne("StaffApp.Domain.Entity.Income", "Income")
-                        .WithMany("IncomeSupportAttachments")
-                        .HasForeignKey("IncomeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("StaffApp.Domain.Entity.SupportAttachment", "SupportAttachment")
-                        .WithMany("IncomeSupportAttachments")
-                        .HasForeignKey("SupportAttachmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Income");
-
-                    b.Navigation("SupportAttachment");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.LeaveTypeAllowDuration", b =>
@@ -2443,19 +2343,9 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("LeaveTypeConfigurations");
                 });
 
-            modelBuilder.Entity("StaffApp.Domain.Entity.Expense", b =>
-                {
-                    b.Navigation("ExpenseSupportAttachments");
-                });
-
             modelBuilder.Entity("StaffApp.Domain.Entity.ExpenseType", b =>
                 {
                     b.Navigation("Expenses");
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.Income", b =>
-                {
-                    b.Navigation("IncomeSupportAttachments");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.IncomeType", b =>
@@ -2501,13 +2391,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("EmployeeSalaryAddons");
 
                     b.Navigation("TaxLogics");
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.SupportAttachment", b =>
-                {
-                    b.Navigation("ExpenseSupportAttachments");
-
-                    b.Navigation("IncomeSupportAttachments");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.TimeCard", b =>

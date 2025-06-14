@@ -49,6 +49,8 @@ namespace StaffApp.Infrastructure.Data
                 await SeedCompanyLocationsAsync();
                 await SeedAppSettingsAsync();
                 await SeedSalaryAddonAsync();
+                await SeedExpensesTypeAsync();
+                await SeedIncomeTypeAsync();
             }
             catch (Exception ex)
             {
@@ -284,6 +286,7 @@ namespace StaffApp.Infrastructure.Data
                 await context.SaveChangesAsync();
             }
         }
+
         private async Task SeedCompanyLocationsAsync()
         {
             if (!context.CompanyLocations.Any())
@@ -354,6 +357,77 @@ namespace StaffApp.Infrastructure.Data
                 };
 
                 await context.SalaryAddons.AddRangeAsync(salaryAddons);
+                await context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SeedIncomeTypeAsync()
+        {
+            if (!context.IncomeTypes.Any())
+            {
+                var incomeTypes = new List<IncomeType>
+                {
+                    new IncomeType(){ Name ="Product Sales" },
+                    new IncomeType(){ Name ="Service Income" },
+                    new IncomeType(){ Name ="Subscription Fees" },
+                    new IncomeType(){ Name ="Licensing Fees" },
+                    new IncomeType(){ Name ="Project-Based Income" },
+                    new IncomeType(){ Name ="Membership Fees" },
+                    new IncomeType(){ Name ="Interest Income" },
+                    new IncomeType(){ Name ="Dividend Income" },
+                    new IncomeType(){ Name ="Rental Income" },
+                    new IncomeType(){ Name ="Gain From Asset Sales" },
+                    new IncomeType(){ Name ="Forex Gains" },
+                    new IncomeType(){ Name ="Refunds" },
+                    new IncomeType(){ Name ="Grants" },
+                    new IncomeType(){ Name ="Subsidies" },
+                    new IncomeType(){ Name ="Commission Income" },
+                    new IncomeType(){ Name ="Donations" }
+                };
+
+                await context.IncomeTypes.AddRangeAsync(incomeTypes);
+                await context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SeedExpensesTypeAsync()
+        {
+            if (!context.ExpenseTypes.Any())
+            {
+                var expenseTypes = new List<ExpenseType>
+                {
+                    new ExpenseType(){ Name ="Salaries and Wages" },
+                    new ExpenseType(){ Name ="Employee Benefits (EPF/ETF, Insurance, Bonuses)" },
+                    new ExpenseType(){ Name ="Rent" },
+                    new ExpenseType(){ Name ="Utilities" },
+                    new ExpenseType(){ Name ="Office Supplies and Stationery" },
+                    new ExpenseType(){ Name ="Repairs and Maintenance" },
+                    new ExpenseType(){ Name ="Marketing and Advertising" },
+                    new ExpenseType(){ Name ="Travel and Accommodation" },
+                    new ExpenseType(){ Name ="Training and Development" },
+                    new ExpenseType(){ Name ="Software Subscriptions" },
+                    new ExpenseType(){ Name ="Legal and Professional Fees" },
+                    new ExpenseType(){ Name ="Accounting or Audit Fees" },
+                    new ExpenseType(){ Name ="Bank Charges and Service Fees" },
+                    new ExpenseType(){ Name ="Telephone and Communication" },
+                    new ExpenseType(){ Name ="Depreciation and Amortization" },
+                    new ExpenseType(){ Name ="Insurance (property, liability, etc.)" },
+                    new ExpenseType(){ Name ="Raw Materials" },
+                    new ExpenseType(){ Name ="Packaging and shipping" },
+                    new ExpenseType(){ Name ="Manufacturing labor" },
+                    new ExpenseType(){ Name ="Equipment usage (factory, tools)" },
+                    new ExpenseType(){ Name ="Inventory purchases" },
+                    new ExpenseType(){ Name ="Loan interest" },
+                    new ExpenseType(){ Name ="Credit card processing fees" },
+                    new ExpenseType(){ Name ="Lease payments" },
+                    new ExpenseType(){ Name ="Bad debts" },
+                    new ExpenseType(){ Name ="Income tax" },
+                    new ExpenseType(){ Name ="VAT/Sales tax" },
+                    new ExpenseType(){ Name ="Withholding tax" },
+                    new ExpenseType(){ Name ="Property tax (if applicable)" }
+                };
+
+                await context.ExpenseTypes.AddRangeAsync(expenseTypes);
                 await context.SaveChangesAsync();
             }
         }
