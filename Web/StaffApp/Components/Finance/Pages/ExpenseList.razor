@@ -1,6 +1,293 @@
 ﻿@page "/Finance/ExpenseList"
-<h3>ExpenseList</h3>
+@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.EmploymentLeave
+@using StaffApp.Application.DTOs.Finance
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@inject IExpenseService ExpenseService
+@inject IDialogService Dialog
+@inject LoadingService LoadingService
+@inject ISnackbar Snackbar
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Company Expenses</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudTooltip Text="Apply For New Leave Request" Color="Color.Primary" Placement="Placement.Top">
+                    <MudIconButton Icon="@Icons.Material.Filled.AddTask" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => AddNewExpenseAsync()"></MudIconButton>
+                </MudTooltip>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="12">
+                @if (!_isMasterDataLoaded)
+                {
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                    <MudText>Loading master data...</MudText>
+                }
+                else
+                {
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="12" lg="12">
+                            <MudGrid>
+
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudDatePicker xs="12" sm="6" Label="From Date" Date="StartDate" DateChanged="FromDateChanged" />
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudDatePicker xs="12" sm="6" Label="To Date" Date="EndDate" DateChanged="ToDataChanged" />
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudSelect T="DropDownDTO" Label="Expense Type" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedExpenseType" ValueChanged="@ExpenseTypeChanged">
+                                        @foreach (var expenseType in ExpenseTypes)
+                                        {
+                                            <MudSelectItem T="DropDownDTO" Value="@expenseType">@expenseType.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+
+                            </MudGrid>
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="12" lg="12">
+                            <MudDataGrid @ref="_dataGrid" T="ExpenseDTO" ServerData="@(LoadData)" Sortable="true"
+                            Filterable="false"
+                            Hideable="true"
+                            Hover="true"
+                            Striped="true"
+                            Elevation="25"
+                            Loading="@_loading">
+                                <Columns>
+                                    <PropertyColumn Property="x=>x.Id" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.Id))" />
+                                    <PropertyColumn Property="x=>x.DateName" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.DateName))" />
+                                    <PropertyColumn Property="x=>x.Amount" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.Amount))" />
+                                    <PropertyColumn Property="x=>x.ExpenseType" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.ExpenseType))" />
+                                    <TemplateColumn CellClass="d-flex justify-end">
+                                        <CellTemplate Context="expense">
+                                            <MudStack Row>
+                                                <MudTooltip Text="View Expense" Color="Color.Info" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled" OnClick="() => ViewLeaveRequestAsync(expense.Item)"></MudIconButton>
+                                                </MudTooltip>
+                                                <MudTooltip Text="Edit Expense" Color="Color.Primary" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => ViewLeaveRequestAsync(expense.Item)"></MudIconButton>
+                                                </MudTooltip>
+                                                <MudTooltip Text="Delete Expense" Color="Color.Error" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteExpenseAsync(expense.Item)"></MudIconButton>
+                                                </MudTooltip>
+                                            </MudStack>
+                                        </CellTemplate>
+                                    </TemplateColumn>
+                                </Columns>
+                                <PagerContent>
+                                    <MudDataGridPager T="ExpenseDTO" />
+                                </PagerContent>
+                            </MudDataGrid>
+                        </MudItem>
+                    </MudGrid>
+
+                }
+
+            </MudItem>
+        </MudGrid>
+    </MudCardContent>
+</MudCard>
 
 @code {
+    private string _searchString = "";
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = false;
+    private MudDataGrid<ExpenseDTO> _dataGrid;
 
+    private DateTime? StartDate = DateTime.Now.AddDays(-14);
+    private DateTime? EndDate = DateTime.Now;
+
+    private IEnumerable<DropDownDTO> ExpenseTypes = new List<DropDownDTO>();
+    private DropDownDTO SelectedExpenseType = new DropDownDTO();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMasterDataAsync();
+    }
+
+    private async Task LoadMasterDataAsync()
+    {
+        try
+        {
+            // Load your master data
+            ExpenseTypes = await ExpenseService.GetExpenseTypes(true);
+            SelectedExpenseType = ExpenseTypes.FirstOrDefault();
+
+            _isMasterDataLoaded = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine($"Error loading master data: {ex.Message}");
+        }
+    }
+
+    private async Task AddNewExpenseAsync()
+    {
+
+    }
+
+    private async Task<GridData<ExpenseDTO>> LoadData(GridState<ExpenseDTO> state)
+    {
+        _loading = true;
+
+        try
+        {
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            var result = await ExpenseService.GetAllExpensesAsync(
+                                    page,
+                                    pageSize,
+                                    StartDate.Value,
+                                    EndDate.Value,
+                                    SelectedExpenseType.Id);
+
+            return new GridData<ExpenseDTO>
+                {
+                    Items = result.Items,
+                    TotalItems = result.TotalItems
+                };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void FromDateChanged(DateTime? fromDate)
+    {
+
+        StartDate = fromDate;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private void ToDataChanged(DateTime? toDate)
+    {
+        EndDate = toDate;
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private void ExpenseTypeChanged(DropDownDTO changedValue)
+    {
+        SelectedExpenseType = changedValue;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task DeleteExpenseAsync(ExpenseDTO request)
+    {
+        // var parameters = new DialogParameters
+        // {
+        //     { "Title", $"Delete Leave Request from {request.EmployeeName}" },
+        //     { "ContentText", "Are you sure you want to perform this operation?." },
+        //     { "ConfirmText", "Reject" },
+        //     { "CancelText", "Cancel" },
+        //     { "Color", Color.Error },
+        //     { "Icon", Icons.Material.Filled.Delete },
+        //     { "ShowCommentInput", true },
+        //     { "CommentRequired", true }
+        // };
+
+        // var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
+        // var result = await dialog.Result;
+
+        // if (!result.Canceled)
+        // {
+        //     LoadingService.Show();
+
+        //     var comment = result.Data as string;
+
+        //     var deleteResult = await LeaveRequestService.DeleteLeaveRequestAsync(request.Id, comment);
+
+        //     LeaveDashboardData = await LeaveAllocationService.GetMyLeaveDashboardData();
+
+        //     await ShowSnackbar(deleteResult);
+
+        //     _dataGrid?.ReloadServerData();
+        //     StateHasChanged();
+
+        //     LoadingService.Hide();
+        // }
+    }
+
+    private async Task AddNewLeaveRequestAsync()
+    {
+        // var parameters = new DialogParameters
+        // {
+        //     { "LeaveRequestId", ApplicationConstants.Zero },
+        //     { "IsDisabled", false},
+        //     { "IsApprovalView", false},
+        //     { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        // };
+        // await Dialog.ShowAsync<EditExpenseDialog>($"Apply Leave Request", parameters, _maxWidth);
+    }
+
+    private async Task ViewLeaveRequestAsync(ExpenseDTO request)
+    {
+        // var parameters = new DialogParameters
+        // {
+        //     { "LeaveRequestId", request.Id },
+        //     { "IsDisabled", true},
+        //     { "IsApprovalView", false},
+        //     { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        // };
+        // await Dialog.ShowAsync<EditExpenseDialog>($"Manage Leave Request From : {request.EmployeeName}", parameters, _maxWidth);
+    }
+
+    private async Task HandleEditDialogClosedAsync(bool result)
+    {
+        // LeaveDashboardDTO = await LeaveAllocationService.GetMyLeaveDashboardData();
+
+        // _dataGrid?.ReloadServerData();
+        // StateHasChanged();
+    }
+
+
+    async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
+
+    string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
 }

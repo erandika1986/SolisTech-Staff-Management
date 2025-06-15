@@ -2,7 +2,7 @@
 
 namespace StaffApp.Domain.Entity
 {
-    public class ExpenseSupportAttachment : BaseEntity
+    public class ExpenseSupportAttachment : BaseAuditableEntity
     {
         public int ExpenseId { get; set; }
         public int SupportAttachmentId { get; set; }
