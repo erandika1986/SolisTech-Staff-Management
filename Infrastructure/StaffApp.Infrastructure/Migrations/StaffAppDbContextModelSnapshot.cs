@@ -1154,8 +1154,11 @@ namespace StaffApp.Infrastructure.Migrations
             modelBuilder.Entity("StaffApp.Domain.Entity.Expense", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
@@ -1195,8 +1198,11 @@ namespace StaffApp.Infrastructure.Migrations
             modelBuilder.Entity("StaffApp.Domain.Entity.ExpenseSupportAttachment", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CreatedByUserId")
                         .HasColumnType("nvarchar(max)");
@@ -1249,8 +1255,11 @@ namespace StaffApp.Infrastructure.Migrations
             modelBuilder.Entity("StaffApp.Domain.Entity.Income", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
@@ -1290,8 +1299,11 @@ namespace StaffApp.Infrastructure.Migrations
             modelBuilder.Entity("StaffApp.Domain.Entity.IncomeSupportAttachment", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("IncomeId")
                         .HasColumnType("int");
@@ -1750,8 +1762,11 @@ namespace StaffApp.Infrastructure.Migrations
             modelBuilder.Entity("StaffApp.Domain.Entity.SupportAttachment", b =>
                 {
                     b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasColumnOrder(0);
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("OriginalFileName")
                         .IsRequired()

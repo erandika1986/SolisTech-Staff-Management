@@ -12,7 +12,7 @@ namespace StaffApp.Infrastructure.Data.Configurations
 
             builder.HasKey(p => p.Id);
 
-            builder.Property(p => p.Id).ValueGeneratedNever();
+            builder.Property(p => p.Id).ValueGeneratedOnAdd();
 
             builder
                .HasOne<IncomeType>(c => c.IncomeType)

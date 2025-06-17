@@ -118,6 +118,7 @@ namespace StaffApp.Infrastructure.Services
                     Id = e.Id,
                     Date = e.Date,
                     Amount = (double)e.Amount,
+                    DateName = e.Date.ToString("MM/dd/yyyy"),
                     Notes = e.Notes,
                     ExpenseType = new DropDownDTO() { Id = e.ExpenseTypeId },
                     ExpenseTypeName = e.ExpenseType.Name,
@@ -166,9 +167,12 @@ namespace StaffApp.Infrastructure.Services
 
                     };
 
+                    context.Expenses.Add(expense);
+                    await context.SaveChangesAsync(CancellationToken.None);
+
                     await UploadFiles(expenseDto, expense);
 
-                    context.Expenses.Add(expense);
+
                 }
                 else
                 {
@@ -182,9 +186,11 @@ namespace StaffApp.Infrastructure.Services
                     await UploadFiles(expenseDto, expense);
 
                     context.Expenses.Update(expense);
+
+                    await context.SaveChangesAsync(CancellationToken.None);
                 }
 
-                await context.SaveChangesAsync(CancellationToken.None);
+
 
                 return new GeneralResponseDTO
                 {
@@ -268,6 +274,8 @@ namespace StaffApp.Infrastructure.Services
                     UpdateDate = DateTime.Now,
                     UpdatedByUserId = currentUserService.UserId,
                 });
+                context.Expenses.Update(expense);
+                await context.SaveChangesAsync(CancellationToken.None);
             }
 
             return expense;

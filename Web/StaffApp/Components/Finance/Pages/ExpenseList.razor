@@ -72,10 +72,10 @@
                                         <CellTemplate Context="expense">
                                             <MudStack Row>
                                                 <MudTooltip Text="View Expense" Color="Color.Info" Placement="Placement.Top">
-                                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled" OnClick="() => ViewLeaveRequestAsync(expense.Item)"></MudIconButton>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled" OnClick="() => ViewExpenseAsync(expense.Item)"></MudIconButton>
                                                 </MudTooltip>
                                                 <MudTooltip Text="Edit Expense" Color="Color.Primary" Placement="Placement.Top">
-                                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => ViewLeaveRequestAsync(expense.Item)"></MudIconButton>
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditExpenseAsync(expense.Item)"></MudIconButton>
                                                 </MudTooltip>
                                                 <MudTooltip Text="Delete Expense" Color="Color.Error" Placement="Placement.Top">
                                                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteExpenseAsync(expense.Item)"></MudIconButton>
@@ -141,6 +141,17 @@
         {
             { "ExpenseId", ApplicationConstants.Zero },
             { "IsDisabled", false },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditExpenseDialog>($"Add a new expense", parameters, _maxWidth);
+    }
+
+    private async Task ViewExpenseAsync(ExpenseDTO expense)
+    {
+        var parameters = new DialogParameters
+        {
+            { "ExpenseId", expense.Id },
+            { "IsDisabled", true },
             { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
         };
         await Dialog.ShowAsync<EditExpenseDialog>($"Add a new expense", parameters, _maxWidth);
