@@ -10,6 +10,7 @@ namespace StaffApp.Application.Services
         Task<GeneralResponseDTO> DeleteExpense(int expenseId);
         Task<GeneralResponseDTO> DeleteExpenseSupportDocument(int expenseId, int supportDocumentId);
         Task<List<DropDownDTO>> GetExpenseTypes(bool hasDefaultValue = false);
+        Task<ExpenseDTO> GetExpenseByIdAsync(int expenseId);
 
     }
 }

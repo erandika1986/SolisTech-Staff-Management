@@ -2,6 +2,7 @@
 @using StaffApp.Application.DTOs.Common
 @using StaffApp.Application.DTOs.EmploymentLeave
 @using StaffApp.Application.DTOs.Finance
+@using StaffApp.Application.Extensions.Constants
 @using StaffApp.Application.Services
 @using StaffApp.Infrastructure.Services
 @using System.Reflection
@@ -43,7 +44,7 @@
                                 <MudItem xs="12" sm="12" md="2" lg="2">
                                     <MudDatePicker xs="12" sm="6" Label="To Date" Date="EndDate" DateChanged="ToDataChanged" />
                                 </MudItem>
-                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                <MudItem xs="12" sm="12" md="3" lg="3">
                                     <MudSelect T="DropDownDTO" Label="Expense Type" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedExpenseType" ValueChanged="@ExpenseTypeChanged">
                                         @foreach (var expenseType in ExpenseTypes)
                                         {
@@ -66,7 +67,7 @@
                                     <PropertyColumn Property="x=>x.Id" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.Id))" />
                                     <PropertyColumn Property="x=>x.DateName" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.DateName))" />
                                     <PropertyColumn Property="x=>x.Amount" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.Amount))" />
-                                    <PropertyColumn Property="x=>x.ExpenseType" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.ExpenseType))" />
+                                    <PropertyColumn Property="x=>x.ExpenseTypeName" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.ExpenseTypeName))" />
                                     <TemplateColumn CellClass="d-flex justify-end">
                                         <CellTemplate Context="expense">
                                             <MudStack Row>
@@ -136,7 +137,24 @@
 
     private async Task AddNewExpenseAsync()
     {
+        var parameters = new DialogParameters
+        {
+            { "ExpenseId", ApplicationConstants.Zero },
+            { "IsDisabled", false },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditExpenseDialog>($"Add a new expense", parameters, _maxWidth);
+    }
 
+    private async Task EditExpenseAsync(ExpenseDTO expense)
+    {
+        var parameters = new DialogParameters
+        {
+            { "ExpenseId", expense.Id },
+            { "IsDisabled", false },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditExpenseDialog>($"Add a new expense", parameters, _maxWidth);
     }
 
     private async Task<GridData<ExpenseDTO>> LoadData(GridState<ExpenseDTO> state)

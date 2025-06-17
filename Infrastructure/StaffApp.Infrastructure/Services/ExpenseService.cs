@@ -117,10 +117,10 @@ namespace StaffApp.Infrastructure.Services
                 {
                     Id = e.Id,
                     Date = e.Date,
-                    Amount = e.Amount,
+                    Amount = (double)e.Amount,
                     Notes = e.Notes,
-                    ExpenseTypeId = e.ExpenseTypeId,
-                    ExpenseType = e.ExpenseType.Name,
+                    ExpenseType = new DropDownDTO() { Id = e.ExpenseTypeId },
+                    ExpenseTypeName = e.ExpenseType.Name,
                     SavedSupportFiles = e.ExpenseSupportAttachments.Select(a => new SupportAttachmentDTO
                     {
                         Id = a.SupportAttachmentId,
@@ -155,9 +155,9 @@ namespace StaffApp.Infrastructure.Services
                     expense = new Expense
                     {
                         Date = expenseDto.Date,
-                        Amount = expenseDto.Amount,
+                        Amount = (decimal)expenseDto.Amount,
                         Notes = expenseDto.Notes,
-                        ExpenseTypeId = expenseDto.ExpenseTypeId,
+                        ExpenseTypeId = expenseDto.ExpenseType.Id,
                         CreatedByUserId = currentUserService.UserId,
                         CreatedDate = DateTime.Now,
                         UpdateDate = DateTime.Now,
@@ -172,10 +172,10 @@ namespace StaffApp.Infrastructure.Services
                 }
                 else
                 {
-                    expense.Amount = expenseDto.Amount;
+                    expense.Amount = (decimal)expenseDto.Amount;
                     expense.Date = expenseDto.Date;
                     expense.Notes = expenseDto.Notes;
-                    expense.ExpenseTypeId = expenseDto.ExpenseTypeId;
+                    expense.ExpenseTypeId = expenseDto.ExpenseType.Id;
                     expense.UpdatedByUserId = currentUserService.UserId;
                     expense.UpdateDate = DateTime.Now;
 
@@ -271,6 +271,34 @@ namespace StaffApp.Infrastructure.Services
             }
 
             return expense;
+        }
+
+        public async Task<ExpenseDTO> GetExpenseByIdAsync(int expenseId)
+        {
+            var expense = await context.Expenses
+                .Include(e => e.ExpenseType)
+                .Include(e => e.ExpenseSupportAttachments)
+                .ThenInclude(a => a.SupportAttachment)
+                .FirstOrDefaultAsync(e => e.Id == expenseId && e.IsActive);
+
+            var expenseDTO = new ExpenseDTO
+            {
+                Id = expense.Id,
+                Date = expense.Date,
+                Amount = (double)expense.Amount,
+                Notes = expense.Notes,
+                ExpenseType = new DropDownDTO() { Id = expense.ExpenseTypeId },
+                ExpenseTypeName = expense.ExpenseType.Name,
+                SavedSupportFiles = expense.ExpenseSupportAttachments.Select(a => new SupportAttachmentDTO
+                {
+                    Id = a.SupportAttachmentId,
+                    OriginalFileName = a.SupportAttachment.OriginalFileName,
+                    SavedFileName = a.SupportAttachment.SavedFileName,
+                    SaveFileURL = a.SupportAttachment.SaveFileURL,
+                }).ToList()
+            };
+
+            return expenseDTO;
         }
     }
 }
