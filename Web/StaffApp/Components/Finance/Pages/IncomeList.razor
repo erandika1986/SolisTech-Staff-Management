@@ -1,6 +1,289 @@
 ﻿@page "/Finance/IncomeList"
-<h3>IncomeList</h3>
+@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.Finance
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+@using StaffApp.Components.Shared
+@using StaffApp.Infrastructure.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@inject IIncomeService IncomeService
+@inject IDialogService Dialog
+@inject LoadingService LoadingService
+@inject ISnackbar Snackbar
+
+<MudCard>
+    <MudCardHeader>
+        <CardHeaderContent>
+            <MudText Typo="Typo.h6">Company Incomes</MudText>
+        </CardHeaderContent>
+    </MudCardHeader>
+    <MudCardContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudTooltip Text="Add New Company Income" Color="Color.Primary" Placement="Placement.Top">
+                    <MudIconButton Icon="@Icons.Material.Filled.AddTask" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => AddNewIncomeAsync()"></MudIconButton>
+                </MudTooltip>
+            </MudItem>
+            <MudItem xs="12" sm="12" md="12" lg="12">
+                @if (!_isMasterDataLoaded)
+                {
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+                    <MudText>Loading master data...</MudText>
+                }
+                else
+                {
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="12" lg="12">
+                            <MudGrid>
+
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudDatePicker xs="12" sm="6" Label="From Date" Date="StartDate" DateChanged="FromDateChanged" />
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="2" lg="2">
+                                    <MudDatePicker xs="12" sm="6" Label="To Date" Date="EndDate" DateChanged="ToDataChanged" />
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="3" lg="3">
+                                    <MudSelect T="DropDownDTO" Label="Income Type" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" Value="SelectedIncomeType" ValueChanged="@IncomeTypeChanged">
+                                        @foreach (var incomeType in IncomeTypes)
+                                        {
+                                            <MudSelectItem T="DropDownDTO" Value="@incomeType">@incomeType.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+
+                            </MudGrid>
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="12" lg="12">
+                            <MudDataGrid @ref="_dataGrid" T="IncomeDTO" ServerData="@(LoadData)" Sortable="true"
+                                         Filterable="false"
+                                         Hideable="true"
+                                         Hover="true"
+                                         Striped="true"
+                                         Elevation="25"
+                                         Loading="@_loading">
+                                <Columns>
+                                    <PropertyColumn Property="x=>x.Id" Title="@GetDisplayName(typeof(IncomeDTO), nameof(IncomeDTO.Id))" />
+                                    <PropertyColumn Property="x=>x.DateName" Title="@GetDisplayName(typeof(IncomeDTO), nameof(IncomeDTO.DateName))" />
+                                    <PropertyColumn Property="x=>x.Amount" Title="@GetDisplayName(typeof(IncomeDTO), nameof(IncomeDTO.Amount))" />
+                                    <PropertyColumn Property="x=>x.IncomeTypeName" Title="@GetDisplayName(typeof(IncomeDTO), nameof(IncomeDTO.IncomeTypeName))" />
+                                    <PropertyColumn Property="x=>x.CreatedByUser" Title="@GetDisplayName(typeof(IncomeDTO), nameof(IncomeDTO.CreatedByUser))" />
+                                    <PropertyColumn Property="x=>x.CreatedOn" Title="@GetDisplayName(typeof(IncomeDTO), nameof(IncomeDTO.CreatedOn))" />
+                                    <PropertyColumn Property="x=>x.UpdatedByUser" Title="@GetDisplayName(typeof(IncomeDTO), nameof(IncomeDTO.UpdatedByUser))" />
+                                    <PropertyColumn Property="x=>x.UpdatedOn" Title="@GetDisplayName(typeof(IncomeDTO), nameof(IncomeDTO.UpdatedOn))" />
+                                    <TemplateColumn CellClass="d-flex justify-end">
+                                        <CellTemplate Context="income">
+                                            <MudStack Row>
+                                                <MudTooltip Text="View Expense" Color="Color.Info" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye" Color="Color.Info" Variant="Variant.Filled" OnClick="() => ViewIncomeAsync(income.Item)"></MudIconButton>
+                                                </MudTooltip>
+                                                <MudTooltip Text="Edit Expense" Color="Color.Primary" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditIncomeAsync(income.Item)"></MudIconButton>
+                                                </MudTooltip>
+                                                <MudTooltip Text="Delete Expense" Color="Color.Error" Placement="Placement.Top">
+                                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteIncomeAsync(income.Item)"></MudIconButton>
+                                                </MudTooltip>
+                                            </MudStack>
+                                        </CellTemplate>
+                                    </TemplateColumn>
+                                </Columns>
+                                <PagerContent>
+                                    <MudDataGridPager T="ExpenseDTO" />
+                                </PagerContent>
+                            </MudDataGrid>
+                        </MudItem>
+                    </MudGrid>
+
+                }
+
+            </MudItem>
+        </MudGrid>
+    </MudCardContent>
+</MudCard>
 
 @code {
+    private string _searchString = "";
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = false;
+    private MudDataGrid<IncomeDTO> _dataGrid;
 
+    private DateTime? StartDate = DateTime.Now.AddDays(-14);
+    private DateTime? EndDate = DateTime.Now;
+
+    private IEnumerable<DropDownDTO> IncomeTypes = new List<DropDownDTO>();
+    private DropDownDTO SelectedIncomeType = new DropDownDTO();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMasterDataAsync();
+    }
+
+    private async Task LoadMasterDataAsync()
+    {
+        try
+        {
+            // Load your master data
+            IncomeTypes = await IncomeService.GetIncomeTypes(true);
+            SelectedIncomeType = IncomeTypes.FirstOrDefault();
+
+            _isMasterDataLoaded = true;
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine($"Error loading master data: {ex.Message}");
+        }
+    }
+
+    private async Task AddNewIncomeAsync()
+    {
+        var parameters = new DialogParameters
+        {
+            { "IncomeId", ApplicationConstants.Zero },
+            { "IsDisabled", false },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditIncomeDialog>($"Add a new income", parameters, _maxWidth);
+    }
+
+    private async Task ViewIncomeAsync(IncomeDTO income)
+    {
+        var parameters = new DialogParameters
+        {
+            { "IncomeId", income.Id },
+            { "IsDisabled", true },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditIncomeDialog>($"View income", parameters, _maxWidth);
+    }
+
+    private async Task EditIncomeAsync(IncomeDTO income)
+    {
+        var parameters = new DialogParameters
+        {
+            { "IncomeId", income.Id },
+            { "IsDisabled", false },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditIncomeDialog>($"Edit income", parameters, _maxWidth);
+    }
+
+    private async Task<GridData<IncomeDTO>> LoadData(GridState<IncomeDTO> state)
+    {
+        _loading = true;
+
+        try
+        {
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            var result = await IncomeService.GetAllIncomeAsync(
+                                    page,
+                                    pageSize,
+                                    StartDate.Value,
+                                    EndDate.Value,
+                                    SelectedIncomeType.Id);
+
+            return new GridData<IncomeDTO>
+                {
+                    Items = result.Items,
+                    TotalItems = result.TotalItems
+                };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void FromDateChanged(DateTime? fromDate)
+    {
+
+        StartDate = fromDate;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private void ToDataChanged(DateTime? toDate)
+    {
+        EndDate = toDate;
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private void IncomeTypeChanged(DropDownDTO changedValue)
+    {
+        SelectedIncomeType = changedValue;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private Task DeleteIncomeAsync(IncomeDTO request)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "Id", request.Id.ToString() },
+            { x => x.ContentText, "Do you really want to delete these records? This process cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error },
+             { "OnDialogClosed", EventCallback.Factory.Create<string>(this, HandleDeleteConfirmationDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        return Dialog.ShowAsync<ConfirmationDialog>("Delete", parameters, options);
+    }
+
+    private async Task HandleDeleteConfirmationDialogClosedAsync(string id)
+    {
+        var result = await IncomeService.DeleteIncome(int.Parse(id));
+
+        await ShowSnackbar(result);
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task HandleEditDialogClosedAsync(bool result)
+    {
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
+
+    private string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    private string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
 }

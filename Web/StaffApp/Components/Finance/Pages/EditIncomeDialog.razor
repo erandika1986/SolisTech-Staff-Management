@@ -1,5 +1,285 @@
-﻿<h3>EditIncomeDialog</h3>
+﻿@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.Finance
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+
+
+@inject IIncomeService IncomeService
+@inject IAzureBlobService AzureBlobService
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+@inject LoadingService LoadingService
+@inject IDialogService Dialog
+
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudPaper class="pa-2">
+                    <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                        <MudGrid>
+                            <MudItem xs="12" sm="6" md="4" lg="4">
+                                <MudDatePicker xs="12" sm="6" Variant="Variant.Outlined" Adornment="Adornment.End" Label="Date" Date="Income.Date" DateChanged="OnDateChanged" Required="true" RequiredError="From date is required!" Disabled="IsDisabled" />
+                            </MudItem>
+
+
+                            <MudItem xs="12" sm="6" md="4" lg="4">
+                                <MudSelect T="DropDownDTO" Variant="Variant.Outlined" Adornment="Adornment.End" Label="Income Type" MultiSelection="false" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" @bind-Value="Income.IncomeType" Required="true" RequiredError="Income type is required!" Disabled="IsDisabled">
+                                    @foreach (var incomeType in IncomeTypes)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@incomeType">@incomeType.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                            <MudItem xs="12" sm="6" md="4" lg="4">
+                                <MudNumericField T="double"
+                                                 Label="Amount"
+                                                 @bind-Value="Income.Amount"
+                                                 Variant="Variant.Outlined"
+                                                 Adornment="Adornment.End"
+                                                 AdornmentText="$"
+                                                 Step="0.25"
+                                                 Min="0"
+                                                 Immediate="true"
+                                                 DecimalPlaces="2" Disabled=" IsDisabled" />
+                            </MudItem>
+
+                            <MudItem xs="12" sm="12" md="12" lg="12">
+                                <MudTextField Variant="Variant.Outlined" Adornment="Adornment.End" @bind-Value="Income.Notes" Label="Note" Lines="4" Required="true" RequiredError="Note is required!" Disabled="IsDisabled" />
+                            </MudItem>
+                            <MudItem xs="12">
+                                <MudText>Supporting Documents</MudText>
+                                @if (!IsDisabled)
+                                {
+                                    <MudFileUpload T="IReadOnlyList<IBrowserFile>" FilesChanged="UploadFiles">
+                                        <ActivatorContent>
+                                            <MudButton Variant="Variant.Filled"
+                                                       Color="Color.Primary"
+                                                       StartIcon="@Icons.Material.Filled.CloudUpload">
+                                                Upload Support Files
+                                            </MudButton>
+                                        </ActivatorContent>
+                                    </MudFileUpload>
+                                }
+
+                                @if (FileNames.Count > 0)
+                                {
+                                    <MudList T="string">
+                                        @foreach (var file in FileNames)
+                                        {
+                                            <MudListItem Icon="@Icons.Material.Filled.Inbox">
+                                                <MudGrid>
+                                                    <MudItem xs="6" sm="6" md="6" lg="6">
+                                                        <MudText>@file</MudText>
+                                                    </MudItem>
+                                                    <MudItem xs="6" sm="6" md="6" lg="6" class="d-flex justify-end">
+                                                        <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Warning" Variant="Variant.Filled" Size="Size.Small" OnClick="@(() => RemoveFile(file))" Class="mr-1" />
+                                                        <MudIconButton Icon="@Icons.Material.Filled.CloudDownload" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small" Disabled />
+                                                    </MudItem>
+                                                </MudGrid>
+                                            </MudListItem>
+                                        }
+                                    </MudList>
+                                }
+                                @if (UploadErrors.Count > 0)
+                                {
+                                    <MudAlert Severity="Severity.Error" Class="mt-2">
+                                        <MudText>The following errors occurred:</MudText>
+                                        <MudList T="string">
+                                            @foreach (var error in UploadErrors)
+                                            {
+                                                <MudListItem>@error</MudListItem>
+                                            }
+                                        </MudList>
+                                    </MudAlert>
+                                }
+                                @if (Income.SavedSupportFiles.Count > 0)
+                                {
+                                    <MudList T="string">
+                                        @foreach (var file in Income.SavedSupportFiles)
+                                        {
+                                            <MudListItem Icon="@Icons.Material.Filled.Inbox">
+                                                <MudGrid>
+                                                    <MudItem xs="6" sm="6" md="6" lg="6">
+                                                        <MudText>@file.OriginalFileName</MudText>
+                                                    </MudItem>
+                                                    <MudItem xs="6" sm="6" md="6" lg="6" class="d-flex justify-end">
+                                                        <MudIconButton Icon="@Icons.Material.Filled.Close" Color="Color.Warning" Variant="Variant.Filled" Size="Size.Small" OnClick="@(() => RemoveSavedFile(file))" Class="mr-1" Disabled="IsDisabled" />
+
+                                                        <MudIconButton Icon="@Icons.Material.Filled.CloudDownload" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small" OnClick="@(() => DownloadFile(file))" />
+                                                    </MudItem>
+                                                </MudGrid>
+                                            </MudListItem>
+                                        }
+                                    </MudList>
+                                }
+                            </MudItem>
+                        </MudGrid>
+                    </MudForm>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudPaper Class="pa-2">
+            <MudButton Variant="Variant.Filled" OnClick="Cancel" Class="mr-1">Close</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Submit" StartIcon="@Icons.Material.Filled.Save"
+                       Disabled="@(!success)" Class="mr-1"> Save</MudButton>
+
+        </MudPaper>
+    </DialogActions>
+</MudDialog>
 
 @code {
+    [Parameter]
+    public int IncomeId { get; set; }
 
+    [Parameter]
+    public bool IsDisabled { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnDialogClosed { get; set; }
+
+    private IncomeDTO Income { get; set; } = new();
+    public List<IBrowserFile> Files { get; set; } = new List<IBrowserFile> { };
+    public List<string> FileNames { get; set; } = new List<string>();
+    private List<string> UploadErrors = new List<string>();
+    private long MaxFileSize = 10 * 1024 * 1024; // 10MB
+
+    private IEnumerable<DropDownDTO> IncomeTypes = new List<DropDownDTO>();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
+
+    bool success;
+    string[] errors = { };
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadingService.Show();
+        IncomeTypes = await IncomeService.GetIncomeTypes();
+        if (IncomeId > 0)
+        {
+            Income = await IncomeService.GetIncomeByIdAsync(IncomeId);
+            if (Income == null)
+            {
+                Snackbar.Add("Income not found.", Severity.Error);
+                MudDialog.Cancel();
+            }
+
+            Income.IncomeType = IncomeTypes.FirstOrDefault(x => x.Id == Income.IncomeType.Id);
+        }
+        else
+        {
+            Income.Date = DateTime.Now;
+            Income.IncomeType = IncomeTypes.FirstOrDefault();
+        }
+
+        LoadingService.Hide();
+    }
+
+
+    private async Task Submit()
+    {
+        LoadingService.Show();
+
+        Income.Files = Files.ToList();
+        var response = await IncomeService.SaveIncome(Income);
+        await ShowSnackbar(response);
+        LoadingService.Hide();
+        await OnDialogClosed.InvokeAsync(true); // Notify parent
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+
+    private void UploadFiles(IReadOnlyList<IBrowserFile> files)
+    {
+        foreach (var file in files)
+        {
+            if (file.Size > MaxFileSize)
+            {
+                UploadErrors.Add($"{file.Name} exceeds the maximum file size (10MB).");
+                continue;
+            }
+            try
+            {
+                Files.Add(file);
+                FileNames.Add(file.Name);
+            }
+            catch (Exception ex)
+            {
+                UploadErrors.Add($"Error uploading {file.Name}: {ex.Message}");
+            }
+        }
+    }
+
+
+    private async Task RemoveSavedFile(SupportAttachmentDTO file)
+    {
+        LoadingService.Show();
+        var result = await IncomeService.DeleteIncomeSupportDocument(Income.Id, file.Id);
+        if (result.Flag)
+        {
+            var index = Income.SavedSupportFiles.IndexOf(file);
+            if (index >= 0)
+            {
+                Income.SavedSupportFiles.RemoveAt(index);
+            }
+        }
+        LoadingService.Hide();
+        await ShowSnackbar(result);
+    }
+
+
+    private async Task DownloadFile(SupportAttachmentDTO file)
+    {
+        LoadingService.Show();
+        var sasUrl = await AzureBlobService.GenerateSasTokenForBlobAsync(file.SavedFileName, ApplicationConstants.AzureBlobStorageName, DateTimeOffset.UtcNow.AddMinutes(5));
+
+        LoadingService.Hide();
+        await JSRuntime.InvokeVoidAsync("open", sasUrl, "_blank");
+    }
+
+    private void RemoveFile(string fileName)
+    {
+        var index = FileNames.IndexOf(fileName);
+        if (index >= 0)
+        {
+            FileNames.RemoveAt(index);
+            Files.RemoveAt(index);
+        }
+    }
+
+    private string GetUploadSummary()
+    {
+        if (FileNames.Count == 0)
+            return "No files selected";
+
+        return $"{FileNames.Count} file(s) selected";
+    }
+
+    async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
+
+    private Task OnDateChanged(DateTime? date)
+    {
+        Income.Date = date.Value;
+        return Task.CompletedTask;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
 }

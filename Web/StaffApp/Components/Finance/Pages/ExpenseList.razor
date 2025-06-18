@@ -4,6 +4,7 @@
 @using StaffApp.Application.DTOs.Finance
 @using StaffApp.Application.Extensions.Constants
 @using StaffApp.Application.Services
+@using StaffApp.Components.Shared
 @using StaffApp.Infrastructure.Services
 @using System.Reflection
 @using System.ComponentModel.DataAnnotations
@@ -22,7 +23,7 @@
     <MudCardContent>
         <MudGrid>
             <MudItem xs="12" sm="12">
-                <MudTooltip Text="Apply For New Leave Request" Color="Color.Primary" Placement="Placement.Top">
+                <MudTooltip Text="Add New Company Expense" Color="Color.Primary" Placement="Placement.Top">
                     <MudIconButton Icon="@Icons.Material.Filled.AddTask" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => AddNewExpenseAsync()"></MudIconButton>
                 </MudTooltip>
             </MudItem>
@@ -68,6 +69,10 @@
                                     <PropertyColumn Property="x=>x.DateName" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.DateName))" />
                                     <PropertyColumn Property="x=>x.Amount" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.Amount))" />
                                     <PropertyColumn Property="x=>x.ExpenseTypeName" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.ExpenseTypeName))" />
+                                    <PropertyColumn Property="x=>x.CreatedByUser" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.CreatedByUser))" />
+                                    <PropertyColumn Property="x=>x.CreatedOn" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.CreatedOn))" />
+                                    <PropertyColumn Property="x=>x.UpdatedByUser" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.UpdatedByUser))" />
+                                    <PropertyColumn Property="x=>x.UpdatedOn" Title="@GetDisplayName(typeof(ExpenseDTO), nameof(ExpenseDTO.UpdatedOn))" />
                                     <TemplateColumn CellClass="d-flex justify-end">
                                         <CellTemplate Context="expense">
                                             <MudStack Row>
@@ -226,76 +231,39 @@
         StateHasChanged();
     }
 
-    private async Task DeleteExpenseAsync(ExpenseDTO request)
+    private Task DeleteExpenseAsync(ExpenseDTO request)
     {
-        // var parameters = new DialogParameters
-        // {
-        //     { "Title", $"Delete Leave Request from {request.EmployeeName}" },
-        //     { "ContentText", "Are you sure you want to perform this operation?." },
-        //     { "ConfirmText", "Reject" },
-        //     { "CancelText", "Cancel" },
-        //     { "Color", Color.Error },
-        //     { "Icon", Icons.Material.Filled.Delete },
-        //     { "ShowCommentInput", true },
-        //     { "CommentRequired", true }
-        // };
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "Id", request.Id.ToString() },
+            { x => x.ContentText, "Do you really want to delete these records? This process cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error },
+             { "OnDialogClosed", EventCallback.Factory.Create<string>(this, HandleDeleteConfirmationDialogClosedAsync)  }
+        };
 
-        // var dialog = await Dialog.ShowAsync<ConfirmationWithCommentDialog>("", parameters, _maxWidth);
-        // var result = await dialog.Result;
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
 
-        // if (!result.Canceled)
-        // {
-        //     LoadingService.Show();
-
-        //     var comment = result.Data as string;
-
-        //     var deleteResult = await LeaveRequestService.DeleteLeaveRequestAsync(request.Id, comment);
-
-        //     LeaveDashboardData = await LeaveAllocationService.GetMyLeaveDashboardData();
-
-        //     await ShowSnackbar(deleteResult);
-
-        //     _dataGrid?.ReloadServerData();
-        //     StateHasChanged();
-
-        //     LoadingService.Hide();
-        // }
+        return Dialog.ShowAsync<ConfirmationDialog>("Delete", parameters, options);
     }
 
-    private async Task AddNewLeaveRequestAsync()
+    private async Task HandleDeleteConfirmationDialogClosedAsync(string id)
     {
-        // var parameters = new DialogParameters
-        // {
-        //     { "LeaveRequestId", ApplicationConstants.Zero },
-        //     { "IsDisabled", false},
-        //     { "IsApprovalView", false},
-        //     { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
-        // };
-        // await Dialog.ShowAsync<EditExpenseDialog>($"Apply Leave Request", parameters, _maxWidth);
-    }
+        var result = await ExpenseService.DeleteExpense(int.Parse(id));
 
-    private async Task ViewLeaveRequestAsync(ExpenseDTO request)
-    {
-        // var parameters = new DialogParameters
-        // {
-        //     { "LeaveRequestId", request.Id },
-        //     { "IsDisabled", true},
-        //     { "IsApprovalView", false},
-        //     { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
-        // };
-        // await Dialog.ShowAsync<EditExpenseDialog>($"Manage Leave Request From : {request.EmployeeName}", parameters, _maxWidth);
+        await ShowSnackbar(result);
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
     }
 
     private async Task HandleEditDialogClosedAsync(bool result)
     {
-        // LeaveDashboardDTO = await LeaveAllocationService.GetMyLeaveDashboardData();
-
-        // _dataGrid?.ReloadServerData();
-        // StateHasChanged();
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
     }
 
-
-    async Task ShowSnackbar(GeneralResponseDTO result)
+    private async Task ShowSnackbar(GeneralResponseDTO result)
     {
         if (result.Flag)
         {
@@ -307,13 +275,13 @@
         }
     }
 
-    string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    private string GetDisplayNameByPropertyInfro(PropertyInfo prop)
     {
         var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
         return displayAttribute?.Name ?? prop.Name;
     }
 
-    string GetDisplayName(Type type, string propertyName)
+    private string GetDisplayName(Type type, string propertyName)
     {
         var prop = type.GetProperty(propertyName);
         var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
