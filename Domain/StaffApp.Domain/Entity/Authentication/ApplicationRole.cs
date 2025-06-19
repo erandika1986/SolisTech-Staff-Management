@@ -12,6 +12,7 @@ namespace StaffApp.Domain.Entity.Authentication
         {
         }
         public bool? IsManagerTypeRole { get; set; }
+        public decimal? DefaultHourlyRate { get; set; }
         //public virtual ICollection<ProjectMember> ProjectMembers { get; set; } = new HashSet<ProjectMember>();
     }
 }

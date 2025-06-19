@@ -18,6 +18,7 @@ namespace StaffApp.Infrastructure.Services
                 IsManagerTypeRole = x.IsManagerTypeRole.HasValue ? x.IsManagerTypeRole.Value : false,
                 Id = x.Id,
                 Name = x.Name,
+                DefaultHourlyRate = x.DefaultHourlyRate.HasValue ? (double)x.DefaultHourlyRate.Value : 0.0,
                 ManagerTypeRole = (x.IsManagerTypeRole.HasValue && x.IsManagerTypeRole.Value) ? "Yes" : "No",
 
             }).ToList();
@@ -29,7 +30,13 @@ namespace StaffApp.Infrastructure.Services
         {
             var role = await roleManager.FindByIdAsync(roleId);
 
-            return new RoleDTO() { Id = role.Id, Name = role.Name, IsManagerTypeRole = role.IsManagerTypeRole.HasValue ? role.IsManagerTypeRole.Value : false };
+            return new RoleDTO()
+            {
+                Id = role.Id,
+                Name = role.Name,
+                IsManagerTypeRole = role.IsManagerTypeRole.HasValue ? role.IsManagerTypeRole.Value : false,
+                DefaultHourlyRate = role.DefaultHourlyRate.HasValue ? (double)role.DefaultHourlyRate.Value : 0.0
+            };
         }
 
 
@@ -41,7 +48,7 @@ namespace StaffApp.Infrastructure.Services
             return await roleManager.FindByNameAsync(roleName);
         }
 
-        public async Task<IdentityResult> CreateRoleAsync(string roleName, bool isManagerTypeRole)
+        public async Task<IdentityResult> CreateRoleAsync(string roleName, bool isManagerTypeRole, decimal? hourlyRate)
         {
             if (string.IsNullOrWhiteSpace(roleName))
                 throw new ArgumentException("Role name cannot be null or empty", nameof(roleName));
@@ -50,7 +57,11 @@ namespace StaffApp.Infrastructure.Services
             if (roleExists)
                 throw new InvalidOperationException($"Role '{roleName}' already exists.");
 
-            var role = new ApplicationRole(roleName) { IsManagerTypeRole = isManagerTypeRole };
+            var role = new ApplicationRole(roleName)
+            {
+                IsManagerTypeRole = isManagerTypeRole,
+                DefaultHourlyRate = hourlyRate  // Assuming default hourly rate is only set for manager type roles
+            };
             return await roleManager.CreateAsync(role);
         }
 
@@ -62,6 +73,7 @@ namespace StaffApp.Infrastructure.Services
             var savedRole = await roleManager.FindByIdAsync(role.Id);
             savedRole.Name = role.Name;
             savedRole.IsManagerTypeRole = role.IsManagerTypeRole;
+            savedRole.DefaultHourlyRate = (decimal)role.DefaultHourlyRate;
 
             return await roleManager.UpdateAsync(savedRole);
         }

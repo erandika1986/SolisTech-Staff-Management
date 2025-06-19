@@ -33,6 +33,11 @@
                 <PropertyColumn Property="x=>x.Id" Title="@GetDisplayName(typeof(RoleDTO), nameof(RoleDTO.Id))" />
                 <PropertyColumn Property="x=>x.Name" Title="@GetDisplayName(typeof(RoleDTO), nameof(RoleDTO.Name))" />
                 <PropertyColumn Property="x=>x.ManagerTypeRole" Title="@GetDisplayName(typeof(RoleDTO), nameof(RoleDTO.ManagerTypeRole))" />
+                <PropertyColumn Property="x=>x.DefaultHourlyRate" Title="@GetDisplayName(typeof(RoleDTO), nameof(RoleDTO.DefaultHourlyRate))">
+                    <CellTemplate>
+                        @($"{context.Item.DefaultHourlyRate:0.00}")
+                    </CellTemplate>
+                </PropertyColumn>
                 <TemplateColumn CellClass="d-flex justify-end">
                     <CellTemplate Context="department">
                         <MudStack Row>

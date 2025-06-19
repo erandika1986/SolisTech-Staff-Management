@@ -13,6 +13,9 @@ namespace StaffApp.Application.DTOs.User
         [Display(Name = "Is Manager Type Role")]
         public bool IsManagerTypeRole { get; set; }
 
+        [Display(Name = "Default Hourly Rate")]
+        public double DefaultHourlyRate { get; set; }
+
         [Display(Name = "Manager Type Role")]
         public string ManagerTypeRole { get; set; }
     }

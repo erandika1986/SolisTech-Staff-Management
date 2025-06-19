@@ -9,7 +9,7 @@ namespace StaffApp.Application.Services
         Task<IEnumerable<RoleDTO>> GetAllRolesAsync();
         Task<RoleDTO> GetRoleByIdAsync(string roleId);
         Task<ApplicationRole> GetRoleByNameAsync(string roleName);
-        Task<IdentityResult> CreateRoleAsync(string roleName, bool isManagerTypeRole);
+        Task<IdentityResult> CreateRoleAsync(string roleName, bool isManagerTypeRole, decimal? hourlyRate);
         Task<IdentityResult> UpdateRoleAsync(RoleDTO role);
         Task<IdentityResult> DeleteRoleAsync(string roleId);
         Task<bool> RoleExistsAsync(string roleName);

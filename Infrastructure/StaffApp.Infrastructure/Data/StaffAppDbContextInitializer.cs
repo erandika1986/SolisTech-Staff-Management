@@ -83,7 +83,7 @@ namespace StaffApp.Infrastructure.Data
             {
                 if (!await roleService.RoleExistsAsync(roleName))
                 {
-                    await roleService.CreateRoleAsync(roleName, false);
+                    await roleService.CreateRoleAsync(roleName, false, 0.0m);
                 }
             }
         }

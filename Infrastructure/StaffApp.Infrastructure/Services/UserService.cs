@@ -473,7 +473,7 @@ namespace StaffApp.Infrastructure.Services
                 return new GeneralResponseDTO(false, "Model state can't be empty");
 
             if (await roleService.GetRoleByNameAsync(role.Name) is null)
-                await roleService.CreateRoleAsync(role.Name, role.IsManagerTypeRole.Value);
+                await roleService.CreateRoleAsync(role.Name, role.IsManagerTypeRole.Value, role.DefaultHourlyRate);
 
             IdentityResult result = await userManager.AddToRoleAsync(user, role.Name);
             string error = CheckResponse(result);
