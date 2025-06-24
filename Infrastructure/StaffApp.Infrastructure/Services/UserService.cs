@@ -247,6 +247,18 @@ namespace StaffApp.Infrastructure.Services
             return allRoles.OrderBy(x => x.Name).Adapt<List<RoleDTO>>();
         }
 
+        public async Task<List<RoleDropDownDTO>> GetAvailableRolesWithDefaultHourlyRate()
+        {
+            var allRoles = await roleService.GetAllRolesAsync();
+
+            return allRoles.OrderBy(x => x.Name).Select(x => new RoleDropDownDTO()
+            {
+                Id = x.Id,
+                Name = x.Name,
+                HourlyRate = x.DefaultHourlyRate
+            }).ToList();
+        }
+
         public async Task<GeneralResponseDTO> DeleteUser(string id)
         {
             var user = await context.ApplicationUsers.FindAsync(id);

@@ -43,6 +43,8 @@ namespace StaffApp.Application.Contracts
         DbSet<ExpenseSupportAttachment> ExpenseSupportAttachments { get; }
         DbSet<Income> Incomes { get; }
         DbSet<IncomeType> IncomeTypes { get; }
+        DbSet<Invoice> Invoices { get; }
+        DbSet<InvoiceDetail> InvoiceDetails { get; }
         DbSet<IncomeSupportAttachment> IncomeSupportAttachments { get; }
 
 

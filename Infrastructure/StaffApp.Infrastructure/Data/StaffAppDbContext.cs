@@ -142,5 +142,7 @@ namespace StaffApp.Infrastructure.Data
         public DbSet<SupportAttachment> SupportAttachments => Set<SupportAttachment>();
         public DbSet<ExpenseSupportAttachment> ExpenseSupportAttachments => Set<ExpenseSupportAttachment>();
         public DbSet<IncomeSupportAttachment> IncomeSupportAttachments => Set<IncomeSupportAttachment>();
+        public DbSet<Invoice> Invoices => Set<Invoice>();
+        public DbSet<InvoiceDetail> InvoiceDetails => Set<InvoiceDetail>();
     }
 }

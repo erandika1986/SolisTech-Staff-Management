@@ -1,6 +1,223 @@
 ﻿@page "/Finance/InvoiceList"
-<h3>InvoiceListrazor</h3>
+@using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.Finance
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+
+
+@inject IUserSalaryService UserSalaryService
+@inject IMasterDataService MasterDataService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+@inject IJSRuntime JSRuntime
+@inject LoadingService LoadingService
+
+@attribute [Authorize]
+<MudGrid>
+    <MudItem xs="12" sm="12" md="12" lg="12">
+        @if (!_isMasterDataLoaded)
+        {
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+            <MudText>Loading master data...</MudText>
+        }
+        else
+        {
+@*             <MudDataGrid @ref="_dataGrid" T="EmployeeMonthlySalarySummaryDTO" ServerData="@(LoadData)" Sortable="true"
+                         Filterable="false"
+                         Hideable="true"
+                         Hover="true"
+                         Striped="true"
+                         Elevation="25"
+                         Loading="@_loading">
+                <ToolBarContent>
+                    <MudGrid>
+                        <MudItem xs="12" sm="12" md="4" lg="4">
+                            <MudText Typo="Typo.h6">Manage Monthly Salaries</MudText>
+                            <MudSpacer />
+                        </MudItem>
+                        <MudItem xs="12" sm="12" md="8" lg="8">
+
+                            <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+                                <MudSelect T="DropDownDTO"
+                                           Label="Company Year"
+                                           Class="mt-0"
+                                           ToStringFunc="(item) => item  is not null? item.Name:string.Empty"
+                                           MultiSelection="false" Value="SelectedCompanyYear"
+                                           ValueChanged="@CompanyYearChanged"
+                                           Style="padding-right:2px;">
+                                    @foreach (var companyYear in CompanyYears)
+                                    {
+                                        <MudSelectItem T="DropDownDTO"
+                                                       Value="@companyYear">
+                                            @companyYear.Name
+                                        </MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudSelect T="DropDownDTO"
+                                           Label="Month"
+                                           Class="mt-0"
+                                           ToStringFunc="(item) => item  is not null? item.Name:string.Empty"
+                                           MultiSelection="false" Value="SelectedMonth"
+                                           ValueChanged="@MonthChanged"
+                                           Style="padding-right:2px;">
+                                    @foreach (var month in Months)
+                                    {
+                                        <MudSelectItem T="DropDownDTO"
+                                                       Value="@month">
+                                            @month.Name
+                                        </MudSelectItem>
+                                    }
+                                </MudSelect>
+                                <MudTooltip Text="Generate Monthly Salary"
+                                            Color="Color.Info"
+                                            Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.PlayCircleFilled"
+                                                   Color="Color.Info"
+                                                   Variant="Variant.Filled"
+                                                   Disabled="_isSalaryGenerated"
+                                                   OnClick=" ()=> GenerateMonthlySalaryAsync()">
+                                    </MudIconButton>
+                                </MudTooltip>
+                            </MudPaper>
+
+                        </MudItem>
+                    </MudGrid>
+
+                </ToolBarContent>
+                <Columns>
+
+                    <PropertyColumn Property="x=>x.EmployeeName"
+                                    Title="@GetDisplayName(typeof(EmployeeMonthlySalarySummaryDTO), nameof(EmployeeMonthlySalarySummaryDTO.EmployeeName))" />
+                    <PropertyColumn Property="x=>x.EmployeeNumber"
+                                    Title="@GetDisplayName(typeof(EmployeeMonthlySalarySummaryDTO), nameof(EmployeeMonthlySalarySummaryDTO.EmployeeNumber))" />
+                    <PropertyColumn Property="x=>x.BasicSalary"
+                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.BasicSalary))" />
+                    <PropertyColumn Property="x=>x.TotalEarning"
+                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.TotalEarning))" />
+                    <PropertyColumn Property="x=>x.EmployerContribution"
+                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.EmployerContribution))" />
+                    <PropertyColumn Property="x=>x.TotalDeduction"
+                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.TotalDeduction))" />
+                    <PropertyColumn Property="x=>x.NetSalary"
+                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.NetSalary))" />
+                    <TemplateColumn CellClass="d-flex justify-end">
+                        <CellTemplate Context="user">
+                            <MudStack Row>
+                                <MudTooltip Text="View Salary"
+                                            Color="Color.Info"
+                                            Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye"
+                                                   Color="Color.Info" Variant="Variant.Filled"
+                                                   OnClick="() => ManageEmployeeSalaryAsync(user.Item)"></MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Edit Salary"
+                                            Color="Color.Primary"
+                                            Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Color="Color.Primary"
+                                                   Variant="Variant.Filled"
+                                                   OnClick="() => EditEmployeeMonthlySalaryAsync(user.Item)"
+                                                   Disabled="MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.Generated &&
+                                                  MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.SubmittedForRevised"></MudIconButton>
+                                </MudTooltip>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="EmployeeMonthlySalarySummaryDTO" />
+                </PagerContent>
+            </MudDataGrid> *@
+        }
+
+    </MudItem>
+@*     <MudItem xs="12" sm="12" md="12" lg="12" Style="text-align: center;">
+        <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+            <MudText><b>Salary Status : </b>@MonthlySalarySummary.StatusName | </MudText>
+            <MudText><b>Created Date : </b>@MonthlySalarySummary.CreatedDate | </MudText>
+            <MudText><b>Created User : </b>@MonthlySalarySummary.CreatedByUser | </MudText>
+            <MudText><b>Updated Date : </b>@MonthlySalarySummary.UpdatedDate | </MudText>
+            <MudText><b>Update User : </b>@MonthlySalarySummary.UpdatedByUser</MudText>
+        </MudPaper>
+    </MudItem>
+    <MudItem xs="12" sm="12" md="12" lg="12" Style="text-align: center;">
+        <MudButton Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Chat">
+            Comments
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Success"
+                   Disabled="MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.Generated && MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.SubmittedForRevised"
+                   StartIcon="@Icons.Material.Filled.CheckCircle"
+                   OnClick="() => SubmitForApprovalAsync()">
+            Submit For Approval
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Success"
+                   Disabled="MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.Approved"
+                   StartIcon="@Icons.Material.Filled.CheckCircle"
+                   OnClick="() => MaskAsSubmittedToBankAsync()">
+            Mark As Submitted To Bank
+        </MudButton>
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Success"
+                   Disabled="MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.SubmittedToBank"
+                   StartIcon="@Icons.Material.Filled.CheckCircle"
+                   OnClick="() => MaskAsTransferredAsync()">
+            Mark As Transferred To Employee Account
+        </MudButton>
+    </MudItem> *@
+</MudGrid>
 
 @code {
+    private string _searchString = "";
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = false;
+    private bool _isSalaryGenerated = false;
 
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
+    private MudDataGrid<InvoiceDTO> _dataGrid;
+
+    private IEnumerable<DropDownDTO> CompanyYears = new List<DropDownDTO>();
+    private DropDownDTO SelectedCompanyYear = new DropDownDTO();
+
+    private IEnumerable<DropDownDTO> Months = new List<DropDownDTO>();
+    private DropDownDTO SelectedMonth = new DropDownDTO();
+
+
+    //private EmployeeMonthlySalaryStatusDTO MonthlySalarySummary = new EmployeeMonthlySalaryStatusDTO();
+
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMasterDataAsync();
+    }
+
+    private async Task LoadMasterDataAsync()
+    {
+        try
+        {
+            // Load your master data
+            CompanyYears = await MasterDataService.GetAvailableCompanyYears();
+            SelectedCompanyYear = CompanyYears.FirstOrDefault();
+
+            Months = MasterDataService.GetAvailableMonths();
+            SelectedMonth = Months.FirstOrDefault();
+
+            _isMasterDataLoaded = true;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            // Handle error
+            Console.WriteLine($"Error loading master data: {ex.Message}");
+        }
+    }
 }

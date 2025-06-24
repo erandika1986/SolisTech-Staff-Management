@@ -1,6 +1,7 @@
 ﻿@using StaffApp.Application.DTOs.Common
 @using StaffApp.Application.DTOs.Project
 @using StaffApp.Application.DTOs.User
+@using StaffApp.Application.Extensions.Constants
 @using StaffApp.Application.Services
 @using StaffApp.Components.Shared
 @using StaffApp.Infrastructure.Services
@@ -19,31 +20,67 @@
         <MudGrid>
             @if(!IsReadOnly)
             {
-                <MudItem xs="12" sm="6" md="6" lg="6">
-                    <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
-                        <MudSelect T="UserDropDownDTO" Label="Select Project Member" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="SelectedProjectMember">
-                            @foreach (var member in AvailableMembers)
-                            {
-                                <MudSelectItem T="UserDropDownDTO" Value="@member">@member.Name</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudSelect T="RoleDTO" Label="Select Project Role" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="SelectedProjectRole">
-                            @foreach (var role in Roles)
-                            {
-                                <MudSelectItem T="RoleDTO" Value="@role">@role.Name</MudSelectItem>
-                            }
-                        </MudSelect>
-                        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddNewMember">
-                            <MudIcon Icon="@Icons.Material.Filled.Add" /> Add
-                        </MudButton>
+                <MudItem xs="12" sm="12">
+                    <MudPaper class="pa-2">
+                        <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
+                            <MudGrid>
+                                <MudItem xs="12" sm="12" md="3" lg="3">
+                                    <MudSelect Variant="Variant.Outlined"
+                                    Adornment="Adornment.End" T="UserDropDownDTO" Label="Select Project Member" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false" @bind-Value="SelectedProjectMember" Disabled=" IsReadOnly">
+                                        @foreach (var member in AvailableMembers)
+                                        {
+                                            <MudSelectItem T="UserDropDownDTO" Value="@member">@member.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="3" lg="3">
+                                    <MudSelect Variant="Variant.Outlined"
+                                    Adornment="Adornment.End" T="RoleDropDownDTO" Label="Select Project Role" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" MultiSelection="false"
+                                    Value="SelectedProjectRole" ValueChanged="@ProjectRoleChanged"
+                                    Disabled=" IsReadOnly">
+                                        @foreach (var role in Roles)
+                                        {
+                                            <MudSelectItem T="RoleDropDownDTO" Value="@role">@role.Name</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="3" lg="3">
+                                    <MudNumericField T="double"
+                                    Label="Hourly Rate"
+                                    @bind-Value="HourlyRate"
+                                    Variant="Variant.Outlined"
+                                    Adornment="Adornment.End"
+                                    AdornmentText="$"
+                                    Step="0.25"
+                                    Min="0"
+                                    Immediate="true"
+                                    DecimalPlaces="2" 
+                                    Format="0.00" 
+                                    Disabled=" IsReadOnly" />
+                                </MudItem>
+                                <MudItem xs="12" sm="12" md="3" lg="3">
+                                    <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="AddNewMember">
+                                        <MudIcon Icon="@Icons.Material.Filled.Add" /> Add
+                                    </MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </MudForm>
                     </MudPaper>
                 </MudItem>
+                @*                 <MudItem xs="12" sm="6" md="6" lg="6">
+                    <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
+
+
+
+                    </MudPaper>
+                </MudItem> *@
             }
             <MudItem xs="12" sm="12">
                 <MudTable Items="ProjectMembers">
                     <HeaderContent>
                         <MudTh>Project Member Name</MudTh>
                         <MudTh>Project Role</MudTh>
+                        <MudTh>Hourly Rate</MudTh>
                         <MudTh>Allocated Date</MudTh>
                         <MudTh>Deallocated Date</MudTh>
                         <MudTh>Actions</MudTh>
@@ -51,6 +88,7 @@
                     <RowTemplate>
                         <MudTd>@context.MemberName</MudTd>
                         <MudTd>@context.RoleName</MudTd>
+                        <MudTd>@($"{context.HourlyRate:0.00}")</MudTd>
                         <MudTd>@context.AllocatedDate</MudTd>
                         <MudTd>@context.DeAllocatedDate</MudTd>
                         <MudTd>
@@ -73,6 +111,11 @@
 </MudDialog>
 
 @code {
+
+    bool success;
+    string[] errors = { };
+    MudForm form;
+
     [Parameter] public int ProjectId { get; set; }
 
     [Parameter] public string ProjectName { get; set; }
@@ -87,10 +130,14 @@
     public IEnumerable<UserDropDownDTO> AvailableMembers { get; set; } = new HashSet<UserDropDownDTO>();
     public UserDropDownDTO SelectedProjectMember { get; set; } = new();
 
-    public IEnumerable<RoleDTO> Roles { get; set; } = new HashSet<RoleDTO>();
-    public RoleDTO SelectedProjectRole { get; set; } = new();
+    public IEnumerable<RoleDropDownDTO> Roles { get; set; } = new HashSet<RoleDropDownDTO>();
+    public RoleDropDownDTO SelectedProjectRole { get; set; } = new();
+
+    public int ProjectMemberId { get; set; } = ApplicationConstants.Zero;
 
     public IEnumerable<ProjectMemberDTO> ProjectMembers { get; set; } = new List<ProjectMemberDTO>();
+
+    public double HourlyRate { get; set; }
 
 
     protected override async Task OnInitializedAsync()
@@ -108,6 +155,7 @@
 
         SelectedProjectMember = new();
         SelectedProjectRole = new();
+        HourlyRate = 0;
 
         LoadingService.Hide();
     }
@@ -119,7 +167,7 @@
 
     private async Task GetAvailableRolesAsync()
     {
-        Roles = await UserService.GetAvailableRoles();
+        Roles = await UserService.GetAvailableRolesWithDefaultHourlyRate();
     }
 
     private async Task GetProjectMembersAsync()
@@ -127,11 +175,17 @@
         ProjectMembers = await ProjectService.GetProjectMembers(ProjectId);
     }
 
+    private void ProjectRoleChanged(RoleDropDownDTO changedValue)
+    {
+        SelectedProjectRole = changedValue;
+        HourlyRate = SelectedProjectRole.HourlyRate;
+    }
+
     private async Task AddNewMember()
     {
         LoadingService.Show();
 
-        var result = await ProjectService.AddProjectMember(ProjectId, SelectedProjectMember.Id, SelectedProjectRole.Id);
+        var result = await ProjectService.AddProjectMember(ProjectMemberId, ProjectId, SelectedProjectMember.Id, SelectedProjectRole.Id, HourlyRate);
 
         LoadingService.Hide();
 
@@ -139,6 +193,7 @@
 
         await ShowSnackbar(result);
     }
+
 
     private Task DeleteMember(ProjectMemberDTO member)
     {

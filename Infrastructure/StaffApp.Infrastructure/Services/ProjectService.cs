@@ -75,30 +75,62 @@ namespace StaffApp.Infrastructure.Services
             }
         }
 
-        public async Task<GeneralResponseDTO> AddProjectMember(int projectId, string userId, string roleId)
+        public async Task<GeneralResponseDTO> AddProjectMember(int Id, int projectId, string userId, string roleId, double hourlyRate)
         {
             try
             {
-                var projectMember = new ProjectMember
+                if (Id == 0)
                 {
-                    ProjectId = projectId,
-                    MemberId = userId,
-                    RoleId = roleId,
-                    IsActive = true,
-                    CreatedByUserId = currentUserService.UserId,
-                    CreatedDate = DateTime.UtcNow,
-                    UpdatedByUserId = currentUserService.UserId,
-                    UpdateDate = DateTime.UtcNow
-                };
+                    var projectMember = new ProjectMember
+                    {
+                        ProjectId = projectId,
+                        MemberId = userId,
+                        RoleId = roleId,
+                        HourlyRate = (decimal)hourlyRate,
+                        IsActive = true,
+                        CreatedByUserId = currentUserService.UserId,
+                        CreatedDate = DateTime.UtcNow,
+                        UpdatedByUserId = currentUserService.UserId,
+                        UpdateDate = DateTime.UtcNow
+                    };
 
-                context.ProjectMembers.Add(projectMember);
-                await context.SaveChangesAsync(CancellationToken.None);
+                    context.ProjectMembers.Add(projectMember);
+                    await context.SaveChangesAsync(CancellationToken.None);
 
-                return new GeneralResponseDTO
+                    return new GeneralResponseDTO
+                    {
+                        Flag = true,
+                        Message = "Project member has assigned to project successfully."
+                    };
+
+                }
+                else
                 {
-                    Flag = true,
-                    Message = "Project member has assigned to project successfully."
-                };
+                    var projectMember = await context.ProjectMembers.FindAsync(Id);
+                    if (projectMember == null)
+                    {
+                        return new GeneralResponseDTO
+                        {
+                            Flag = false,
+                            Message = "Project member not found."
+                        };
+                    }
+                    projectMember.ProjectId = projectId;
+                    projectMember.MemberId = userId;
+                    projectMember.RoleId = roleId;
+                    projectMember.HourlyRate = (decimal)hourlyRate;
+                    projectMember.UpdatedByUserId = currentUserService.UserId;
+                    projectMember.UpdateDate = DateTime.UtcNow;
+
+                    context.ProjectMembers.Update(projectMember);
+                    await context.SaveChangesAsync(CancellationToken.None);
+
+                    return new GeneralResponseDTO
+                    {
+                        Flag = true,
+                        Message = "Project member has updated successfully."
+                    };
+                }
 
             }
             catch (Exception ex)
@@ -545,6 +577,7 @@ namespace StaffApp.Infrastructure.Services
                     MemberId = pm.MemberId,
                     MemberName = pm.Member.FullName,
                     RoleId = pm.RoleId,
+                    HourlyRate = pm.HourlyRate,
                     AllocatedDate = pm.CreatedDate.ToString("MM/dd/yyyy"),
                     DeAllocatedDate = pm.IsActive ? "Still Active" : pm.UpdateDate.Value.ToString("MM/dd/yyyy")
                 })
@@ -560,6 +593,7 @@ namespace StaffApp.Infrastructure.Services
                                       MemberName = pm.MemberName,
                                       RoleId = pm.RoleId,
                                       RoleName = r.Name,
+                                      HourlyRate = pm.HourlyRate.HasValue ? pm.HourlyRate.Value : 0.0m,
                                       AllocatedDate = pm.AllocatedDate,
                                       DeAllocatedDate = pm.DeAllocatedDate
                                   }).ToList();

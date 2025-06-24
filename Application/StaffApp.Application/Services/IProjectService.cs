@@ -11,7 +11,7 @@ namespace StaffApp.Application.Services
         Task<PaginatedResultDTO<ProjectDTO>> GetMyManageProjectsAsync(int pageNumber, int pageSize, int status, string searchString = null, string sortField = null, bool ascending = true);
         Task<PaginatedResultDTO<ProjectDTO>> GetMyAssignProjectsAsync(int pageNumber, int pageSize, int status, string searchString = null, string sortField = null, bool ascending = true);
         Task<List<UserDropDownDTO>> GetAvailableProjectMembers(int projectId);
-        Task<GeneralResponseDTO> AddProjectMember(int projectId, string userId, string roleId);
+        Task<GeneralResponseDTO> AddProjectMember(int Id, int projectId, string userId, string roleId, double hourlyRate);
         Task<GeneralResponseDTO> DeleteProjectMember(int projectMember);
         Task<List<ProjectMemberDTO>> GetProjectMembers(int projectId);
         Task<GeneralResponseDTO> AddProjectDocument(ProjectDocumentAttachmentDTO projectDocumentAttachment);

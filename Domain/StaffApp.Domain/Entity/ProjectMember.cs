@@ -8,6 +8,7 @@ namespace StaffApp.Domain.Entity
         public int ProjectId { get; set; }
         public string MemberId { get; set; }
         public string RoleId { get; set; }
+        public decimal? HourlyRate { get; set; }
         public bool IsActive { get; set; }
 
         public virtual Project Project { get; set; }

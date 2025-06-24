@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StaffApp.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using StaffApp.Infrastructure.Data;
 namespace StaffApp.Infrastructure.Migrations
 {
     [DbContext(typeof(StaffAppDbContext))]
-    partial class StaffAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250624155822_00038")]
+    partial class _00038
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1365,9 +1368,6 @@ namespace StaffApp.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CompanyYearId")
-                        .HasColumnType("int");
-
                     b.Property<string>("CreatedByUserId")
                         .HasColumnType("nvarchar(max)");
 
@@ -1383,9 +1383,6 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
-
-                    b.Property<int>("Month")
-                        .HasColumnType("int");
 
                     b.Property<string>("Notes")
                         .IsRequired()
@@ -1410,8 +1407,6 @@ namespace StaffApp.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CompanyYearId");
 
                     b.HasIndex("ProjectId");
 
@@ -1440,9 +1435,6 @@ namespace StaffApp.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("EmployeeId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<int>("InvoiceId")
                         .HasColumnType("int");
 
@@ -1456,8 +1448,6 @@ namespace StaffApp.Infrastructure.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
 
                     b.HasIndex("InvoiceId");
 
@@ -2378,36 +2368,21 @@ namespace StaffApp.Infrastructure.Migrations
 
             modelBuilder.Entity("StaffApp.Domain.Entity.Invoice", b =>
                 {
-                    b.HasOne("StaffApp.Domain.Entity.CompanyYear", "CompanyYear")
-                        .WithMany("Invoices")
-                        .HasForeignKey("CompanyYearId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("StaffApp.Domain.Entity.Project", "Project")
                         .WithMany("Invoices")
                         .HasForeignKey("ProjectId")
                         .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("CompanyYear");
 
                     b.Navigation("Project");
                 });
 
             modelBuilder.Entity("StaffApp.Domain.Entity.InvoiceDetail", b =>
                 {
-                    b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "Employee")
-                        .WithMany("InvoiceDetails")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
                     b.HasOne("StaffApp.Domain.Entity.Invoice", "Invoice")
                         .WithMany("InvoiceDetails")
                         .HasForeignKey("InvoiceId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
-
-                    b.Navigation("Employee");
 
                     b.Navigation("Invoice");
                 });
@@ -2571,8 +2546,6 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.Navigation("EmployeeSalaryHistories");
 
-                    b.Navigation("InvoiceDetails");
-
                     b.Navigation("LeaveRequestReportingManagers");
 
                     b.Navigation("ProjectMembers");
@@ -2592,8 +2565,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("EmployeeLeaveBalances");
 
                     b.Navigation("EmployeeLeaveRequests");
-
-                    b.Navigation("Invoices");
 
                     b.Navigation("MonthlySalaries");
                 });

@@ -13,5 +13,7 @@
 
         public string AllocatedDate { get; set; }
         public string DeAllocatedDate { get; set; }
+
+        public decimal HourlyRate { get; set; }
     }
 }

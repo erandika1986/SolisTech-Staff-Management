@@ -23,5 +23,6 @@ namespace StaffApp.Domain.Entity
         public virtual ICollection<ProjectMember> ProjectMembers { get; set; } = new HashSet<ProjectMember>();
         public virtual ICollection<ProjectDocument> ProjectDocuments { get; set; } = new HashSet<ProjectDocument>();
         public virtual ICollection<TimeCardEntry> TimeCardEntries { get; set; } = new HashSet<TimeCardEntry>();
+        public virtual ICollection<Invoice> Invoices { get; set; } = new HashSet<Invoice>();
     }
 }

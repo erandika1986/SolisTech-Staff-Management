@@ -18,6 +18,7 @@ namespace StaffApp.Application.Services
         Task<GeneralResponseDTO> CreateNewUserAsync(UserDTO model);
         Task<GeneralResponseDTO> UpdateExistingUserAsync(UserDTO model);
         Task<List<RoleDTO>> GetAvailableRoles();
+        Task<List<RoleDropDownDTO>> GetAvailableRolesWithDefaultHourlyRate();
         Task<GeneralResponseDTO> DeleteUser(string id);
         Task<List<DropDownDTO>> GetAvailableEmploymentTypes();
         List<DropDownDTO> GetAvailableGenderTypes();

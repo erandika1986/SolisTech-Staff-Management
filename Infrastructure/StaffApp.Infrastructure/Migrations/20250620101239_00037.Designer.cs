@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StaffApp.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using StaffApp.Infrastructure.Data;
 namespace StaffApp.Infrastructure.Migrations
 {
     [DbContext(typeof(StaffAppDbContext))]
-    partial class StaffAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250620101239_00037")]
+    partial class _00037
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1356,114 +1359,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.ToTable("IncomeType", (string)null);
                 });
 
-            modelBuilder.Entity("StaffApp.Domain.Entity.Invoice", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("CompanyYearId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("InvoiceDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("InvoiceNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("Month")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Notes")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("PeriodEnd")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("PeriodStart")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int?>("ProjectId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("TotalAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("UpdateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedByUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CompanyYearId");
-
-                    b.HasIndex("ProjectId");
-
-                    b.ToTable("Invoice", (string)null);
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.InvoiceDetail", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnOrder(0);
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("CreatedByUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmployeeId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("InvoiceId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("UpdateDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("UpdatedByUserId")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
-
-                    b.HasIndex("InvoiceId");
-
-                    b.ToTable("InvoiceDetail", (string)null);
-                });
-
             modelBuilder.Entity("StaffApp.Domain.Entity.LeaveType", b =>
                 {
                     b.Property<int>("Id")
@@ -2376,42 +2271,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("SupportAttachment");
                 });
 
-            modelBuilder.Entity("StaffApp.Domain.Entity.Invoice", b =>
-                {
-                    b.HasOne("StaffApp.Domain.Entity.CompanyYear", "CompanyYear")
-                        .WithMany("Invoices")
-                        .HasForeignKey("CompanyYearId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("StaffApp.Domain.Entity.Project", "Project")
-                        .WithMany("Invoices")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.Navigation("CompanyYear");
-
-                    b.Navigation("Project");
-                });
-
-            modelBuilder.Entity("StaffApp.Domain.Entity.InvoiceDetail", b =>
-                {
-                    b.HasOne("StaffApp.Domain.Entity.Authentication.ApplicationUser", "Employee")
-                        .WithMany("InvoiceDetails")
-                        .HasForeignKey("EmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict);
-
-                    b.HasOne("StaffApp.Domain.Entity.Invoice", "Invoice")
-                        .WithMany("InvoiceDetails")
-                        .HasForeignKey("InvoiceId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Employee");
-
-                    b.Navigation("Invoice");
-                });
-
             modelBuilder.Entity("StaffApp.Domain.Entity.LeaveTypeAllowDuration", b =>
                 {
                     b.HasOne("StaffApp.Domain.Entity.LeaveType", "LeaveType")
@@ -2571,8 +2430,6 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.Navigation("EmployeeSalaryHistories");
 
-                    b.Navigation("InvoiceDetails");
-
                     b.Navigation("LeaveRequestReportingManagers");
 
                     b.Navigation("ProjectMembers");
@@ -2592,8 +2449,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("EmployeeLeaveBalances");
 
                     b.Navigation("EmployeeLeaveRequests");
-
-                    b.Navigation("Invoices");
 
                     b.Navigation("MonthlySalaries");
                 });
@@ -2662,11 +2517,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Navigation("Incomes");
                 });
 
-            modelBuilder.Entity("StaffApp.Domain.Entity.Invoice", b =>
-                {
-                    b.Navigation("InvoiceDetails");
-                });
-
             modelBuilder.Entity("StaffApp.Domain.Entity.LeaveType", b =>
                 {
                     b.Navigation("EmployeeLeaveBalances");
@@ -2689,8 +2539,6 @@ namespace StaffApp.Infrastructure.Migrations
 
             modelBuilder.Entity("StaffApp.Domain.Entity.Project", b =>
                 {
-                    b.Navigation("Invoices");
-
                     b.Navigation("ProjectDocuments");
 
                     b.Navigation("ProjectMembers");
