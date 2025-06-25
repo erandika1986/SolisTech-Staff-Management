@@ -19,6 +19,16 @@
                         <MudTh>Description</MudTh>
                         <MudTh>Total Hours</MudTh>
                         <MudTh>Amount</MudTh>
+                        <MudTh>
+                            <MudTooltip Text="Add New sales ty0 Invoice Item"
+                            Color="Color.Primary"
+                            Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Add"
+                                Color="Color.Primary"
+                                               OnClick="() => AddNewInvoiceDetail()"
+                                Variant="Variant.Filled" 
+                                Disabled="IsReadOnly"></MudIconButton>
+                            </MudTooltip></MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd>@context.Description</MudTd>
@@ -27,21 +37,21 @@
                         <MudTd>
                             <MudStack Row>
                                 <MudTooltip Text="Delete Invoice Item" 
-                                            Color="Color.Error" 
-                                            Placement="Placement.Top">
+                                Color="Color.Error" 
+                                Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.Delete" 
-                                                    Color="Color.Error" Variant="Variant.Filled" 
-                                                    OnClick="() => DeleteInvoiceDetail(context)" 
-                                                    Disabled="IsReadOnly"></MudIconButton>
+                                    Color="Color.Error" Variant="Variant.Filled" 
+                                    OnClick="() => DeleteInvoiceDetail(context)" 
+                                    Disabled="IsReadOnly"></MudIconButton>
                                 </MudTooltip>
                                 <MudTooltip Text="Edit Invoice Item"
-                                            Color="Color.Primary"
-                                            Placement="Placement.Top">
+                                Color="Color.Primary"
+                                Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                   Color="Color.Primary"
-                                                   OnClick="() => EditTimeCardEntry(context)"
-                                                   Variant="Variant.Filled" 
-                                                   Disabled="IsReadOnly"></MudIconButton>
+                                    Color="Color.Primary"
+                                    OnClick="() => EditInvoiceDetail(context)"
+                                    Variant="Variant.Filled" 
+                                    Disabled="IsReadOnly"></MudIconButton>
                                 </MudTooltip>
                             </MudStack>
                         </MudTd>
@@ -98,7 +108,7 @@
         success = true;
     }
 
-    private async Task EditTimeCardEntry(InvoiceDetailDTO invoiceDetail)
+    private async Task EditInvoiceDetail(InvoiceDetailDTO invoiceDetail)
     {
         var parameters = new DialogParameters
         {
@@ -107,6 +117,17 @@
             { "OnDetailDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEdiInvoiceyDetailDialogClosedAsync)  }
         };
         await Dialog.ShowAsync<EditInvoiceDetailDialog>($"Edit Invoice Detail", parameters, _maxWidth);
+    }
+
+    private async Task AddNewInvoiceDetail()
+    {
+        var parameters = new DialogParameters
+        {
+            { "InvoiceDetail", new InvoiceDetailDTO(){InvoiceId = InvoiceId, Id = 0,TotalHours = 0.0m,Amount = 0.0m} },
+            { "IsDisabled", false },
+            { "OnDetailDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEdiInvoiceyDetailDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditInvoiceDetailDialog>($"Add New Invoice Detail", parameters, _maxWidth);
     }
 
     private async Task HandleEdiInvoiceyDetailDialogClosedAsync(bool result)
