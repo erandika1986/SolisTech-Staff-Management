@@ -8,6 +8,8 @@ namespace StaffApp.Domain.Entity
         public int InvoiceId { get; set; }
         public string? EmployeeId { get; set; }
         public string Description { get; set; }
+
+        public decimal? TotalHours { get; set; }
         public decimal Amount { get; set; }
 
         public virtual Invoice Invoice { get; set; }

@@ -3,10 +3,13 @@
 @using StaffApp.Application.DTOs.Common
 @using StaffApp.Application.DTOs.Finance
 @using StaffApp.Application.Services
+@using StaffApp.Domain.Enum
 @using StaffApp.Infrastructure.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
 
 
-@inject IUserSalaryService UserSalaryService
+@inject IInvoiceService InvoiceService
 @inject IMasterDataService MasterDataService
 @inject ISnackbar Snackbar
 @inject IDialogService Dialog
@@ -23,7 +26,7 @@
         }
         else
         {
-@*             <MudDataGrid @ref="_dataGrid" T="EmployeeMonthlySalarySummaryDTO" ServerData="@(LoadData)" Sortable="true"
+            <MudDataGrid @ref="_dataGrid" T="InvoiceDTO" ServerData="@(LoadData)" Sortable="true"
                          Filterable="false"
                          Hideable="true"
                          Hover="true"
@@ -33,7 +36,7 @@
                 <ToolBarContent>
                     <MudGrid>
                         <MudItem xs="12" sm="12" md="4" lg="4">
-                            <MudText Typo="Typo.h6">Manage Monthly Salaries</MudText>
+                            <MudText Typo="Typo.h6">Manage Monthly Invoices</MudText>
                             <MudSpacer />
                         </MudItem>
                         <MudItem xs="12" sm="12" md="8" lg="8">
@@ -76,7 +79,7 @@
                                                    Color="Color.Info"
                                                    Variant="Variant.Filled"
                                                    Disabled="_isSalaryGenerated"
-                                                   OnClick=" ()=> GenerateMonthlySalaryAsync()">
+                                                   OnClick=" ()=> GenerateMonthlyInvoicesAsync()">
                                     </MudIconButton>
                                 </MudTooltip>
                             </MudPaper>
@@ -87,48 +90,62 @@
                 </ToolBarContent>
                 <Columns>
 
-                    <PropertyColumn Property="x=>x.EmployeeName"
-                                    Title="@GetDisplayName(typeof(EmployeeMonthlySalarySummaryDTO), nameof(EmployeeMonthlySalarySummaryDTO.EmployeeName))" />
-                    <PropertyColumn Property="x=>x.EmployeeNumber"
-                                    Title="@GetDisplayName(typeof(EmployeeMonthlySalarySummaryDTO), nameof(EmployeeMonthlySalarySummaryDTO.EmployeeNumber))" />
-                    <PropertyColumn Property="x=>x.BasicSalary"
-                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.BasicSalary))" />
-                    <PropertyColumn Property="x=>x.TotalEarning"
-                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.TotalEarning))" />
-                    <PropertyColumn Property="x=>x.EmployerContribution"
-                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.EmployerContribution))" />
-                    <PropertyColumn Property="x=>x.TotalDeduction"
-                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.TotalDeduction))" />
-                    <PropertyColumn Property="x=>x.NetSalary"
-                                    Title="@GetDisplayName(typeof(EmployeeSalaryBasicDTO), nameof(EmployeeMonthlySalarySummaryDTO.NetSalary))" />
+                    <PropertyColumn Property="x=>x.InvoiceNumber"
+                                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.InvoiceNumber))" />
+                    <PropertyColumn Property="x=>x.ProjectName"
+                                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.ProjectName))" />
+                    <PropertyColumn Property="x=>x.InvoiceDate"
+                                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.InvoiceDate))" />
+                    <PropertyColumn Property="x=>x.TotalHours"
+                                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.TotalHours))" />
+                    <PropertyColumn Property="x=>x.TotalAmount"
+                                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.TotalAmount))" />
+                    <PropertyColumn Property="x=>x.StartDate"
+                                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.StartDate))" />
+                    <PropertyColumn Property="x=>x.EndDate"
+                                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.EndDate))" />
                     <TemplateColumn CellClass="d-flex justify-end">
-                        <CellTemplate Context="user">
+                        <CellTemplate Context="invoice">
                             <MudStack Row>
-                                <MudTooltip Text="View Salary"
+                                <MudTooltip Text="View Invoice"
                                             Color="Color.Info"
                                             Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye"
                                                    Color="Color.Info" Variant="Variant.Filled"
-                                                   OnClick="() => ManageEmployeeSalaryAsync(user.Item)"></MudIconButton>
+                                                   OnClick="() => ViewInvoiceAsync(invoice.Item)"></MudIconButton>
                                 </MudTooltip>
-                                <MudTooltip Text="Edit Salary"
+                                <MudTooltip Text="Edit Invoice"
                                             Color="Color.Primary"
                                             Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                                    Color="Color.Primary"
                                                    Variant="Variant.Filled"
-                                                   OnClick="() => EditEmployeeMonthlySalaryAsync(user.Item)"
-                                                   Disabled="MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.Generated &&
-                                                  MonthlySalarySummary.Status != Domain.Enum.MonthlySalaryStatus.SubmittedForRevised"></MudIconButton>
+                                                   OnClick="() => EditInvoiceAsync(invoice.Item)"></MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Download Invoice"
+                                            Color="Color.Success"
+                                            Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.GetApp"
+                                                   Color="Color.Success"
+                                                   Variant="Variant.Filled"
+                                                   OnClick="() => EditInvoiceAsync(invoice.Item)"></MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Email Invoice"
+                                            Color="Color.Secondary"
+                                            Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Email"
+                                                   Color="Color.Secondary"
+                                                   Variant="Variant.Filled"
+                                                   OnClick="() => EditInvoiceAsync(invoice.Item)"></MudIconButton>
                                 </MudTooltip>
                             </MudStack>
                         </CellTemplate>
                     </TemplateColumn>
                 </Columns>
                 <PagerContent>
-                    <MudDataGridPager T="EmployeeMonthlySalarySummaryDTO" />
+                    <MudDataGridPager T="InvoiceDTO" />
                 </PagerContent>
-            </MudDataGrid> *@
+            </MudDataGrid> 
         }
 
     </MudItem>
@@ -219,5 +236,133 @@
             // Handle error
             Console.WriteLine($"Error loading master data: {ex.Message}");
         }
+    }
+
+    private async Task<GridData<InvoiceDTO>> LoadData(GridState<InvoiceDTO> state)
+    {
+        _loading = true;
+
+        try
+        {
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            var result = await InvoiceService.GetAllInvoiceAsync(
+                                    page,
+                                    pageSize,
+                                    SelectedCompanyYear.Id,
+                                    (Month)SelectedMonth.Id);
+
+            if (result.Items == null || !result.Items.Any())
+            {
+                _isSalaryGenerated = false;
+                Snackbar.Add("No data found for the selected filters.", Severity.Warning);
+            }
+            else
+            {
+                _isSalaryGenerated = true;
+            }
+
+            return new GridData<InvoiceDTO>
+                {
+                    Items = result.Items,
+                    TotalItems = result.TotalItems
+                };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task EditInvoiceAsync(InvoiceDTO invoice)
+    {
+        var parameters = new DialogParameters
+        {
+            { "InvoiceId", invoice.Id },
+            { "IsReadOnly", false },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEdiInvoiceyDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditInvoiceDialog>($"Edit Monthly Invoice For For : {invoice.ProjectName}", parameters, _maxWidth);
+    }
+
+    private async Task ViewInvoiceAsync(InvoiceDTO invoice)
+    {
+        var parameters = new DialogParameters
+        {
+            { "InvoiceId", invoice.Id },
+            { "IsReadOnly", true },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEdiInvoiceyDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditInvoiceDialog>($"Edit Monthly Invoice For For : {invoice.ProjectName}", parameters, _maxWidth);
+    }
+
+    private async Task HandleEdiInvoiceyDialogClosedAsync(bool result)
+    {
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task CompanyYearChanged(DropDownDTO changedValue)
+    {
+        SelectedCompanyYear = changedValue;
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task MonthChanged(DropDownDTO changedValue)
+    {
+        SelectedMonth = changedValue;
+
+        //MonthlySalarySummary = await UserSalaryService.GetEmployeeMonthlySalaryStatus(SelectedCompanyYear.Id, SelectedMonth.Id);
+
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task GenerateMonthlyInvoicesAsync()
+    {
+        LoadingService.Show();
+        var result = await InvoiceService.GenerateMonthlyInvoicesAsync(SelectedCompanyYear.Id, SelectedMonth.Id);
+        if (result.Flag)
+        {
+            _loading = false;
+            _dataGrid?.ReloadServerData();
+            StateHasChanged();
+        }
+        await ShowSnackbar(result);
+        LoadingService.Hide();
+    }
+
+    private async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
+
+    private string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    private string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
     }
 }

@@ -16,6 +16,7 @@ namespace StaffApp.Domain.Entity
         public DateTime PeriodEnd { get; set; }
 
         public int? ProjectId { get; set; }
+        public decimal? TotalHours { get; set; }
 
         public decimal TotalAmount { get; set; }
 

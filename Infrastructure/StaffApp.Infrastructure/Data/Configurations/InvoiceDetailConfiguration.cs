@@ -15,6 +15,8 @@ namespace StaffApp.Infrastructure.Data.Configurations
 
             builder.Property(p => p.Id).ValueGeneratedOnAdd();
 
+            builder.Property(p => p.TotalHours).IsRequired(false);
+
             builder
                .HasOne<Invoice>(c => c.Invoice)
                .WithMany(c => c.InvoiceDetails)

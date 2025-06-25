@@ -100,7 +100,9 @@ namespace StaffApp.Infrastructure.Services
                                 CreatedDate = DateTime.Now,
                                 UpdateDate = DateTime.Now,
                                 UpdatedByUserId = currentUserService.UserId,
-                                IsActive = true
+                                IsActive = true,
+                                TotalHours = (decimal)userTimeCards.Sum(u => u.TotalHours),
+                                Notes = $"Invoice for project {project.Name} for the period {startDate.ToString("yyyy-MM-dd")} to {endDate.ToString("yyyy-MM-dd")}."
                             };
 
                             var totalAmount = 0.0m;
@@ -115,7 +117,15 @@ namespace StaffApp.Infrastructure.Services
                                 {
                                     Invoice = projectInvoice,
                                     Description = $"{user.EmployeeName} - {user.TotalHours} Hours x {hourlyRate} $",
-                                    Amount = (decimal)user.TotalHours * hourlyRate // Assuming HourlyRate is a property of Project
+                                    Amount = (decimal)user.TotalHours * hourlyRate,
+                                    CreatedByUserId = currentUserService.UserId,
+                                    CreatedDate = DateTime.Now,
+                                    UpdatedByUserId = currentUserService.UserId,
+                                    UpdateDate = DateTime.Now,
+                                    IsActive = true,
+                                    EmployeeId = user.EmployeeId,
+                                    TotalHours = (decimal)user.TotalHours
+
                                 };
 
                                 totalAmount += invoiceDetail.Amount;
@@ -146,7 +156,13 @@ namespace StaffApp.Infrastructure.Services
                                     {
                                         Invoice = projectInvoice,
                                         Description = $"{userTimeCard.EmployeeName} - {userTimeCard.TotalHours} Hours x {hourlyRate} $",
-                                        Amount = (decimal)userTimeCard.TotalHours * hourlyRate // Assuming HourlyRate is a property of Project
+                                        Amount = (decimal)userTimeCard.TotalHours * hourlyRate, // Assuming HourlyRate is a property of Project
+                                        CreatedByUserId = currentUserService.UserId,
+                                        CreatedDate = DateTime.Now,
+                                        UpdatedByUserId = currentUserService.UserId,
+                                        UpdateDate = DateTime.Now,
+                                        IsActive = true,
+                                        EmployeeId = userTimeCard.EmployeeId
                                     };
 
                                     totalAmount += invoiceDetail.Amount;
@@ -204,12 +220,14 @@ namespace StaffApp.Infrastructure.Services
                 TotalAmount = i.TotalAmount,
                 StartDate = i.PeriodStart.ToString("yyyy-MM-dd"),
                 EndDate = i.PeriodEnd.ToString("yyyy-MM-dd"),
+                TotalHours = i.TotalHours.HasValue ? i.TotalHours.Value : 0.0m,
                 InvoiceDetails = i.InvoiceDetails.Select(d => new InvoiceDetailDTO
                 {
                     Id = d.Id,
                     InvoiceId = d.InvoiceId,
                     Description = d.Description,
-                    Amount = d.Amount
+                    Amount = d.Amount,
+                    TotalHours = d.TotalHours.HasValue ? d.TotalHours.Value : 0.0m,
                 }).ToList()
             }).ToListAsync();
 
@@ -225,11 +243,11 @@ namespace StaffApp.Infrastructure.Services
             return newResult;
         }
 
-        public async Task<InvoiceDTO> GetInvoiceByIdAsync(int expenseId)
+        public async Task<InvoiceDTO> GetInvoiceByIdAsync(int invoiceId)
         {
             var invoice = await context.Invoices
                 .Include(i => i.InvoiceDetails)
-                .FirstOrDefaultAsync(i => i.Id == expenseId && i.IsActive);
+                .FirstOrDefaultAsync(i => i.Id == invoiceId && i.IsActive);
 
             var invoiceDTO = invoice == null ? null : new InvoiceDTO
             {
@@ -240,12 +258,15 @@ namespace StaffApp.Infrastructure.Services
                 TotalAmount = invoice.TotalAmount,
                 StartDate = invoice.PeriodStart.ToString("yyyy-MM-dd"),
                 EndDate = invoice.PeriodEnd.ToString("yyyy-MM-dd"),
+                TotalHours = invoice.TotalHours.HasValue ? invoice.TotalHours.Value : 0.0m,
                 InvoiceDetails = invoice.InvoiceDetails.Select(d => new InvoiceDetailDTO
                 {
                     Id = d.Id,
                     InvoiceId = d.InvoiceId,
+                    EmployeeId = d.EmployeeId,
                     Description = d.Description,
-                    Amount = d.Amount
+                    Amount = d.Amount,
+                    TotalHours = d.TotalHours.HasValue ? d.TotalHours.Value : 0.0m,
                 }).ToList()
             };
 
@@ -255,6 +276,65 @@ namespace StaffApp.Infrastructure.Services
         public async Task<GeneralResponseDTO> SaveInvoice(InvoiceDTO invoice)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<GeneralResponseDTO> SaveInvoiceDetail(InvoiceDetailDTO invoiceDetailDTO)
+        {
+            try
+            {
+                var invoice = await context.Invoices.FindAsync(invoiceDetailDTO.InvoiceId);
+
+                var invoiceDetail = invoice.InvoiceDetails.FirstOrDefault(x => x.Id == invoiceDetailDTO.Id);
+                if (invoiceDetail is null)
+                {
+                    invoice.InvoiceDetails.Add(new Domain.Entity.InvoiceDetail()
+                    {
+                        Description = invoiceDetailDTO.Description,
+                        Amount = invoiceDetailDTO.Amount,
+                        EmployeeId = invoiceDetailDTO.EmployeeId,
+                        InvoiceId = invoiceDetail.InvoiceId,
+                        TotalHours = invoiceDetail.TotalHours,
+                        CreatedByUserId = currentUserService.UserId,
+                        CreatedDate = DateTime.Now,
+                        UpdatedByUserId = currentUserService.UserId,
+                        UpdateDate = DateTime.Now,
+                        IsActive = true
+                    });
+                }
+                else
+                {
+                    invoiceDetail.Amount = invoiceDetailDTO.Amount;
+                    invoiceDetail.TotalHours = invoiceDetailDTO.TotalHours;
+                    invoiceDetail.Description = invoiceDetailDTO.Description;
+                    invoiceDetail.UpdateDate = DateTime.Now;
+                    invoiceDetail.UpdatedByUserId = currentUserService.UserId;
+                }
+
+                invoice.TotalHours = invoice.InvoiceDetails.Sum(x => x.TotalHours);
+                invoice.TotalAmount = invoice.InvoiceDetails.Sum(x => x.Amount);
+                invoice.UpdateDate = DateTime.Now;
+                invoice.UpdatedByUserId = currentUserService.UserId;
+
+                context.Invoices.Update(invoice);
+
+                await context.SaveChangesAsync(CancellationToken.None);
+
+                return new GeneralResponseDTO()
+                {
+                    Flag = true,
+                    Message = "Invoice detail successfully saved ."
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.ToString());
+
+                return new GeneralResponseDTO()
+                {
+                    Flag = false,
+                    Message = "An Error has been occurred. Please try again."
+                };
+            }
         }
 
         private async Task<string> GenerateInvoiceNumberAsync(DateTime date)

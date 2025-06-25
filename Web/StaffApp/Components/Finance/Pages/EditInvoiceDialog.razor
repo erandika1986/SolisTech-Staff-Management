@@ -1,5 +1,119 @@
-﻿<h3>EditInvoiceDialog</h3>
+﻿@using StaffApp.Application.DTOs.Finance
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+
+
+@inject IJSRuntime JSRuntime
+@inject ISnackbar Snackbar
+@inject LoadingService LoadingService
+@inject IDialogService Dialog
+@inject IProjectService ProjectService
+@inject IInvoiceService InvoiceService
+
+<MudDialog>
+    <DialogContent>
+        <MudGrid>
+            <MudItem xs="12" sm="12">
+                <MudTable Items="InvoiceDetails">
+                    <HeaderContent>
+                        <MudTh>Description</MudTh>
+                        <MudTh>Total Hours</MudTh>
+                        <MudTh>Amount</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Description</MudTd>
+                        <MudTd>@($"{context.TotalHours:0.00}")</MudTd>
+                        <MudTd>@($"{context.Amount:0.00}")</MudTd>
+                        <MudTd>
+                            <MudStack Row>
+                                <MudTooltip Text="Delete Invoice Item" 
+                                            Color="Color.Error" 
+                                            Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                                    Color="Color.Error" Variant="Variant.Filled" 
+                                                    OnClick="() => DeleteInvoiceDetail(context)" 
+                                                    Disabled="IsReadOnly"></MudIconButton>
+                                </MudTooltip>
+                                <MudTooltip Text="Edit Invoice Item"
+                                            Color="Color.Primary"
+                                            Placement="Placement.Top">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                                   Color="Color.Primary"
+                                                   OnClick="() => EditTimeCardEntry(context)"
+                                                   Variant="Variant.Filled" 
+                                                   Disabled="IsReadOnly"></MudIconButton>
+                                </MudTooltip>
+                            </MudStack>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudItem>
+        </MudGrid>
+    </DialogContent>
+    <DialogActions>
+        <MudPaper Class="pa-2">
+            <MudButton OnClick="Cancel">Cancel</MudButton>
+        </MudPaper>
+    </DialogActions>
+</MudDialog>
 
 @code {
+    bool success;
 
+    [Parameter]
+    public int InvoiceId { get; set; }
+
+    [Parameter]
+    public bool IsReadOnly { get; set; }
+
+    [Parameter]
+    public bool IsApprovalView { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnDialogClosed { get; set; }
+
+    private InvoiceDTO Invoice = new();
+
+    private List<InvoiceDetailDTO> InvoiceDetails { get; set; } = new List<InvoiceDetailDTO>();
+
+    private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Large, FullWidth = true };
+
+    protected override async Task OnInitializedAsync()
+    {
+        LoadingService.Show();
+
+        Invoice = await InvoiceService.GetInvoiceByIdAsync(InvoiceId);
+
+        InvoiceDetails = Invoice.InvoiceDetails;
+
+        LoadingService.Hide();
+    }
+
+    private void DeleteInvoiceDetail(InvoiceDetailDTO invoiceDetail)
+    {
+        InvoiceDetails.Remove(invoiceDetail);
+        success = true;
+    }
+
+    private async Task EditTimeCardEntry(InvoiceDetailDTO invoiceDetail)
+    {
+        var parameters = new DialogParameters
+        {
+            { "InvoiceDetail", invoiceDetail },
+            { "IsDisabled", false },
+            { "OnDetailDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEdiInvoiceyDetailDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EditInvoiceDetailDialog>($"Edit Invoice Detail", parameters, _maxWidth);
+    }
+
+    private async Task HandleEdiInvoiceyDetailDialogClosedAsync(bool result)
+    {
+        await OnDialogClosed.InvokeAsync(true); // Notify parent
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
 }
