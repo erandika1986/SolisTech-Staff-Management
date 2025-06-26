@@ -24,6 +24,12 @@ namespace StaffApp.Infrastructure.Services
 
             var isPasswordLoginEnable = context.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.IsPasswordLoginEnable);
 
+            var companyWebSiteUrl = context.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.CompanyWebsiteUrl);
+
+            var companyEmail = context.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.CompanyEmail);
+
+            var companyPhone = context.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.CompanyPhone);
+
             return new CompanyDetailDTO()
             {
                 ApplicationUrl = applicationUrl.Value,
@@ -31,6 +37,9 @@ namespace StaffApp.Infrastructure.Services
                 CompanyLogoUrl = companyLogoUrl.Value,
                 CompanyName = companyName.Value,
                 LeaveRequestCCList = leaveRequestCCList.Value,
+                CompanyWebSiteUrl = companyWebSiteUrl.Value,
+                CompanyEmail = companyEmail.Value,
+                CompanyPhone = companyPhone.Value,
                 IsPasswordLoginEnable = bool.Parse(isPasswordLoginEnable.Value)
             };
         }
@@ -55,7 +64,8 @@ namespace StaffApp.Infrastructure.Services
                 SMTPPort = smtpPort.Value,
                 SMTPServer = smtpServer.Value,
                 SMTPUsername = smtpUsername.Value,
-                SMTPSenderEmail = smtpSenderEmail.Value
+                SMTPSenderEmail = smtpSenderEmail.Value,
+
             };
 
         }
@@ -79,7 +89,10 @@ namespace StaffApp.Infrastructure.Services
                 var leaveRequestCCList = await context.AppSettings.FirstOrDefaultAsync(x => x.Name == CompanySettingConstants.LeaveRequestCCList);
                 leaveRequestCCList.Value = companyDetail.LeaveRequestCCList;
 
-                context.AppSettings.UpdateRange(new List<AppSetting> { applicationUrl, companyAddress, companyLogoUrl, companyName, leaveRequestCCList });
+                var companyWebSiteUrl = await context.AppSettings.FirstOrDefaultAsync(x => x.Name == CompanySettingConstants.CompanyWebsiteUrl);
+                companyWebSiteUrl.Value = companyDetail.CompanyWebSiteUrl;
+
+                context.AppSettings.UpdateRange(new List<AppSetting> { applicationUrl, companyAddress, companyLogoUrl, companyName, leaveRequestCCList, companyWebSiteUrl });
 
                 await context.SaveChangesAsync(CancellationToken.None);
 

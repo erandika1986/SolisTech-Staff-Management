@@ -318,10 +318,12 @@ namespace StaffApp.Infrastructure.Data
                     new AppSetting() { Name = CompanySettingConstants.CompanyPhone, Value = "" },
                     new AppSetting() { Name = CompanySettingConstants.CompanyName, Value = "" },
                     new AppSetting() { Name = CompanySettingConstants.CompanyLogoUrl, Value = "" },
+                    new AppSetting() { Name = CompanySettingConstants.CompanyWebsiteUrl, Value = "" },
                     new AppSetting() { Name = CompanySettingConstants.CompanyAddress, Value = "" },
                     new AppSetting() { Name = CompanySettingConstants.LeaveRequestCCList, Value = "" },
                     new AppSetting() { Name = CompanySettingConstants.IsPasswordLoginEnable, Value = "False"},
-                    new AppSetting() { Name = CompanySettingConstants.SalarySlipFolderPath, Value = "C:\\WordDocuments\\"}
+                    new AppSetting() { Name = CompanySettingConstants.SalarySlipFolderPath, Value = "C:\\WordDocuments\\"},
+                    new AppSetting() { Name = CompanySettingConstants.InvoiceFolderPath, Value = "C:\\InvoiceFolderPath\\"}
 
                 };
                 await context.AppSettings.AddRangeAsync(appSettings);

@@ -12,5 +12,6 @@ namespace StaffApp.Application.Services
         Task<GeneralResponseDTO> SaveInvoiceDetail(InvoiceDetailDTO invoiceDetail);
         Task<GeneralResponseDTO> DeleteInvoice(int invoiceId);
         Task<InvoiceDTO> GetInvoiceByIdAsync(int expenseId);
+        Task<DocumentDTO> DownloadInvoiceAsync(int invoiceId);
     }
 }

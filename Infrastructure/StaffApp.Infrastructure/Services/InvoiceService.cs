@@ -1,16 +1,27 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using StaffApp.Application.Contracts;
 using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.Finance;
+using StaffApp.Application.Extensions.Constants;
+using StaffApp.Application.Extensions.Helpers.OpenXML;
 using StaffApp.Application.Services;
+using StaffApp.Domain.Entity;
+using Syncfusion.DocIO;
+using Syncfusion.DocIO.DLS;
+using Syncfusion.DocIORenderer;
+using System.Reflection;
 
 namespace StaffApp.Infrastructure.Services
 {
     public class InvoiceService(IStaffAppDbContext context,
         ICurrentUserService currentUserService,
+        ICompanySettingService companySettingService,
         IAzureBlobService azureBlobService,
+        IFileDownloadService fileDownloadService,
         IConfiguration configuration,
         ILogger<IInvoiceService> logger) : IInvoiceService
     {
@@ -47,6 +58,121 @@ namespace StaffApp.Infrastructure.Services
             {
                 return new GeneralResponseDTO() { Flag = false, Message = ex.Message, UserId = currentUserService.UserId ?? string.Empty };
             }
+        }
+
+        public async Task<DocumentDTO> DownloadInvoiceAsync(int invoiceId)
+        {
+            string filePath = string.Empty;
+            var documentDto = new DocumentDTO();
+
+            try
+            {
+                var invoice = await context.Invoices
+                    .FirstOrDefaultAsync(i => i.Id == invoiceId && i.IsActive);
+
+                var companySettings = await companySettingService.GetCompanyDetail();
+
+                var outPutDirectory = System.IO.Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
+                var templatePath = System.IO.Path.Combine(outPutDirectory, @"WordTemplates\InvoiceTemplate.docx");
+
+
+                var invoiceFolderPath = context.AppSettings.FirstOrDefault(x => x.Name == CompanySettingConstants.InvoiceFolderPath);
+                if (!Directory.Exists(invoiceFolderPath.Value))
+                {
+                    // Create the directory
+                    Directory.CreateDirectory(invoiceFolderPath.Value);
+                }
+
+                string fileName = $"Invoice_{Guid.NewGuid().ToString()}.docx";
+                documentDto.FileName = System.IO.Path.ChangeExtension(fileName, ".pdf");
+                string tempDocxPath = System.IO.Path.Combine(invoiceFolderPath.Value, fileName);
+                string tempPdfPath = System.IO.Path.Combine(invoiceFolderPath.Value, System.IO.Path.ChangeExtension(fileName, ".pdf"));
+
+                File.Copy(templatePath, tempDocxPath, true);
+
+                using (WordprocessingDocument wordDoc = WordprocessingDocument.Open(tempDocxPath, true))
+                {
+                    MainDocumentPart mainPart = wordDoc.MainDocumentPart;
+
+                    ReplaceText(mainPart, "CompanyName", companySettings.CompanyName);
+                    ReplaceText(mainPart, "CompanyAddress", companySettings.CompanyAddress);
+                    ReplaceText(mainPart, "CompanyEmail", companySettings.CompanyEmail);
+                    ReplaceText(mainPart, "CompanyWebSite", companySettings.CompanyWebSiteUrl);
+                    ReplaceText(mainPart, "CompanyPhone", companySettings.CompanyPhone);
+
+
+                    ReplaceText(mainPart, "ClientName", invoice.Project.ClientName);
+                    ReplaceText(mainPart, "ClientAddress", invoice.Project.ClientAddress);
+                    ReplaceText(mainPart, "ClientEmail", invoice.Project.ClientEmail);
+                    ReplaceText(mainPart, "ClientPhone", invoice.Project.ClientPhone);
+
+                    ReplaceText(mainPart, "InvoiceNumber", invoice.InvoiceNumber);
+                    ReplaceText(mainPart, "InvoiceDate", invoice.InvoiceDate.ToString("MM/dd/yyyy"));
+                    ReplaceText(mainPart, "InvoiceDueDate", invoice.InvoiceDate.AddMonths(1).ToString("MM/dd/yyyy"));
+
+                    ReplaceText(mainPart, "InvoiceSubTotal", invoice.TotalAmount.ToString("F2"));
+                    ReplaceText(mainPart, "InvoiceDiscount", 0.0m.ToString("F2"));
+                    ReplaceText(mainPart, "InvoiceSubTotalLessDiscount", invoice.TotalAmount.ToString("F2"));
+                    ReplaceText(mainPart, "InvoiceTaxRate", 0.0m.ToString("F2"));
+                    ReplaceText(mainPart, "InvoiceTotalTax", 0.0m.ToString("F2"));
+                    ReplaceText(mainPart, "invoiceBalanceDue", invoice.TotalAmount.ToString("F2"));
+
+                    Document doc = mainPart.Document;
+                    List<Table> tables = doc.Descendants<Table>().ToList();
+
+                    //Employee Earnings
+                    Table invoiceDetailTable = tables[3];
+
+                    var invoiceDetails = invoice.InvoiceDetails.ToList();
+
+                    for (int i = 0; i < invoiceDetails.Count; i++)
+                    {
+                        if (i == 0)
+                        {
+                            DocumentFormat.OpenXml.Wordprocessing.TableRow earningRow = invoiceDetailTable.Elements<DocumentFormat.OpenXml.Wordprocessing.TableRow>().ElementAtOrDefault(1);
+                            // Fill values in specific cells
+                            FillCellValue(earningRow, 0, invoiceDetails[i].Description);      // First column
+                            FillCellValue(earningRow, 1, invoiceDetails[i].Amount.ToString("C"));   // Third column
+                        }
+                        else
+                        {
+                            TableRow newRow = new TableRow();
+
+                            // Add cells to the new row
+                            string[] cellValues = new string[] { invoiceDetails[i].Description, invoiceDetails[i].Amount.ToString("C") };
+                            int index = 0;
+                            foreach (string value in cellValues)
+                            {
+                                var runProperties = new RunProperties(new Bold() { Val = false });
+                                TableCell cell = new TableCell(new Paragraph(new Run(runProperties, new Text(value))));
+                                OpenXMLTableHelper.SetCellFontSize(cell, 10);
+                                //OpenXMLTableHelper.RemoveBoldFromTableCell(cell);
+                                if (index == 1)
+                                {
+                                    OpenXMLTableHelper.SetHorizontalTextAlignment(cell, JustificationValues.Right);
+                                }
+                                newRow.Append(cell);
+                                index++;
+                            }
+
+                            invoiceDetailTable.Append(newRow);
+                        }
+                    }
+
+                    mainPart.Document.Save();
+                }
+
+                // Convert the modified document to PDF
+                ConvertWordToPdf(tempDocxPath, tempPdfPath);
+
+                documentDto.FileArray = await fileDownloadService.GetFileAsync(tempPdfPath);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error downloading invoice with ID {InvoiceId}", invoiceId);
+            }
+
+            return documentDto;
         }
 
         public async Task<GeneralResponseDTO> GenerateMonthlyInvoicesAsync(int companyYear, int month)
@@ -362,5 +488,127 @@ namespace StaffApp.Infrastructure.Services
             string invoiceNumber = $"{prefix}{nextSequence.ToString("D4")}";
             return invoiceNumber;
         }
+
+        private void ReplaceText(MainDocumentPart mainPart, string placeholder, string replacement)
+        {
+            if (string.IsNullOrEmpty(replacement))
+            {
+                replacement = "N/A";
+            }
+            string docText = null;
+            using (StreamReader sr = new StreamReader(mainPart.GetStream()))
+            {
+                docText = sr.ReadToEnd();
+            }
+
+            docText = docText.Replace(placeholder, replacement);
+
+            using (StreamWriter sw = new StreamWriter(mainPart.GetStream(FileMode.Create)))
+            {
+                sw.Write(docText);
+            }
+        }
+
+        // Helper method to fill a value in a specific cell
+        private void FillCellValue(TableRow row, int cellIndex, string value, int fontSize = 10)
+        {
+            TableCell cell = row.Elements<TableCell>().ElementAtOrDefault(cellIndex);
+            if (cell != null)
+            {
+                // Get the first paragraph in the cell or create one if it doesn't exist
+                Paragraph paragraph = cell.Elements<Paragraph>().FirstOrDefault();
+                if (paragraph == null)
+                {
+                    paragraph = new Paragraph();
+                    cell.Append(paragraph);
+                }
+
+                // Clear existing content
+                paragraph.RemoveAllChildren<Run>();
+
+                // Add new text
+                var runProperties = new RunProperties(new Bold() { Val = false });
+                Run run = new Run(runProperties, new Text(value));
+                paragraph.Append(run);
+
+                OpenXMLTableHelper.SetCellFontSize(cell, fontSize);
+            }
+        }
+
+        private decimal CalculateMonthlyTaxForMultipleRange(decimal monthlySalary, List<TaxLogic> taxLogics)
+        {
+            decimal tax = 0;
+
+            if (taxLogics == null || taxLogics.Count == 0)
+            {
+                return tax;
+            }
+
+            if (monthlySalary <= taxLogics.FirstOrDefault().MaxSalary)
+            {
+                return 0;
+            }
+
+            var brackets = taxLogics.Skip(1).Select(x => new
+            {
+                MaxLimit = x.MaxSalary,
+                MinLimit = x.MinSalary,
+                Rate = x.TaxRate / 100.00m
+            }).ToArray();
+
+
+            for (int i = 0; i < brackets.Length; i++)
+            {
+                if (monthlySalary >= brackets[i].MinLimit && monthlySalary <= brackets[i].MaxLimit)
+                {
+                    decimal taxableAmount = monthlySalary - brackets[i].MinLimit;
+                    tax += taxableAmount * brackets[i].Rate;
+                }
+                else if (monthlySalary >= brackets[i].MinLimit && monthlySalary > brackets[i].MaxLimit)
+                {
+                    decimal taxableAmount = brackets[i].MaxLimit - brackets[i].MinLimit;
+                    tax += taxableAmount * brackets[i].Rate;
+                }
+                else
+                {
+
+                }
+
+            }
+
+            return Math.Round(tax, 2);
+
+        }
+
+        public void ConvertWordToPdf(string wordPath, string pdfPath)
+        {
+            using (FileStream docStream = new FileStream(wordPath, FileMode.Open, FileAccess.Read))
+            {
+                //Loads file stream into Word document
+                using (WordDocument wordDocument = new WordDocument(docStream, FormatType.Docx))
+                {
+                    //Instantiation of DocIORenderer for Word to PDF conversion
+                    using (DocIORenderer render = new DocIORenderer())
+                    {
+                        //Converts Word document into PDF document
+                        Syncfusion.Pdf.PdfDocument pdfDocument = render.ConvertToPDF(wordDocument);
+
+                        using (FileStream outputStream = new FileStream(pdfPath, FileMode.Create, FileAccess.Write))
+                        {
+                            pdfDocument.Save(outputStream);
+                        }
+
+                        //Saves the PDF document to MemoryStream.
+                        //MemoryStream stream = new MemoryStream();
+                        //pdfDocument.Save(stream);
+                        //stream.Position = 0;
+
+                        //Download PDF document in the browser.
+                        //return File(stream, "application/pdf", pdfPath);
+                    }
+                }
+            }
+        }
+
     }
 }

@@ -17,8 +17,10 @@
         public const string CompanyEmail = "CompanyEmail";
         public const string LeaveRequestCCList = "LeaveRequestCCList";
         public const string IsPasswordLoginEnable = "IsPasswordLoginEnable";
+        public const string CompanyWebsiteUrl = "CompanyWebsiteUrl";
 
         public const string SalarySlipFolderPath = "SalarySlipFolderPath";
+        public const string InvoiceFolderPath = "InvoiceFolderPath";
 
     }
 }

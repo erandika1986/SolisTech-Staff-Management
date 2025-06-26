@@ -128,7 +128,7 @@
                                     <MudIconButton Icon="@Icons.Material.Filled.GetApp"
                                                    Color="Color.Success"
                                                    Variant="Variant.Filled"
-                                                   OnClick="() => EditInvoiceAsync(invoice.Item)"></MudIconButton>
+                                                   OnClick="() => DownloadPdf(invoice.Item)"></MudIconButton>
                                 </MudTooltip>
                                 <MudTooltip Text="Email Invoice"
                                             Color="Color.Secondary"
@@ -327,6 +327,7 @@
         StateHasChanged();
     }
 
+
     private async Task GenerateMonthlyInvoicesAsync()
     {
         LoadingService.Show();
@@ -351,6 +352,16 @@
         {
             Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
         }
+    }
+
+    private async Task DownloadPdf(InvoiceDTO invoice)
+    {
+        // Logic to handle PDF download
+        var documentDto = await InvoiceService.DownloadInvoiceAsync(invoice.Id);
+
+        var base64Data = Convert.ToBase64String(documentDto.FileArray);
+
+        await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", documentDto.FileName, base64Data);
     }
 
     private string GetDisplayNameByPropertyInfro(PropertyInfo prop)
