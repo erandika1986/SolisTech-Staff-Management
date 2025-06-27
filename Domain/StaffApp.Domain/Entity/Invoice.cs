@@ -21,11 +21,13 @@ namespace StaffApp.Domain.Entity
         public decimal TotalAmount { get; set; }
 
         public string Notes { get; set; }
+        public InvoiceStatus Status { get; set; }
 
 
         public virtual CompanyYear CompanyYear { get; set; }
         public virtual Project Project { get; set; }
 
         public virtual ICollection<InvoiceDetail> InvoiceDetails { get; set; } = new HashSet<InvoiceDetail>();
+        public virtual ICollection<InvoicePayment> InvoicePayments { get; set; } = new HashSet<InvoicePayment>();
     }
 }

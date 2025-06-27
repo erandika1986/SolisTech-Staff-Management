@@ -13,5 +13,6 @@ namespace StaffApp.Application.Services
         Task<GeneralResponseDTO> DeleteInvoice(int invoiceId);
         Task<InvoiceDTO> GetInvoiceByIdAsync(int expenseId);
         Task<DocumentDTO> DownloadInvoiceAsync(int invoiceId);
+        Task<GeneralResponseDTO> EmailInvoiceAsync(int invoiceId);
     }
 }

@@ -16,6 +16,10 @@ namespace StaffApp.Infrastructure.Data.Configurations
 
             builder.Property(p => p.TotalHours).IsRequired(false);
 
+            builder.Property(p => p.Status)
+                   .HasDefaultValue(StaffApp.Domain.Enum.InvoiceStatus.Draft)
+                   .IsRequired(true);
+
             builder
                .HasOne<Project>(c => c.Project)
                .WithMany(c => c.Invoices)

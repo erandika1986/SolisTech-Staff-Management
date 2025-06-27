@@ -1,9 +1,11 @@
 ﻿using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Wordprocessing;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using StaffApp.Application.Contracts;
+using StaffApp.Application.DTOs.ApplicationCore;
 using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.Finance;
 using StaffApp.Application.Extensions.Constants;
@@ -23,6 +25,8 @@ namespace StaffApp.Infrastructure.Services
         IAzureBlobService azureBlobService,
         IFileDownloadService fileDownloadService,
         IConfiguration configuration,
+        IEmailService emailService,
+        IWebHostEnvironment environment,
         ILogger<IInvoiceService> logger) : IInvoiceService
     {
         public async Task<GeneralResponseDTO> DeleteInvoice(int invoiceId)
@@ -175,6 +179,76 @@ namespace StaffApp.Infrastructure.Services
             return documentDto;
         }
 
+        public async Task<GeneralResponseDTO> EmailInvoiceAsync(int invoiceId)
+        {
+            try
+            {
+                var invoice = await context.Invoices
+                    .Include(i => i.Project)
+                    .FirstOrDefaultAsync(i => i.Id == invoiceId);
+
+                var companySettings = await companySettingService.GetCompanyDetail();
+
+                var invoiceAttachment = await DownloadInvoiceAsync(invoiceId);
+
+                if (invoiceAttachment.FileArray == null || invoiceAttachment.FileArray.Length == 0)
+                {
+                    return new GeneralResponseDTO()
+                    {
+                        Flag = false,
+                        Message = "Invoice file is empty or not found.",
+                        UserId = currentUserService.UserId ?? string.Empty
+                    };
+                }
+
+                string templatePath = Path.Combine(environment.ContentRootPath, "EmailTemplates", "InvoiceEmailTemplate.html");
+                string htmlBody = File.ReadAllText(templatePath);
+
+                // Replace placeholders with actual values
+                htmlBody = htmlBody
+                    .Replace("@CustomerName", invoice.Project.ClientName)
+                    .Replace("@InvoiceNumber", invoice.InvoiceNumber)
+                    .Replace("@InvoiceDate", invoice.InvoiceDate.ToString("MM/dd/yyyy"))
+                    .Replace("@DueDate", invoice.InvoiceDate.AddMonths(1).ToString("MM/dd/yyyy"))
+                    .Replace("@TotalAmount", invoice.TotalAmount.ToString("F2"))
+                    .Replace("@CompanyName", companySettings.CompanyName)
+                    .Replace("@PhoneNumber", companySettings.CompanyPhone)
+                    .Replace("@EmailAddress", companySettings.CompanyEmail)
+                    .Replace("@WebsiteURL", companySettings.CompanyWebSiteUrl)
+                    .Replace("@CompanyAddress", companySettings.CompanyAddress)
+                    .Replace("@BankDetails", "");
+
+
+                List<EmailAttachmentDTO> emailAttachments = new List<EmailAttachmentDTO>();
+
+                emailAttachments.Add(new EmailAttachmentDTO
+                {
+                    FileName = invoiceAttachment.FileName,
+                    Content = invoiceAttachment.FileArray,
+                    ContentType = "application/pdf"
+                });
+
+
+                // Send email with attachments
+                await emailService.SendEmailWithAttachmentsAsync(
+                    invoice.Project.ClientEmail,
+                    $"Billing Invoice From {companySettings.CompanyName}",
+                    htmlBody,
+                    emailAttachments);
+
+                return new GeneralResponseDTO()
+                {
+                    Flag = true,
+                    Message = "Invoice emailed successfully.",
+                    UserId = currentUserService.UserId ?? string.Empty
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error emailing invoice with ID {InvoiceId}", invoiceId);
+                return new GeneralResponseDTO() { Flag = false, Message = ex.Message, UserId = currentUserService.UserId ?? string.Empty };
+            }
+        }
         public async Task<GeneralResponseDTO> GenerateMonthlyInvoicesAsync(int companyYear, int month)
         {
             try
@@ -609,6 +683,7 @@ namespace StaffApp.Infrastructure.Services
                 }
             }
         }
+
 
     }
 }

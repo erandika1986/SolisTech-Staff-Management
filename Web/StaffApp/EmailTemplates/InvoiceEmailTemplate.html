@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - Your Business Name</title>
+    <style>
+        /* Reset styles for email clients */
+        body, table, td, p, a, li, blockquote {
+            -webkit-text-size-adjust: 100%;
+            -ms-text-size-adjust: 100%;
+        }
+        table, td {
+            mso-table-lspace: 0pt;
+            mso-table-rspace: 0pt;
+        }
+        img {
+            -ms-interpolation-mode: bicubic;
+            border: 0;
+            height: auto;
+            line-height: 100%;
+            outline: none;
+            text-decoration: none;
+        }
+        
+        /* Main styles */
+        body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background-color: #f4f4f7;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.6;
+            color: #333333;
+        }
+        
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+        }
+        
+        .header p {
+            color: #e8eaff;
+            margin: 10px 0 0 0;
+            font-size: 16px;
+        }
+        
+        .content {
+            padding: 40px 30px;
+        }
+        
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333333;
+        }
+        
+        .invoice-details {
+            background-color: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .invoice-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        
+        .invoice-row:last-child {
+            margin-bottom: 0;
+            padding-top: 12px;
+            border-top: 2px solid #dee2e6;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .invoice-label {
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .invoice-value {
+            color: #333333;
+        }
+        
+        .attachment-notice {
+            background-color: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+        }
+        
+        .attachment-icon {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .payment-info {
+            background-color: #f8f9fa;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        
+        .payment-info h3 {
+            margin: 0 0 15px 0;
+            color: #28a745;
+            font-size: 18px;
+        }
+        
+        .payment-methods {
+            margin: 15px 0;
+        }
+        
+        .payment-method {
+            margin-bottom: 8px;
+            padding: 8px 0;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: #ffffff !important;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+        
+        .footer {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .footer p {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+        }
+        
+        .footer .company-info {
+            margin-bottom: 20px;
+        }
+        
+        .footer .contact-info {
+            font-size: 13px;
+            color: #bdc3c7;
+        }
+        
+        /* Responsive design */
+        @media only screen and (max-width: 600px) {
+            .email-container {
+                width: 100% !important;
+            }
+            
+            .header, .content, .footer {
+                padding: 20px !important;
+            }
+            
+            .invoice-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 5px;
+            }
+            
+            .header h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📧 Invoice Delivery</h1>
+            <p>Your invoice is ready for review</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="content">
+            <div class="greeting">
+                Hello @CustomerName,
+            </div>
+            
+            <p>Thank you for your business! Please find your invoice attached to this email. Below are the details for your reference:</p>
+            
+            <!-- Invoice Details -->
+            <div class="invoice-details">
+                <div class="invoice-row">
+                    <span class="invoice-label">Invoice Number:</span>
+                    <span class="invoice-value">@InvoiceNumber</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">Invoice Date:</span>
+                    <span class="invoice-value">@InvoiceDate</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">Due Date:</span>
+                    <span class="invoice-value">@DueDate</span>
+                </div>
+                <div class="invoice-row">
+                    <span class="invoice-label">Total Amount:</span>
+                    <span class="invoice-value">$ @TotalAmount</span>
+                </div>
+            </div>
+            
+            <!-- Attachment Notice -->
+            <div class="attachment-notice">
+                <div class="attachment-icon">📎</div>
+                <strong>Invoice Attached</strong>
+                <p style="margin: 10px 0 0 0; color: #495057;">Your detailed invoice is attached as a PDF document to this email.</p>
+            </div>
+            
+            <!-- Payment Information -->
+            <div class="payment-info">
+                <h3>💳 Payment Information</h3>
+                <p>Please remit payment by the due date shown above. We accept the following payment methods:</p>
+                <div class="payment-methods">
+                    <div class="payment-method">• Bank Transfer: @BankDetails</div>
+                    <div class="payment-method">• Check: Made payable to @CompanyName</div>
+                    <!--<div class="payment-method">• Online Payment: [Payment Portal URL]</div>-->
+                </div>
+            </div>
+            
+            <!--<div style="text-align: center;">
+                <a href="[Payment Portal URL]" class="cta-button">Pay Online Now</a>
+            </div>-->
+            
+            <p>If you have any questions about this invoice or need assistance with payment, please don't hesitate to contact us. We appreciate your prompt attention to this matter.</p>
+
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="company-info">
+                <p><strong>@CompanyName</strong></p>
+                <p>@CompanyAddress</p>
+            </div>
+            <div class="contact-info">
+                <p>Phone: @PhoneNumber | Email: @EmailAddress</p>
+                <p>Website: @WebsiteURL</p>
+                <p style="margin-top: 20px; font-size: 12px;">
+                    This is an automated invoice notification. Please do not reply directly to this email.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

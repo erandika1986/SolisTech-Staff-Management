@@ -27,12 +27,12 @@
         else
         {
             <MudDataGrid @ref="_dataGrid" T="InvoiceDTO" ServerData="@(LoadData)" Sortable="true"
-                         Filterable="false"
-                         Hideable="true"
-                         Hover="true"
-                         Striped="true"
-                         Elevation="25"
-                         Loading="@_loading">
+            Filterable="false"
+            Hideable="true"
+            Hover="true"
+            Striped="true"
+            Elevation="25"
+            Loading="@_loading">
                 <ToolBarContent>
                     <MudGrid>
                         <MudItem xs="12" sm="12" md="4" lg="4">
@@ -43,43 +43,43 @@
 
                             <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
                                 <MudSelect T="DropDownDTO"
-                                           Label="Company Year"
-                                           Class="mt-0"
-                                           ToStringFunc="(item) => item  is not null? item.Name:string.Empty"
-                                           MultiSelection="false" Value="SelectedCompanyYear"
-                                           ValueChanged="@CompanyYearChanged"
-                                           Style="padding-right:2px;">
+                                Label="Company Year"
+                                Class="mt-0"
+                                ToStringFunc="(item) => item  is not null? item.Name:string.Empty"
+                                MultiSelection="false" Value="SelectedCompanyYear"
+                                ValueChanged="@CompanyYearChanged"
+                                Style="padding-right:2px;">
                                     @foreach (var companyYear in CompanyYears)
                                     {
                                         <MudSelectItem T="DropDownDTO"
-                                                       Value="@companyYear">
+                                        Value="@companyYear">
                                             @companyYear.Name
                                         </MudSelectItem>
                                     }
                                 </MudSelect>
                                 <MudSelect T="DropDownDTO"
-                                           Label="Month"
-                                           Class="mt-0"
-                                           ToStringFunc="(item) => item  is not null? item.Name:string.Empty"
-                                           MultiSelection="false" Value="SelectedMonth"
-                                           ValueChanged="@MonthChanged"
-                                           Style="padding-right:2px;">
+                                Label="Month"
+                                Class="mt-0"
+                                ToStringFunc="(item) => item  is not null? item.Name:string.Empty"
+                                MultiSelection="false" Value="SelectedMonth"
+                                ValueChanged="@MonthChanged"
+                                Style="padding-right:2px;">
                                     @foreach (var month in Months)
                                     {
                                         <MudSelectItem T="DropDownDTO"
-                                                       Value="@month">
+                                        Value="@month">
                                             @month.Name
                                         </MudSelectItem>
                                     }
                                 </MudSelect>
                                 <MudTooltip Text="Generate Monthly Salary"
-                                            Color="Color.Info"
-                                            Placement="Placement.Top">
+                                Color="Color.Info"
+                                Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.PlayCircleFilled"
-                                                   Color="Color.Info"
-                                                   Variant="Variant.Filled"
-                                                   Disabled="_isSalaryGenerated"
-                                                   OnClick=" ()=> GenerateMonthlyInvoicesAsync()">
+                                    Color="Color.Info"
+                                    Variant="Variant.Filled"
+                                    Disabled="_isSalaryGenerated"
+                                    OnClick=" ()=> GenerateMonthlyInvoicesAsync()">
                                     </MudIconButton>
                                 </MudTooltip>
                             </MudPaper>
@@ -91,52 +91,52 @@
                 <Columns>
 
                     <PropertyColumn Property="x=>x.InvoiceNumber"
-                                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.InvoiceNumber))" />
+                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.InvoiceNumber))" />
                     <PropertyColumn Property="x=>x.ProjectName"
-                                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.ProjectName))" />
+                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.ProjectName))" />
                     <PropertyColumn Property="x=>x.InvoiceDate"
-                                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.InvoiceDate))" />
+                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.InvoiceDate))" />
                     <PropertyColumn Property="x=>x.TotalHours"
-                                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.TotalHours))" />
+                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.TotalHours))" />
                     <PropertyColumn Property="x=>x.TotalAmount"
-                                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.TotalAmount))" />
+                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.TotalAmount))" />
                     <PropertyColumn Property="x=>x.StartDate"
-                                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.StartDate))" />
+                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.StartDate))" />
                     <PropertyColumn Property="x=>x.EndDate"
-                                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.EndDate))" />
+                    Title="@GetDisplayName(typeof(InvoiceDTO), nameof(InvoiceDTO.EndDate))" />
                     <TemplateColumn CellClass="d-flex justify-end">
                         <CellTemplate Context="invoice">
                             <MudStack Row>
                                 <MudTooltip Text="View Invoice"
-                                            Color="Color.Info"
-                                            Placement="Placement.Top">
+                                Color="Color.Info"
+                                Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.RemoveRedEye"
-                                                   Color="Color.Info" Variant="Variant.Filled"
-                                                   OnClick="() => ViewInvoiceAsync(invoice.Item)"></MudIconButton>
+                                    Color="Color.Info" Variant="Variant.Filled"
+                                    OnClick="() => ViewInvoiceAsync(invoice.Item)"></MudIconButton>
                                 </MudTooltip>
                                 <MudTooltip Text="Edit Invoice"
-                                            Color="Color.Primary"
-                                            Placement="Placement.Top">
+                                Color="Color.Primary"
+                                Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit"
-                                                   Color="Color.Primary"
-                                                   Variant="Variant.Filled"
-                                                   OnClick="() => EditInvoiceAsync(invoice.Item)"></MudIconButton>
+                                    Color="Color.Primary"
+                                    Variant="Variant.Filled"
+                                    OnClick="() => EditInvoiceAsync(invoice.Item)"></MudIconButton>
                                 </MudTooltip>
                                 <MudTooltip Text="Download Invoice"
-                                            Color="Color.Success"
-                                            Placement="Placement.Top">
+                                Color="Color.Success"
+                                Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.GetApp"
-                                                   Color="Color.Success"
-                                                   Variant="Variant.Filled"
-                                                   OnClick="() => DownloadPdf(invoice.Item)"></MudIconButton>
+                                    Color="Color.Success"
+                                    Variant="Variant.Filled"
+                                    OnClick="() => DownloadPdf(invoice.Item)"></MudIconButton>
                                 </MudTooltip>
                                 <MudTooltip Text="Email Invoice"
-                                            Color="Color.Secondary"
-                                            Placement="Placement.Top">
+                                Color="Color.Secondary"
+                                Placement="Placement.Top">
                                     <MudIconButton Icon="@Icons.Material.Filled.Email"
-                                                   Color="Color.Secondary"
-                                                   Variant="Variant.Filled"
-                                                   OnClick="() => EditInvoiceAsync(invoice.Item)"></MudIconButton>
+                                    Color="Color.Secondary"
+                                    Variant="Variant.Filled"
+                                                   OnClick="() => EmailInvoice(invoice.Item)"></MudIconButton>
                                 </MudTooltip>
                             </MudStack>
                         </CellTemplate>
@@ -149,7 +149,7 @@
         }
 
     </MudItem>
-@*     <MudItem xs="12" sm="12" md="12" lg="12" Style="text-align: center;">
+    @*     <MudItem xs="12" sm="12" md="12" lg="12" Style="text-align: center;">
         <MudPaper Class="d-flex align-center gap-2" Style="padding: 8px;">
             <MudText><b>Salary Status : </b>@MonthlySalarySummary.StatusName | </MudText>
             <MudText><b>Created Date : </b>@MonthlySalarySummary.CreatedDate | </MudText>
@@ -362,6 +362,14 @@
         var base64Data = Convert.ToBase64String(documentDto.FileArray);
 
         await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", documentDto.FileName, base64Data);
+    }
+
+    private async Task EmailInvoice(InvoiceDTO invoice)
+    {
+        // Logic to handle PDF download
+        var response = await InvoiceService.EmailInvoiceAsync(invoice.Id);
+
+        await ShowSnackbar(response);
     }
 
     private string GetDisplayNameByPropertyInfro(PropertyInfo prop)
