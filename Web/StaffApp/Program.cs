@@ -10,6 +10,10 @@ using StaffApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add Serilog file logging
+builder.Logging.ClearProviders();
+builder.Logging.AddFile("Logs/app-errors-{Date}.log");
+
 // Add MudBlazor services
 builder.Services.AddMudServices();
 
@@ -55,6 +59,22 @@ builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSe
 
 
 var app = builder.Build();
+
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Unhandled exception occurred while processing request");
+
+        // Optional: return a friendly error page
+        context.Response.Redirect("/error");
+    }
+});
 
 using (var scope = app.Services.CreateScope())
 {

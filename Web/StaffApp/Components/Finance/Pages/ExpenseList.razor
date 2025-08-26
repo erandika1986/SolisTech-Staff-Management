@@ -127,7 +127,8 @@
         try
         {
             // Load your master data
-            ExpenseTypes = await ExpenseService.GetExpenseTypes(true);
+            var masterData = await ExpenseService.GetExpenseMasterData(true);
+            ExpenseTypes = masterData.ExpenseTypes;
             SelectedExpenseType = ExpenseTypes.FirstOrDefault();
 
             _isMasterDataLoaded = true;

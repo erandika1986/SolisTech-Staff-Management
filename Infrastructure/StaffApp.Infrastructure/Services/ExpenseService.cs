@@ -5,8 +5,10 @@ using StaffApp.Application.Contracts;
 using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.Finance;
 using StaffApp.Application.Extensions.Constants;
+using StaffApp.Application.Extensions.Helpers;
 using StaffApp.Application.Services;
 using StaffApp.Domain.Entity;
+using StaffApp.Domain.Enum;
 
 namespace StaffApp.Infrastructure.Services
 {
@@ -125,6 +127,8 @@ namespace StaffApp.Infrastructure.Services
                     CreatedByUser = e.CreatedByUserId != null ? context.ApplicationUsers.FirstOrDefault(u => u.Id == e.CreatedByUserId).FullName : "N/A",
                     CreatedOn = e.CreatedDate.ToString("MM/dd/yyyy"),
                     UpdatedByUser = e.UpdatedByUserId != null ? context.ApplicationUsers.FirstOrDefault(u => u.Id == e.UpdatedByUserId).FullName : "N/A",
+                    CompanyYear = new DropDownDTO() { Id = e.CompanyYearId, Name = e.CompanyYear.Year.ToString() },
+                    Month = new DropDownDTO() { Id = (int)e.Month, Name = EnumHelper.GetEnumDescription(e.Month) },
                     UpdatedOn = e.UpdateDate.Value.ToString("MM/dd/yyyy"),
                     SavedSupportFiles = e.ExpenseSupportAttachments.Select(a => new SupportAttachmentDTO
                     {
@@ -167,8 +171,11 @@ namespace StaffApp.Infrastructure.Services
                         CreatedDate = DateTime.Now,
                         UpdateDate = DateTime.Now,
                         UpdatedByUserId = currentUserService.UserId,
-                        IsActive = true
-
+                        IsActive = true,
+                        CompanyYearId = expenseDto.CompanyYear.Id,
+                        Month = (Month)expenseDto.Month.Id,
+                        EmployeeShare = (decimal?)expenseDto.EmployeeShare,
+                        CompanyShare = (decimal?)expenseDto.CompanyShare,
                     };
 
                     context.Expenses.Add(expense);
@@ -180,6 +187,10 @@ namespace StaffApp.Infrastructure.Services
                 }
                 else
                 {
+                    expense.CompanyYearId = expenseDto.CompanyYear.Id;
+                    expense.Month = (Month)expenseDto.Month.Id;
+                    expense.EmployeeShare = (decimal?)expenseDto.EmployeeShare;
+                    expense.CompanyShare = (decimal?)expenseDto.CompanyShare;
                     expense.Amount = (decimal)expenseDto.Amount;
                     expense.Date = expenseDto.Date;
                     expense.Notes = expenseDto.Notes;
@@ -213,12 +224,12 @@ namespace StaffApp.Infrastructure.Services
             }
         }
 
-        public async Task<List<DropDownDTO>> GetExpenseTypes(bool hasDefaultValue = false)
+        public async Task<ExpenseMasterDataDTO> GetExpenseMasterData(bool hasDefaultValue = false)
         {
-            var response = new List<DropDownDTO>();
+            var response = new ExpenseMasterDataDTO();
 
             if (hasDefaultValue)
-                response.Add(new DropDownDTO() { Id = 0, Name = "All" });
+                response.ExpenseTypes.Add(new DropDownDTO() { Id = 0, Name = "All" });
 
             var expenseTypes = await context.ExpenseTypes
                 .OrderBy(et => et.Name)
@@ -229,8 +240,21 @@ namespace StaffApp.Infrastructure.Services
                 })
                 .ToListAsync();
 
-            response.AddRange
+            response.ExpenseTypes.AddRange
                 (expenseTypes);
+
+            var companyYears = await context.CompanyYears
+                .OrderByDescending(cy => cy.Year)
+                .Select(cy => new DropDownDTO
+                {
+                    Id = cy.Id,
+                    Name = cy.Year.ToString()
+                })
+                .ToListAsync();
+
+            response.CompanyYears.AddRange(companyYears);
+
+            response.Months = EnumHelper.GetDropDownList<Month>();
 
             return response;
         }
@@ -301,6 +325,10 @@ namespace StaffApp.Infrastructure.Services
                 Notes = expense.Notes,
                 ExpenseType = new DropDownDTO() { Id = expense.ExpenseTypeId },
                 ExpenseTypeName = expense.ExpenseType.Name,
+                CompanyYear = new DropDownDTO() { Id = expense.CompanyYearId, Name = expense.CompanyYear.Year.ToString() },
+                Month = new DropDownDTO() { Id = (int)expense.Month, Name = EnumHelper.GetEnumDescription(expense.Month) },
+                EmployeeShare = (double?)expense.EmployeeShare,
+                CompanyShare = (double?)expense.CompanyShare,
                 SavedSupportFiles = expense.ExpenseSupportAttachments.Select(a => new SupportAttachmentDTO
                 {
                     Id = a.SupportAttachmentId,

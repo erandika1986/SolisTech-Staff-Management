@@ -14,6 +14,17 @@ namespace StaffApp.Infrastructure.Data.Configurations
 
             builder.Property(p => p.Id).ValueGeneratedOnAdd();
 
+            builder.Property(p => p.CompanyShare).IsRequired(false);
+
+            builder.Property(p => p.EmployeeShare).IsRequired(false);
+
+            builder
+               .HasOne<CompanyYear>(c => c.CompanyYear)
+               .WithMany(c => c.Expenses)
+               .HasForeignKey(c => c.CompanyYearId)
+               .OnDelete(DeleteBehavior.Restrict)
+               .IsRequired(true);
+
             builder
                .HasOne<ExpenseType>(c => c.ExpenseType)
                .WithMany(c => c.Expenses)

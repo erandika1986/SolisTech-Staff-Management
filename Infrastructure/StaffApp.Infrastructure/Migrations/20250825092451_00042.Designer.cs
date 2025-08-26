@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StaffApp.Infrastructure.Data;
 
@@ -11,13 +12,15 @@ using StaffApp.Infrastructure.Data;
 namespace StaffApp.Infrastructure.Migrations
 {
     [DbContext(typeof(StaffAppDbContext))]
-    partial class StaffAppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250825092451_00042")]
+    partial class _00042
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "9.0.7")
                 .HasAnnotation("Proxies:ChangeTracking", false)
                 .HasAnnotation("Proxies:CheckEquality", false)
                 .HasAnnotation("Proxies:LazyLoading", true)
@@ -1166,9 +1169,6 @@ namespace StaffApp.Infrastructure.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<decimal?>("CompanyShare")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("CompanyYearId")
                         .HasColumnType("int");
 
@@ -1180,9 +1180,6 @@ namespace StaffApp.Infrastructure.Migrations
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
-
-                    b.Property<decimal?>("EmployeeShare")
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<int>("ExpenseTypeId")
                         .HasColumnType("int");

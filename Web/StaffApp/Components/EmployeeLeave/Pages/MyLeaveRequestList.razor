@@ -25,14 +25,43 @@
         @foreach (var dashboardItem in LeaveDashboardData.LeaveTypeSummaries)
         {
             <MudItem xs="12" sm="6" md="2" lg="2">
-                <MudPaper Elevation="2" Class="p-4">
+@*                 <MudPaper Elevation="2" Class="p-4">
                     <MudText Typo="Typo.h6" Class="p-4 d-flex align-center justify-center"> @dashboardItem.LeaveTypeName</MudText>
                     <MudText Color="Color.Primary" Class="p-4 d-flex align-center justify-center">Total Leaves : @dashboardItem.TotalLeaveDays</MudText>
                     <MudText Color="Color.Primary" Class="p-4 d-flex align-center justify-center">Remaining Leaves : @dashboardItem.RemainingLeaveDays</MudText>
                     <MudText Color="Color.Primary" Class="p-4 d-flex align-center justify-center">Approved Leaves : @dashboardItem.ApprovedLeaveDays</MudText>
                     <MudText Color="Color.Primary" Class="p-4 d-flex align-center justify-center">Pending Leaves :@dashboardItem.PendingLeaveDays</MudText>
                     <MudText Color="Color.Primary" Class="p-4 d-flex align-center justify-center">Rejected Leaves :@dashboardItem.RejectedLeaveDays</MudText>
-                </MudPaper>
+                </MudPaper> *@
+            <MudCard Class="pa-4" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+                <MudCardContent>
+                    <div class="d-flex align-center justify-space-between mb-3">
+                            <MudIcon Icon="Icons.Material.Filled.CalendarMonth" Size="Size.Large" Style="opacity: 0.9; margin-right: 8px;" />
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary" Text="true" Style="opacity: 0.8; font-weight: 300; letter-spacing: 0.5px;">@dashboardItem.LeaveTypeName</MudChip>
+                    </div>
+                        <MudText Typo="Typo.h6" Class="mb-2">@dashboardItem.LeaveTypeName</MudText>
+                        <MudText Typo="Typo.h5" Class="mb-3">@dashboardItem.TotalLeaveDays Leaves days</MudText>
+                    
+                    <MudDivider Class="mb-3" />
+                    
+                    <div class="d-flex justify-space-between mb-2">
+                        <MudText Typo="Typo.body2">Remaining:</MudText>
+                            <MudText Typo="Typo.body2"><strong>@dashboardItem.RemainingLeaveDays</strong></MudText>
+                    </div>
+                    <div class="d-flex justify-space-between mb-2">
+                        <MudText Typo="Typo.body2">Approved:</MudText>
+                            <MudText Typo="Typo.body2" Style="color: #4caf50;"><strong>@dashboardItem.ApprovedLeaveDays</strong></MudText>
+                    </div>
+                    <div class="d-flex justify-space-between mb-2">
+                        <MudText Typo="Typo.body2">Pending:</MudText>
+                            <MudText Typo="Typo.body2" Style="color: #ff9800;"><strong>@dashboardItem.PendingLeaveDays</strong></MudText>
+                    </div>
+                    <div class="d-flex justify-space-between">
+                        <MudText Typo="Typo.body2">Rejected:</MudText>
+                            <MudText Typo="Typo.body2" Style="color: #f44336;"><strong>@dashboardItem.RejectedLeaveDays</strong></MudText>
+                    </div>
+                </MudCardContent>
+            </MudCard>
             </MudItem>
         }
     </MudGrid>

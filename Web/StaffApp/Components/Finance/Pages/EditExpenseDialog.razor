@@ -21,33 +21,86 @@
                     <MudForm @ref="form" @bind-IsValid="@success" @bind-Errors="@errors">
                         <MudGrid>
                             <MudItem xs="12" sm="6" md="4" lg="4">
-                                <MudDatePicker xs="12" sm="6" Variant="Variant.Outlined" Adornment="Adornment.End" Label="Date" Date="Expense.Date" DateChanged="OnDateChanged" Required="true" RequiredError="From date is required!" Disabled="IsDisabled" />
+                                <MudDatePicker xs="12" sm="6" Variant="Variant.Outlined" Adornment="Adornment.End" Label="Date" Date="Expense.Date" DateChanged="OnDateChanged" Required="true" RequiredError="From date is required!" ReadOnly="IsDisabled" />
                             </MudItem>
 
 
                             <MudItem xs="12" sm="6" md="4" lg="4">
-                                <MudSelect T="DropDownDTO" Variant="Variant.Outlined" Adornment="Adornment.End" Label="Expense Type" MultiSelection="false" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" @bind-Value="Expense.ExpenseType" Required="true" RequiredError="Expense type is required!" Disabled="IsDisabled">
+                                <MudSelect T="DropDownDTO" Variant="Variant.Outlined" Adornment="Adornment.End" Label="Company Year" MultiSelection="false" ToStringFunc="(item) => item  is not null? item.Name:string.Empty" @bind-Value="Expense.CompanyYear" Required="true" RequiredError="Company year is required!" ReadOnly="IsDisabled">
+                                    @foreach (var companyYear in CompanyYears)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@companyYear">@companyYear.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="4" lg="4">
+                                <MudSelect T="DropDownDTO" Variant="Variant.Outlined" Adornment="Adornment.End" Label="Month" MultiSelection="false" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" @bind-Value="Expense.Month" Required="true" RequiredError="Month is required!" ReadOnly="IsDisabled">
+                                    @foreach (var month in Months)
+                                    {
+                                        <MudSelectItem T="DropDownDTO" Value="@month">@month.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+
+                            <MudItem xs="12" sm="6" md="4" lg="4">
+                                <MudSelect T="DropDownDTO" Variant="Variant.Outlined" Adornment="Adornment.End" Label="Expense Type" MultiSelection="false" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" @bind-Value="Expense.ExpenseType" Required="true" RequiredError="Expense type is required!" ReadOnly="IsDisabled">
                                     @foreach (var expenseType in ExpenseTypes)
                                     {
                                         <MudSelectItem T="DropDownDTO" Value="@expenseType">@expenseType.Name</MudSelectItem>
                                     }
                                 </MudSelect>
                             </MudItem>
-                            <MudItem xs="12" sm="6" md="4" lg="4">
-                                <MudNumericField T="double"
-                                Label="Amount"
-                                @bind-Value="Expense.Amount"
-                                Variant="Variant.Outlined"
-                                Adornment="Adornment.End"
-                                AdornmentText="$"
-                                Step="0.25"
-                                Min="0"
-                                Immediate="true"
-                                                 DecimalPlaces="2" Format="0.00" Disabled=" IsDisabled" />
-                            </MudItem>
+
+
+                            @if (Expense.ExpenseType !=null && Expense.ExpenseType.Id == 2)
+                            {
+                                <MudItem xs="12" sm="6" md="4" lg="4">
+                                    <MudNumericField T="double?"
+                                                     Label="Company Share"
+                                                     @bind-Value="Expense.CompanyShare"
+                                                     Variant="Variant.Outlined"
+                                                     Adornment="Adornment.End"
+                                                     AdornmentText="$"
+                                                     Step="0.25"
+                                                     Min="0"
+                                                     Immediate="true"
+                                                     DecimalPlaces="2" Format="0.00" ReadOnly=" IsDisabled" />
+                                </MudItem>
+
+                                <MudItem xs="12" sm="6" md="4" lg="4">
+                                    <MudNumericField T="double?"
+                                                     Label="Employee Share"
+                                                     @bind-Value="Expense.EmployeeShare"
+                                                     Variant="Variant.Outlined"
+                                                     Adornment="Adornment.End"
+                                                     AdornmentText="$"
+                                                     Step="0.25"
+                                                     Min="0"
+                                                     Immediate="true"
+                                                     DecimalPlaces="2" Format="0.00" ReadOnly=" IsDisabled" />
+                                </MudItem>
+                            }
+                            else
+                            {
+                                <MudItem xs="12" sm="6" md="4" lg="4">
+                                    <MudNumericField T="double"
+                                                     Label="Amount"
+                                                     @bind-Value="Expense.Amount"
+                                                     Variant="Variant.Outlined"
+                                                     Adornment="Adornment.End"
+                                                     AdornmentText="$"
+                                                     Step="0.25"
+                                                     Min="0"
+                                                     Immediate="true"
+                                                     DecimalPlaces="2" Format="0.00" ReadOnly=" IsDisabled" />
+                                </MudItem>
+                            }
+
+
 
                             <MudItem xs="12" sm="12" md="12" lg="12">
-                                <MudTextField Variant="Variant.Outlined" Adornment="Adornment.End" @bind-Value="Expense.Notes" Label="Note" Lines="4" Required="true" RequiredError="Note is required!" Disabled="IsDisabled" />
+                                <MudTextField Variant="Variant.Outlined" Adornment="Adornment.End" @bind-Value="Expense.Notes" Label="Note" Lines="4" Required="true" RequiredError="Note is required!" ReadOnly="IsDisabled" />
                             </MudItem>
                             <MudItem xs="12">
                                 <MudText>Supporting Documents</MudText>
@@ -152,6 +205,8 @@
     private long MaxFileSize = 10 * 1024 * 1024; // 10MB
 
     private IEnumerable<DropDownDTO> ExpenseTypes = new List<DropDownDTO>();
+    private IEnumerable<DropDownDTO> CompanyYears = new List<DropDownDTO>();
+    private IEnumerable<DropDownDTO> Months = new List<DropDownDTO>();
 
     private readonly DialogOptions _maxWidth = new() { MaxWidth = MaxWidth.Medium, FullWidth = true };
 
@@ -162,7 +217,11 @@
     protected override async Task OnInitializedAsync()
     {
         LoadingService.Show();
-        ExpenseTypes = await ExpenseService.GetExpenseTypes();
+        var masterDate = await ExpenseService.GetExpenseMasterData();
+        ExpenseTypes = masterDate.ExpenseTypes;
+        CompanyYears = masterDate.CompanyYears;
+        Months = masterDate.Months;
+
         if (ExpenseId > 0)
         {
             Expense = await ExpenseService.GetExpenseByIdAsync(ExpenseId);
@@ -173,11 +232,15 @@
             }
 
             Expense.ExpenseType = ExpenseTypes.FirstOrDefault(x => x.Id == Expense.ExpenseType.Id);
+            Expense.CompanyYear = CompanyYears.FirstOrDefault(x => x.Id == Expense.CompanyYear.Id);
+            Expense.Month = Months.FirstOrDefault(x => x.Id == Expense.Month.Id);
         }
         else
         {
             Expense.Date = DateTime.Now;
             Expense.ExpenseType = ExpenseTypes.FirstOrDefault();
+            Expense.CompanyYear = CompanyYears.FirstOrDefault(x => x.Id == Expense.Date.Year);
+            Expense.Month = Months.FirstOrDefault(x => x.Id == Expense.Date.Month);
         }
 
         LoadingService.Hide();
@@ -187,22 +250,11 @@
     private async Task Submit()
     {
         LoadingService.Show();
-        if (ExpenseId == ApplicationConstants.Zero)
-        {
-            Expense.Files = Files.ToList();
 
-            var response = await ExpenseService.SaveExpense(Expense);
+        Expense.Files = Files.ToList();
+        var response = await ExpenseService.SaveExpense(Expense);
+        await ShowSnackbar(response);
 
-            await ShowSnackbar(response);
-        }
-        else
-        {
-            Expense.Files = Files.ToList();
-
-            //var response = await LeaveRequestService.(LeaveRequest);
-
-            //await ShowSnackbar(response);
-        }
         LoadingService.Hide();
         await OnDialogClosed.InvokeAsync(true); // Notify parent
         MudDialog.Close(DialogResult.Ok(true));

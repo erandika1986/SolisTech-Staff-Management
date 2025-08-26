@@ -27,6 +27,13 @@ namespace StaffApp.Application.DTOs.Finance
         [Display(Name = "Expense Type")]
         public string ExpenseTypeName { get; set; }
 
+        public DropDownDTO CompanyYear { get; set; }
+
+        public DropDownDTO Month { get; set; }
+
+        public double? CompanyShare { get; set; }
+        public double? EmployeeShare { get; set; }
+
         [Display(Name = "Created By")]
         public string CreatedByUser { get; set; }
 
