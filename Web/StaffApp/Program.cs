@@ -7,6 +7,7 @@ using StaffApp.Components.Account;
 using StaffApp.Domain.Entity.Authentication;
 using StaffApp.Infrastructure.Data;
 using StaffApp.Services;
+using Syncfusion.Licensing;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -83,7 +84,9 @@ using (var scope = app.Services.CreateScope())
     await initializer.SeedAsync();
 }
 
-Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1NNaF5cXmBCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdmWXtceHVQR2JcWE11XUNWYUA=");
+//Syncfusion.Licensing.SyncfusionLicenseProvider.RegisterLicense("Ngo9BigBOggjHTQxAR8/V1NNaF5cXmBCf1FpRmJGdld5fUVHYVZUTXxaS00DNHVRdkdmWXtceHVQR2JcWE11XUNWYUA=");
+var licenseKey = builder.Configuration["SyncfusionLicenseKey"];
+SyncfusionLicenseProvider.RegisterLicense(licenseKey);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

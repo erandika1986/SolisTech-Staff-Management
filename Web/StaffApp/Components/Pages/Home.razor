@@ -4,13 +4,358 @@
 @attribute [Authorize]
 <PageTitle>Home</PageTitle>
 
-<MudCheckBox @bind-Value="Basic_CheckBox1"></MudCheckBox>
-<MudCheckBox @bind-Value="Basic_CheckBox2" Color="Color.Primary"></MudCheckBox>
-<MudCheckBox @bind-Value="Basic_CheckBox3" Color="Color.Secondary"></MudCheckBox>
-<MudCheckBox @bind-Value="Basic_CheckBox4" Disabled="true"></MudCheckBox>
+@page "/hr-dashboard"
+@using MudBlazor
+@using System.ComponentModel.DataAnnotations
+
+<PageTitle>HR Management Dashboard</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="mt-4">
+    <!-- Header -->
+    <MudPaper Elevation="2" Class="pa-4 mb-4">
+        <MudGrid AlignItems="Center">
+            <MudItem xs="12" md="8">
+                <MudText Typo="Typo.h4" Class="mb-2">
+                    <MudIcon Icon="Icons.Material.Filled.Dashboard" Class="mr-2" />
+                    HR Management Dashboard
+                </MudText>
+                <MudText Typo="Typo.body1" Color="Color.Secondary">
+                    Welcome back! Here's an overview of your HR metrics and activities.
+                </MudText>
+            </MudItem>
+            <MudItem xs="12" md="4" Class="d-flex justify-end">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="Icons.Material.Filled.Add">
+                    Add Employee
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- Key Metrics Cards -->
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="4" Class="pa-4">
+                <MudCardContent Class="pa-0">
+                    <div class="d-flex align-items-center">
+                        <MudAvatar Color="Color.Primary" Size="Size.Large" Class="mr-3">
+                            <MudIcon Icon="Icons.Material.Filled.People" />
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.h4">1,247</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Total Employees</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Success">+5.2% from last month</MudText>
+                        </div>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="4" Class="pa-4">
+                <MudCardContent Class="pa-0">
+                    <div class="d-flex align-items-center">
+                        <MudAvatar Color="Color.Success" Size="Size.Large" Class="mr-3">
+                            <MudIcon Icon="Icons.Material.Filled.PersonAdd" />
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.h4">23</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">New Hires (This Month)</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Success">+12% from last month</MudText>
+                        </div>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="4" Class="pa-4">
+                <MudCardContent Class="pa-0">
+                    <div class="d-flex align-items-center">
+                        <MudAvatar Color="Color.Warning" Size="Size.Large" Class="mr-3">
+                            <MudIcon Icon="Icons.Material.Filled.Schedule" />
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.h4">156</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Pending Leave Requests</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Warning">Requires attention</MudText>
+                        </div>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Elevation="4" Class="pa-4">
+                <MudCardContent Class="pa-0">
+                    <div class="d-flex align-items-center">
+                        <MudAvatar Color="Color.Info" Size="Size.Large" Class="mr-3">
+                            <MudIcon Icon="Icons.Material.Filled.TrendingUp" />
+                        </MudAvatar>
+                        <div>
+                            <MudText Typo="Typo.h4">87%</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">Employee Satisfaction</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Success">+3% from last quarter</MudText>
+                        </div>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Main Content Grid -->
+    <MudGrid>
+        <!-- Employee Table -->
+        <MudItem xs="12" lg="8">
+            <MudCard Elevation="4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Recent Employee Activities</MudText>
+                    </CardHeaderContent>
+                    <CardHeaderActions>
+                        <MudIconButton Icon="Icons.Material.Filled.MoreVert" Color="Color.Default" />
+                    </CardHeaderActions>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTable Items="@employees" Hover="true" Breakpoint="Breakpoint.Sm" LoadingProgressColor="Color.Info">
+                        <HeaderContent>
+                            <MudTh>Employee</MudTh>
+                            <MudTh>Department</MudTh>
+                            <MudTh>Position</MudTh>
+                            <MudTh>Status</MudTh>
+                            <MudTh>Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Employee">
+                                <div class="d-flex align-items-center">
+                                    <MudAvatar Color="Color.Secondary" Size="Size.Small" Class="mr-2">
+                                        @context.Name.Substring(0, 1)
+                                    </MudAvatar>
+                                    <div>
+                                        <MudText Typo="Typo.body2">@context.Name</MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@context.Email</MudText>
+                                    </div>
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="Department">@context.Department</MudTd>
+                            <MudTd DataLabel="Position">@context.Position</MudTd>
+                            <MudTd DataLabel="Status">
+                                <MudChip T="string" Color="@GetStatusColor(context.Status)" Size="Size.Small">
+                                    @context.Status
+                                </MudChip>
+                            </MudTd>
+                            <MudTd DataLabel="Actions">
+                                <MudIconButton Icon="Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary" />
+                                <MudIconButton Icon="Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Secondary" />
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Side Panel -->
+        <MudItem xs="12" lg="4">
+            <!-- Quick Actions -->
+            <MudCard Elevation="4" Class="mb-4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Quick Actions</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack>
+                        <MudButton Variant="Variant.Outlined" StartIcon="Icons.Material.Filled.PersonAdd" FullWidth="true">
+                            Add New Employee
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" StartIcon="Icons.Material.Filled.Assignment" FullWidth="true">
+                            Generate Reports
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" StartIcon="Icons.Material.Filled.Schedule" FullWidth="true">
+                            Manage Leave Requests
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" StartIcon="Icons.Material.Filled.Assessment" FullWidth="true">
+                            Performance Reviews
+                        </MudButton>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+
+            <!-- Recent Activities -->
+            <MudCard Elevation="4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Recent Activities</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudTimeline TimelineOrientation="TimelineOrientation.Vertical" TimelinePosition="TimelinePosition.Start">
+                        <MudTimelineItem Color="Color.Success" Variant="Variant.Filled">
+                            <ItemOpposite>
+                                <MudText Color="Color.Secondary" Typo="Typo.caption">2 hours ago</MudText>
+                            </ItemOpposite>
+                            <ItemContent>
+                                <MudText Typo="Typo.body2"><strong>John Smith</strong> joined Engineering</MudText>
+                            </ItemContent>
+                        </MudTimelineItem>
+
+                        <MudTimelineItem Color="Color.Info" Variant="Variant.Filled">
+                            <ItemOpposite>
+                                <MudText Color="Color.Secondary" Typo="Typo.caption">4 hours ago</MudText>
+                            </ItemOpposite>
+                            <ItemContent>
+                                <MudText Typo="Typo.body2">Leave request approved for <strong>Sarah Davis</strong></MudText>
+                            </ItemContent>
+                        </MudTimelineItem>
+
+                        <MudTimelineItem Color="Color.Warning" Variant="Variant.Filled">
+                            <ItemOpposite>
+                                <MudText Color="Color.Secondary" Typo="Typo.caption">1 day ago</MudText>
+                            </ItemOpposite>
+                            <ItemContent>
+                                <MudText Typo="Typo.body2">Performance review scheduled for <strong>Mike Johnson</strong></MudText>
+                            </ItemContent>
+                        </MudTimelineItem>
+
+                        <MudTimelineItem Color="Color.Secondary" Variant="Variant.Filled">
+                            <ItemOpposite>
+                                <MudText Color="Color.Secondary" Typo="Typo.caption">2 days ago</MudText>
+                            </ItemOpposite>
+                            <ItemContent>
+                                <MudText Typo="Typo.body2">Department meeting completed - Marketing</MudText>
+                            </ItemContent>
+                        </MudTimelineItem>
+                    </MudTimeline>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Charts Section -->
+    <MudGrid Class="mt-4">
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Department Distribution</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack>
+                        @foreach (var dept in departmentData)
+                        {
+                            <div class="d-flex align-items-center mb-2">
+                                <MudText Typo="Typo.body2" Style="min-width: 100px;">@dept.Name</MudText>
+                                <MudProgressLinear Color="@dept.Color" Size="Size.Medium" Value="@dept.Percentage" Class="flex-grow-1 mx-3" />
+                                <MudText Typo="Typo.body2">@dept.Count</MudText>
+                            </div>
+                        }
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudCard Elevation="4">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Upcoming Events</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack>
+                        @foreach (var evt in upcomingEvents)
+                        {
+                            <MudPaper Elevation="1" Class="pa-3 mb-2">
+                                <div class="d-flex align-items-center">
+                                    <MudIcon Icon="@evt.Icon" Color="@evt.Color" Class="mr-3" />
+                                    <div class="flex-grow-1">
+                                        <MudText Typo="Typo.body2"><strong>@evt.Title</strong></MudText>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@evt.Date.ToString("MMM dd, yyyy")</MudText>
+                                    </div>
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Primary">@evt.Type</MudChip>
+                                </div>
+                            </MudPaper>
+                        }
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
 @code {
-    public bool Basic_CheckBox1 { get; set; } = true;
-    public bool Basic_CheckBox2 { get; set; } = false;
-    public bool Basic_CheckBox3 { get; set; } = false;
-    public bool Basic_CheckBox4 { get; set; } = true;
+    private List<Employee> employees = new List<Employee>();
+    private List<DepartmentData> departmentData = new List<DepartmentData>();
+    private List<UpcomingEvent> upcomingEvents = new List<UpcomingEvent>();
+
+    protected override void OnInitialized()
+    {
+        LoadSampleData();
+    }
+
+    private void LoadSampleData()
+    {
+        employees = new List<Employee>
+        {
+            new Employee { Name = "Alice Johnson", Email = "alice@company.com", Department = "Engineering", Position = "Senior Developer", Status = "Active" },
+            new Employee { Name = "Bob Smith", Email = "bob@company.com", Department = "Marketing", Position = "Marketing Manager", Status = "Active" },
+            new Employee { Name = "Carol Davis", Email = "carol@company.com", Department = "HR", Position = "HR Specialist", Status = "On Leave" },
+            new Employee { Name = "David Wilson", Email = "david@company.com", Department = "Sales", Position = "Sales Executive", Status = "Active" },
+            new Employee { Name = "Eva Brown", Email = "eva@company.com", Department = "Finance", Position = "Financial Analyst", Status = "Active" }
+        };
+
+        departmentData = new List<DepartmentData>
+        {
+            new DepartmentData { Name = "Engineering", Count = 342, Percentage = 85, Color = Color.Primary },
+            new DepartmentData { Name = "Sales", Count = 178, Percentage = 44, Color = Color.Success },
+            new DepartmentData { Name = "Marketing", Count = 124, Percentage = 31, Color = Color.Info },
+            new DepartmentData { Name = "HR", Count = 89, Percentage = 22, Color = Color.Warning },
+            new DepartmentData { Name = "Finance", Count = 67, Percentage = 17, Color = Color.Secondary }
+        };
+
+        upcomingEvents = new List<UpcomingEvent>
+        {
+            new UpcomingEvent { Title = "Team Building Workshop", Date = DateTime.Now.AddDays(3), Type = "Training", Icon = Icons.Material.Filled.Group, Color = Color.Primary },
+            new UpcomingEvent { Title = "Performance Reviews", Date = DateTime.Now.AddDays(7), Type = "Review", Icon = Icons.Material.Filled.Assessment, Color = Color.Info },
+            new UpcomingEvent { Title = "Company All-Hands", Date = DateTime.Now.AddDays(14), Type = "Meeting", Icon = Icons.Material.Filled.Business, Color = Color.Success },
+            new UpcomingEvent { Title = "Holiday Party", Date = DateTime.Now.AddDays(30), Type = "Social", Icon = Icons.Material.Filled.Celebration, Color = Color.Secondary }
+        };
+    }
+
+    private Color GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Active" => Color.Success,
+            "On Leave" => Color.Warning,
+            "Inactive" => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    public class Employee
+    {
+        public string Name { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string Department { get; set; } = "";
+        public string Position { get; set; } = "";
+        public string Status { get; set; } = "";
+    }
+
+    public class DepartmentData
+    {
+        public string Name { get; set; } = "";
+        public int Count { get; set; }
+        public double Percentage { get; set; }
+        public Color Color { get; set; }
+    }
+
+    public class UpcomingEvent
+    {
+        public string Title { get; set; } = "";
+        public DateTime Date { get; set; }
+        public string Type { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public Color Color { get; set; }
+    }
 }
