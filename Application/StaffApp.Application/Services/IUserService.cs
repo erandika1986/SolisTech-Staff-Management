@@ -12,7 +12,7 @@ namespace StaffApp.Application.Services
             string sortField = null,
             bool ascending = true,
             bool status = true);
-
+        Task<List<BasicUserDTO>> GetAllActiveUsersAsync();
         Task<UserDTO> GetUserByIdAsync(string id);
         Task<List<UserDropDownDTO>> GetManagerJobRoleUsersAsync();
         Task<GeneralResponseDTO> CreateNewUserAsync(UserDTO model);

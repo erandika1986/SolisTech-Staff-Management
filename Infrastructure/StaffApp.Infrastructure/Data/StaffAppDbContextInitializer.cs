@@ -51,6 +51,8 @@ namespace StaffApp.Infrastructure.Data
                 await SeedSalaryAddonAsync();
                 await SeedExpensesTypeAsync();
                 await SeedIncomeTypeAsync();
+                await SeedAppraisalCriteriaAsync();
+                await SeedAppraisalPeriodAsync();
             }
             catch (Exception ex)
             {
@@ -430,6 +432,44 @@ namespace StaffApp.Infrastructure.Data
                 };
 
                 await context.ExpenseTypes.AddRangeAsync(expenseTypes);
+                await context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SeedAppraisalCriteriaAsync()
+        {
+            if (!context.UserAppraisalCriterias.Any())
+            {
+                var userAppraisalCriterias = new List<UserAppraisalCriteria>
+                {
+                    new UserAppraisalCriteria(){ CriteriaName ="Job Performance & Results", Description ="Achievement of set goals and KPIs\r\n\r\nQuality of work (accuracy, thoroughness, reliability)\r\n\r\nProductivity and efficiency\r\n\r\nMeeting deadlines and targets\r\n\r\nProblem-solving and decision-making", Weight = 10.0m },
+                    new UserAppraisalCriteria(){ CriteriaName ="Knowledge & Skills", Description ="Job-related technical skills\r\n\r\nIndustry knowledge and awareness\r\n\r\nContinuous learning and professional development\r\n\r\nAdaptability to new tools/technologies", Weight = 10.0m },
+                    new UserAppraisalCriteria(){ CriteriaName ="Work Behavior & Attitude", Description ="Initiative and proactiveness\r\n\r\nAttendance and punctuality\r\n\r\nDiscipline and adherence to company policies\r\n\r\nEthical behavior and integrity\r\n\r\nDependability", Weight = 10.0m },
+                    new UserAppraisalCriteria(){ CriteriaName ="Communication & Collaboration", Description ="Written and verbal communication skills\r\n\r\nActive listening and clarity in conveying ideas\r\n\r\nTeamwork and cooperation\r\n\r\nConflict resolution and interpersonal skills\r\n\r\nCustomer relationship management (if applicable)", Weight = 10.0m },
+                    new UserAppraisalCriteria(){ CriteriaName ="Leadership & Management (for supervisory roles)", Description ="Ability to motivate and guide team members\r\n\r\nDelegation and task management\r\n\r\nDecision-making under pressure\r\n\r\nStrategic thinking and planning\r\n\r\nContribution to team development", Weight = 10.0m },
+                    new UserAppraisalCriteria(){ CriteriaName ="Innovation & Creativity", Description ="Contribution of new ideas\r\n\r\nProcess improvements and cost savings\r\n\r\nProblem-solving creativity\r\n\r\nWillingness to experiment with better solutions", Weight = 10.0m },
+                    new UserAppraisalCriteria(){ CriteriaName ="Future Potential", Description ="Ability to take on higher responsibilities\r\n\r\nFlexibility in handling multiple roles\r\n\r\nLeadership potential\r\n\r\nLong-term contribution to company vision", Weight = 10.0m },
+                    new UserAppraisalCriteria(){ CriteriaName ="Customer / Stakeholder Orientation", Description ="Customer satisfaction and feedback\r\n\r\nResponsiveness to client needs\r\n\r\nHandling complaints professionally\r\n\r\nBuilding long-term relationships", Weight = 10.0m },
+                    new UserAppraisalCriteria(){ CriteriaName ="Compliance & Safety (if applicable)", Description ="Adherence to legal and regulatory requirements\r\n\r\nFollowing workplace safety protocols\r\n\r\nRisk management awareness", Weight = 10.0m },
+                };
+
+                await context.UserAppraisalCriterias.AddRangeAsync(userAppraisalCriterias);
+                await context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SeedAppraisalPeriodAsync()
+        {
+            if (!context.AppraisalPeriods.Any())
+            {
+                var appraisalPeriods = new List<AppraisalPeriod>
+                {
+                    new AppraisalPeriod(){ AppraisalPeriodName ="Annual Appraisal(2025)", StartDate = new DateTime(2025,1,1), EndDate = new DateTime(2025,12,31) },
+                    new AppraisalPeriod(){ AppraisalPeriodName ="Annual Appraisal(2026)", StartDate = new DateTime(2026,1,1), EndDate = new DateTime(2026,12,31) },
+                    new AppraisalPeriod(){ AppraisalPeriodName ="Annual Appraisal(2027)", StartDate = new DateTime(2027,1,1), EndDate = new DateTime(2027,12,31) },
+                    new AppraisalPeriod(){ AppraisalPeriodName ="Annual Appraisal(2028)", StartDate = new DateTime(2028,1,1), EndDate = new DateTime(2028,12,31) }
+                };
+                await context.AppraisalPeriods.AddRangeAsync(appraisalPeriods);
                 await context.SaveChangesAsync();
             }
         }

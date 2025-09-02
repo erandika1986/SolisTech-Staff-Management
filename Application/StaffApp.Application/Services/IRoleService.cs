@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.User;
 using StaffApp.Domain.Entity.Authentication;
 
@@ -17,5 +18,6 @@ namespace StaffApp.Application.Services
         Task<IdentityResult> AddUserToRoleAsync(string userId, string roleName);
         Task<IdentityResult> RemoveUserFromRoleAsync(string userId, string roleName);
         Task<bool> IsUserInRoleAsync(string userId, string roleName);
+        Task<IEnumerable<UserDropDownDTO>> GetUserDropDownsInRoleAsync(string roleName);
     }
 }

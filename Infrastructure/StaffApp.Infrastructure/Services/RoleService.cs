@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.User;
 using StaffApp.Application.Services;
 using StaffApp.Domain.Entity.Authentication;
@@ -103,6 +104,19 @@ namespace StaffApp.Infrastructure.Services
             }
 
             return userIds;
+        }
+
+        public async Task<IEnumerable<UserDropDownDTO>> GetUserDropDownsInRoleAsync(string roleName)
+        {
+            var usersInRole = await userManager.GetUsersInRoleAsync(roleName);
+            var users = new List<UserDropDownDTO>();
+
+            foreach (var user in usersInRole)
+            {
+                users.Add(new UserDropDownDTO() { Id = user.Id, Name = user.FullName });
+            }
+
+            return users;
         }
 
         public async Task<IdentityResult> AddUserToRoleAsync(string userId, string roleName)

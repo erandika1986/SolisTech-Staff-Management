@@ -206,6 +206,27 @@ namespace StaffApp.Infrastructure.Services
             return newResult;
         }
 
+        public async Task<List<BasicUserDTO>> GetAllActiveUsersAsync()
+        {
+            IQueryable<ApplicationUser> query = context.ApplicationUsers.Where(x => x.IsActive == true);
+
+            var items = await query
+                        .Select(user => new BasicUserDTO
+                        {
+                            UserName = user.UserName ?? string.Empty,
+                            FullName = user.FullName ?? string.Empty,
+                            EmployeeNo = user.EmployeeNumber.ToString(),
+                            Gender = !user.Gender.HasValue ? string.Empty : user.Gender.Value.ToString(),
+                            HireDate = !user.HireDate.HasValue ? string.Empty : user.HireDate.Value.ToString("MM/dd/yyyy"),
+                            Id = user.Id,
+                            NIC = user.NICNumber ?? string.Empty,
+                            Phone = user.PhoneNumber ?? string.Empty,
+                        })
+                        .ToListAsync();
+
+            return items;
+        }
+
         public async Task<UserDTO> GetUserByIdAsync(string id)
         {
             var user = await userManager.FindByIdAsync(id);

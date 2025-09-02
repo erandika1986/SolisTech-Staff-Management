@@ -48,6 +48,13 @@ namespace StaffApp.Application.Contracts
         DbSet<InvoicePayment> InvoicePayments { get; }
         DbSet<IncomeSupportAttachment> IncomeSupportAttachments { get; }
 
+        DbSet<AppraisalPeriod> AppraisalPeriods { get; }
+        DbSet<UserAppraisal> UserAppraisals { get; }
+        DbSet<UserAppraisalCriteria> UserAppraisalCriterias { get; }
+        DbSet<UserAppraisalDetail> UserAppraisalDetails { get; }
+        DbSet<UserDisciplinaryAction> UserDisciplinaryActions { get; }
+        DbSet<UserQualificationDocument> UserQualificationDocuments { get; }
+
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);
         Task BeginTransactionAsync(CancellationToken cancellationToken);
