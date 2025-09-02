@@ -145,5 +145,12 @@ namespace StaffApp.Infrastructure.Data
         public DbSet<Invoice> Invoices => Set<Invoice>();
         public DbSet<InvoiceDetail> InvoiceDetails => Set<InvoiceDetail>();
         public DbSet<InvoicePayment> InvoicePayments => Set<InvoicePayment>();
+
+        public DbSet<AppraisalPeriod> AppraisalPeriods => Set<AppraisalPeriod>();
+        public DbSet<UserAppraisal> UserAppraisals => Set<UserAppraisal>();
+        public DbSet<UserAppraisalCriteria> UserAppraisalCriterias => Set<UserAppraisalCriteria>();
+        public DbSet<UserAppraisalDetail> UserAppraisalDetails => Set<UserAppraisalDetail>();
+        public DbSet<UserDisciplinaryAction> UserDisciplinaryActions => Set<UserDisciplinaryAction>();
+        public DbSet<UserQualificationDocument> UserQualificationDocuments => Set<UserQualificationDocument>();
     }
 }

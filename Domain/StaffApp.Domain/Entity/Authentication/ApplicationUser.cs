@@ -22,6 +22,8 @@ namespace StaffApp.Domain.Entity.Authentication
         public virtual CompanyLocation CompanyLocation { get; set; }
 
         public virtual ICollection<Department> DepartmentHeads { get; set; } = new HashSet<Department>();
+        public virtual ICollection<UserAppraisal> UserAppraisals { get; set; } = new HashSet<UserAppraisal>();
+        public virtual ICollection<UserAppraisal> ReviewAppraisals { get; set; } = new HashSet<UserAppraisal>();
         public virtual ICollection<EmployeeLeaveRequest> EmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
         public virtual ICollection<EmployeeLeaveRequest> LeaveRequestReportingManagers { get; set; } = new HashSet<EmployeeLeaveRequest>();
         public virtual ICollection<EmployeeLeaveAllocation> EmployeeLeaveBalances { get; set; } = new HashSet<EmployeeLeaveAllocation>();
@@ -30,9 +32,10 @@ namespace StaffApp.Domain.Entity.Authentication
         public virtual ICollection<EmployeeSalaryHistory> EmployeeSalaryHistories { get; set; } = new HashSet<EmployeeSalaryHistory>();
         public virtual ICollection<Project> Projects { get; set; } = new HashSet<Project>();
         public virtual ICollection<ProjectMember> ProjectMembers { get; set; } = new HashSet<ProjectMember>();
-
+        public virtual ICollection<UserDisciplinaryAction> UserDisciplinaryActions { get; set; } = new HashSet<UserDisciplinaryAction>();
         public virtual ICollection<TimeCard> TimeCards { get; set; } = new HashSet<TimeCard>();
         public virtual ICollection<InvoiceDetail> InvoiceDetails { get; set; } = new HashSet<InvoiceDetail>();
+        public virtual ICollection<UserQualificationDocument> UserQualificationDocuments { get; set; } = new HashSet<UserQualificationDocument>();
         //public virtual ICollection<EmployeeLeaveRequest> CreatedEmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
         //public virtual ICollection<EmployeeLeaveRequest> UpdatedEmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
 

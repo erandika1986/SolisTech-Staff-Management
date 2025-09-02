@@ -63,6 +63,7 @@
                 <PropertyColumn Property="x=>x.HireDate" Title="@GetDisplayName(typeof(BasicUserDTO), nameof(BasicUserDTO.HireDate))" />
                 <TemplateColumn CellClass="d-flex justify-end">
                     <CellTemplate Context="user">
+                        
 
                         <MudStack Row>
                             <MudTooltip Text="Manage Employee Salary" Color="Color.Success" Placement="Placement.Top">
@@ -70,6 +71,9 @@
                             </MudTooltip>
                             <MudTooltip Text="Manage bank accounts" Color="Color.Success" Placement="Placement.Top">
                                 <MudIconButton Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Success" Variant="Variant.Filled" OnClick="() => ManageBankAccountAsync(user.Item)"></MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Manage Employee File" Color="Color.Secondary" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Badge" Color="Color.Secondary" Variant="Variant.Filled" OnClick="() => EditEmployeeFileAsync(user.Item)"></MudIconButton>
                             </MudTooltip>
                             <MudTooltip Text="Edit User" Color="Color.Primary" Placement="Placement.Top">
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditUserAsync(user.Item)"></MudIconButton>
@@ -154,6 +158,16 @@
             { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
         };
         await Dialog.ShowAsync<EditUserDialog>($"Edit Employee : {user.FullName}", parameters, _maxWidth);
+    }
+
+    private async Task EditEmployeeFileAsync(BasicUserDTO user)
+    {
+        var parameters = new DialogParameters
+        {
+            { "UserId", user.Id },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EmployeeFileDialog>($"Manage Employee File Detail For : {user.FullName}", parameters, _maxWidth);
     }
 
     private async Task AddNewUserAsync()

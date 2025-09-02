@@ -1,0 +1,320 @@
+﻿@page "/test"
+@using MudBlazor
+@using MudBlazor.Utilities
+
+<MudLayout>
+    <MudAppBar Elevation="4">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" />
+        <MudSpacer />
+        <MudText Typo="Typo.h6">Director Dashboard</MudText>
+        <MudSpacer />
+        <MudIconButton Icon="@Icons.Material.Filled.Notifications" Color="Color.Inherit" />
+        <MudAvatar Size="Size.Small" Class="ml-3" />
+    </MudAppBar>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.False" Class="py-6">
+            <!-- Welcome and KPI Summary -->
+            <MudGrid Class="mb-6">
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h4" Class="mb-2">Welcome, Director</MudText>
+                    <MudText Color="Color.Secondary" Class="mb-4">Overview of company performance as of @DateTime.Now.ToString("MMMM dd, yyyy")</MudText>
+                </MudItem>
+            </MudGrid>
+
+            <!-- Key Metrics Cards -->
+            <MudGrid Class="mb-6">
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="pa-4 text-center" Elevation="1">
+                        <MudIcon Icon="@Icons.Material.Filled.People" Color="Color.Primary" Class="mb-2" Size="Size.Large" />
+                        <MudText Typo="Typo.h4">@TotalEmployees</MudText>
+                        <MudText Typo="Typo.body2">Total Employees</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="pa-4 text-center" Elevation="1">
+                        <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Success" Class="mb-2" Size="Size.Large" />
+                        <MudText Typo="Typo.h4" Color="Color.Success">@MonthlyRevenue.ToString("C0")</MudText>
+                        <MudText Typo="Typo.body2">Monthly Revenue</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="pa-4 text-center" Elevation="1">
+                        <MudIcon Icon="@Icons.Material.Filled.TrendingDown" Color="Color.Error" Class="mb-2" Size="Size.Large" />
+                        <MudText Typo="Typo.h4" Color="Color.Error">@MonthlyExpenses.ToString("C0")</MudText>
+                        <MudText Typo="Typo.body2">Monthly Expenses</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Class="pa-4 text-center" Elevation="1">
+                        <MudIcon Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Info" Class="mb-2" Size="Size.Large" />
+                        <MudText Typo="Typo.h4">@ProfitMargin.ToString("P1")</MudText>
+                        <MudText Typo="Typo.body2">Profit Margin</MudText>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+
+            <!-- Charts Row -->
+            <MudGrid Class="mb-6">
+                <MudItem xs="12" md="6" Class="mb-4">
+                    <MudCard Elevation="5">
+                        <MudCardHeader Title="Revenue vs Expenses (Last 6 Months)" />
+                        <MudCardContent>
+                            <MudChart LineChartOptions="@lineChartOptions" ChartData="@RevenueExpenseData" />
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" md="6" Class="mb-4">
+                    <MudCard Elevation="5">
+                        <MudCardHeader Title="Department Headcount" />
+                        <MudCardContent>
+                            <MudChart ChartType="MudBlazor.ChartType.Pie" ChartData="@DepartmentHeadcountData" />
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+
+            <!-- Data Tables Row -->
+            <MudGrid Class="mb-6">
+                <MudItem xs="12" md="6" Class="mb-4">
+                    <MudCard Elevation="5">
+                        <MudCardHeader Title="Recent High-Value Transactions" />
+                        <MudCardContent>
+                            <MudTable Items="@RecentLargeTransactions" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>Date</MudTh>
+                                    <MudTh>Description</MudTh>
+                                    <MudTh>Amount</MudTh>
+                                    <MudTh>Department</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Date">@context.Date.ToShortDateString()</MudTd>
+                                    <MudTd DataLabel="Description">@context.Description</MudTd>
+                                    <MudTd DataLabel="Amount">
+                                        <MudText Color="@(context.IsIncome? Color.Success: Color.Error)">@context.Amount.ToString("C0")</MudText>
+                                    </MudTd>
+                                    <MudTd DataLabel="Department">@context.Department</MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+                <MudItem xs="12" md="6" Class="mb-4">
+                    <MudCard Elevation="5">
+                        <MudCardHeader Title="Department Performance Metrics" />
+                        <MudCardContent>
+                            <MudTable Items="@DepartmentMetrics" Hover="true" Breakpoint="Breakpoint.Sm" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>Department</MudTh>
+                                    <MudTh>Headcount</MudTh>
+                                    <MudTh>Budget</MudTh>
+                                    <MudTh>Productivity</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd DataLabel="Department">@context.Name</MudTd>
+                                    <MudTd DataLabel="Headcount">@context.Headcount</MudTd>
+                                    <MudTd DataLabel="Budget">@context.Budget.ToString("C0")</MudTd>
+                                    <MudTd DataLabel="Productivity">
+                                        <MudProgressLinear Color="@GetProductivityColor(context.Productivity)" Value="@(context.Productivity * 100)" Class="my-1" />
+                                        <MudText Typo="Typo.caption">@(context.Productivity.ToString("P0"))</MudText>
+                                    </MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+
+            <!-- Quick Links -->
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6" Class="mb-3">Quick Access</MudText>
+                </MudItem>
+                <MudItem xs="6" sm="4" md="2">
+                    <MudPaper Class="pa-3 text-center quick-action" Elevation="1">
+                        <MudIcon Button="true" Icon="@Icons.Material.Filled.Assessment" Color="Color.Primary" Size="Size.Large" Class="mb-2" />
+                        <MudText Typo="Typo.body2">Financial Reports</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="6" sm="4" md="2">
+                    <MudPaper Class="pa-3 text-center quick-action" Elevation="1">
+                        <MudIcon Button="true" Icon="@Icons.Material.Filled.PieChart" Color="Color.Secondary" Size="Size.Large" Class="mb-2" />
+                        <MudText Typo="Typo.body2">Analytics</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="6" sm="4" md="2">
+                    <MudPaper Class="pa-3 text-center quick-action" Elevation="1">
+                        <MudIcon Button="true" Icon="@Icons.Material.Filled.People" Color="Color.Tertiary" Size="Size.Large" Class="mb-2" />
+                        <MudText Typo="Typo.body2">HR Management</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="6" sm="4" md="2">
+                    <MudPaper Class="pa-3 text-center quick-action" Elevation="1">
+                        <MudIcon Button="true" Icon="@Icons.Material.Filled.Event" Color="Color.Info" Size="Size.Large" Class="mb-2" />
+                        <MudText Typo="Typo.body2">Events</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="6" sm="4" md="2">
+                    <MudPaper Class="pa-3 text-center quick-action" Elevation="1">
+                        <MudIcon Button="true" Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Success" Size="Size.Large" Class="mb-2" />
+                        <MudText Typo="Typo.body2">Expenses</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="6" sm="4" md="2">
+                    <MudPaper Class="pa-3 text-center quick-action" Elevation="1">
+                        <MudIcon Button="true" Icon="@Icons.Material.Filled.Settings" Color="Color.Warning" Size="Size.Large" Class="mb-2" />
+                        <MudText Typo="Typo.body2">Settings</MudText>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    // Test data for the dashboard
+    private int TotalEmployees = 247;
+    private decimal MonthlyRevenue = 1250000;
+    private decimal MonthlyExpenses = 875000;
+    private decimal ProfitMargin => (MonthlyRevenue - MonthlyExpenses) / MonthlyRevenue;
+
+    // Chart options and data
+    private LineChartOptions lineChartOptions = new LineChartOptions
+    {
+        YAxisTicks = 5,
+        XAxisLines = true,
+        YAxisLines = true,
+        InterpolationOption = InterpolationOption.Straight
+    };
+
+    private ChartData RevenueExpenseData = new ChartData
+    {
+        Labels = new List<string> { "Jan", "Feb", "Mar", "Apr", "May", "Jun" },
+        Datasets = new List<ChartDataset>
+        {
+            new ChartDataset
+            {
+                Label = "Revenue",
+                Data = new List<double> { 1050000, 1120000, 1180000, 1210000, 1250000, 1300000 },
+                BackgroundColor = new List<string> { "rgba(76, 175, 80, 0.2)" },
+                BorderColor = new List<string> { "#4CAF50" },
+                BorderWidth = 2,
+                Fill = true
+            },
+            new ChartDataset
+            {
+                Label = "Expenses",
+                Data = new List<double> { 820000, 830000, 845000, 860000, 875000, 890000 },
+                BackgroundColor = new List<string> { "rgba(244, 67, 54, 0.2)" },
+                BorderColor = new List<string> { "#F44336" },
+                BorderWidth = 2,
+                Fill = true
+            }
+        }
+    };
+
+    // Chart data for department headcount
+    private ChartData DepartmentHeadcountData = new ChartData
+    {
+        Labels = new List<string> { "Sales", "Engineering", "Marketing", "HR", "Operations" },
+        Datasets = new List<ChartDataset>
+        {
+            new ChartDataset
+            {
+                Data = new List<double> { 65, 78, 32, 18, 54 },
+                BackgroundColors = new List<string> { "#42A5F5", "#66BB6A", "#FFA726", "#EC407A", "#8D6E63" }
+            }
+        }
+    };
+
+    // Recent transactions data
+    private List<FinancialTransaction> RecentLargeTransactions = new List<FinancialTransaction>
+    {
+        new FinancialTransaction { Date = DateTime.Now.AddDays(-2), Description = "Enterprise Client Payment", Amount = 150000, IsIncome = true, Department = "Sales" },
+        new FinancialTransaction { Date = DateTime.Now.AddDays(-5), Description = "Cloud Infrastructure", Amount = 75000, IsIncome = false, Department = "IT" },
+        new FinancialTransaction { Date = DateTime.Now.AddDays(-7), Description = "Q2 Marketing Campaign", Amount = 45000, IsIncome = false, Department = "Marketing" },
+        new FinancialTransaction { Date = DateTime.Now.AddDays(-10), Description = "Partner Referral Fee", Amount = 25000, IsIncome = true, Department = "Business Dev" },
+        new FinancialTransaction { Date = DateTime.Now.AddDays(-12), Description = "Office Lease", Amount = 65000, IsIncome = false, Department = "Operations" }
+    };
+
+    // Department metrics data
+    private List<DepartmentMetric> DepartmentMetrics = new List<DepartmentMetric>
+    {
+        new DepartmentMetric { Name = "Sales", Headcount = 65, Budget = 500000, Productivity = 0.85 },
+        new DepartmentMetric { Name = "Engineering", Headcount = 78, Budget = 850000, Productivity = 0.92 },
+        new DepartmentMetric { Name = "Marketing", Headcount = 32, Budget = 300000, Productivity = 0.78 },
+        new DepartmentMetric { Name = "HR", Headcount = 18, Budget = 200000, Productivity = 0.88 },
+        new DepartmentMetric { Name = "Operations", Headcount = 54, Budget = 400000, Productivity = 0.82 }
+    };
+
+    // Helper method to get color based on productivity
+    private Color GetProductivityColor(double productivity)
+    {
+        if (productivity >= 0.9) return Color.Success;
+        if (productivity >= 0.7) return Color.Warning;
+        return Color.Error;
+    }
+
+    // Data models
+    public class FinancialTransaction
+    {
+        public DateTime Date { get; set; }
+        public string Description { get; set; }
+        public decimal Amount { get; set; }
+        public bool IsIncome { get; set; }
+        public string Department { get; set; }
+    }
+
+    public class DepartmentMetric
+    {
+        public string Name { get; set; }
+        public int Headcount { get; set; }
+        public decimal Budget { get; set; }
+        public double Productivity { get; set; }
+    }
+
+    // Add these classes at the bottom of your DirectorDashboard.razor file, inside the @code block
+
+    public class ChartData
+    {
+        public List<string> Labels { get; set; } = new List<string>();
+        public List<ChartDataset> Datasets { get; set; } = new List<ChartDataset>();
+    }
+
+    public class ChartDataset
+    {
+        public string Label { get; set; }
+        public List<double> Data { get; set; } = new List<double>();
+        public List<string> BackgroundColor { get; set; } = new List<string>();
+        public List<string> BackgroundColors { get; set; } = new List<string>();
+        public List<string> BorderColor { get; set; } = new List<string>();
+        public double BorderWidth { get; set; } = 2;
+        public bool Fill { get; set; } = true;
+    }
+
+    public class LineChartOptions
+    {
+        public int YAxisTicks { get; set; } = 5;
+        public bool XAxisLines { get; set; } = true;
+        public bool YAxisLines { get; set; } = true;
+        public InterpolationOption InterpolationOption { get; set; } = InterpolationOption.Straight;
+    }
+
+    public enum InterpolationOption
+    {
+        Straight,
+        Smooth
+    }
+
+    public enum ChartType
+    {
+        Line,
+        Bar,
+        Pie,
+        Doughnut,
+        PolarArea,
+        Radar,
+        Scatter,
+        Bubble
+    }
+}
