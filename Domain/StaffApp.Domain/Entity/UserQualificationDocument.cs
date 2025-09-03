@@ -6,6 +6,7 @@ namespace StaffApp.Domain.Entity
     public class UserQualificationDocument : BaseAuditableEntity
     {
         public string UserId { get; set; }
+        public string QualificationName { get; set; }
         public string DocumentName { get; set; }
         public string OriginalFileName { get; set; }
         public string SaveFileName { get; set; }
