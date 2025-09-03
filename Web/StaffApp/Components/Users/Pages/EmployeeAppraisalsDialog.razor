@@ -1,0 +1,20 @@
+﻿<h3>EmployeeAppraisalsDialog</h3>
+
+@code {
+    bool open = true;
+
+    [Parameter] public string UserId { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

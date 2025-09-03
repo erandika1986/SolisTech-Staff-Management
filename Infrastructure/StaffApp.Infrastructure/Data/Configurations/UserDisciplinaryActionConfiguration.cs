@@ -16,6 +16,9 @@ namespace StaffApp.Infrastructure.Data.Configurations
             builder.Property(p => p.Id)
                 .ValueGeneratedOnAdd();
 
+            builder.Property(p => p.EffectiveUntil)
+                .IsRequired(false);
+
             builder
                .HasOne<ApplicationUser>(c => c.User)
                .WithMany(c => c.UserDisciplinaryActions)

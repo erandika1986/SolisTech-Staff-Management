@@ -1,0 +1,180 @@
+﻿@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.DisciplinaryAction
+@using StaffApp.Application.Extensions.Helpers
+@using StaffApp.Application.Services
+
+@inject IUserDisciplinaryService UserDisciplinaryService
+
+<PageTitle>Employee Disciplinary Actions</PageTitle>
+<MudDialog>
+    <TitleContent>
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <div class="d-flex justify-space-between align-center flex-wrap">
+                <div>
+                    <MudText Typo="Typo.h4" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Person" Class="mr-3" />
+                        @(IsEdit ? "Edit Disciplinary Action" : "Add New Disciplinary Action")
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                        Manage Employee Disciplinary Action here
+                    </MudText>
+                </div>
+            </div>
+        </MudPaper>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@isValid">
+            <MudGrid>
+                <!-- ActionType -->
+                <MudItem xs="12" sm="6" md="4" lg="4">
+                    <MudSelect T="DropDownDTO"
+                               Label="ActionType"
+                               @bind-Value="disciplinaryAction.SelectedActionType"
+                               Required="true"
+                               RequiredError="Action type is required!"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var actionType in ActionTypes)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@actionType">@actionType.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- ActionType -->
+                <MudItem xs="12" sm="6" md="4" lg="4">
+                    <MudSelect T="DropDownDTO"
+                               Label="Priority"
+                               @bind-Value="disciplinaryAction.SelectedSeverityLevel"
+                               Required="true"
+                               RequiredError="Severity Level is required!"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var severityLevel in SeverityLevels)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@severityLevel">@severityLevel.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <MudItem xs="6" sm="6" md="4" lg="4">
+                    <MudDatePicker @bind-Date="disciplinaryAction.ActionDate"
+                                   Label="Action Date"
+                                   Required="true"
+                                   RequiredError="Action Date is required!"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   MaxDate="DateTime.Today" />
+                </MudItem>
+
+                <!-- EffectiveUntil -->
+                <MudItem xs="6" sm="6" md="4" lg="4">
+                    <MudDatePicker @bind-Date="disciplinaryAction.EffectiveUntil"
+                                   Label="Effective Until"
+                                   Required="true"
+                                   RequiredError="Effective Date is required!"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense"
+                                   MaxDate="DateTime.Today" />
+                </MudItem>
+                <!-- Reason -->
+                <MudItem xs="12" sm="12" md="12" lg="12">
+                    <MudTextField @bind-Value="disciplinaryAction.Reason"
+                                  Label="Reason"
+                                  Lines="3"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+
+                <!-- Remarks -->
+                <MudItem xs="12" sm="12" md="12" lg="12">
+                    <MudTextField @bind-Value="disciplinaryAction.Remarks"
+                                  Label="Remarks"
+                                  Lines="3"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel" Color="Color.Default">Cancel</MudButton>
+        <MudButton Color="Color.Success"
+                   Variant="Variant.Filled"
+                   OnClick="SaveDisciplinaryAction"
+                   Disabled="!isValid || isSubmitting"
+                   StartIcon="@Icons.Material.Filled.Save">
+            @if (isSubmitting)
+            {
+                <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                <MudText Class="ms-2">Saving...</MudText>
+            }
+            else
+            {
+                @(IsEdit ? "Update" : "Create")
+            }
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public int Id { get; set; }
+
+    [Parameter]
+    public string UserId { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
+
+    private DisciplinaryActionDTO disciplinaryAction = new();
+    private IEnumerable<DropDownDTO> ActionTypes = new List<DropDownDTO>();
+    private IEnumerable<DropDownDTO> SeverityLevels = new List<DropDownDTO>();
+
+    private bool loading = false;
+    private MudForm form = null!;
+    private bool isValid;
+    private bool isSubmitting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        loading = true;
+        var masterData = UserDisciplinaryService.GetDisciplinaryActionMasterData();
+        ActionTypes = masterData.ActionTypes;
+        SeverityLevels = masterData.SeverityLevels;
+        if (IsEdit)
+        {
+  
+            disciplinaryAction = await UserDisciplinaryService.GetByIdAsync(Id);
+            disciplinaryAction.SelectedActionType = ActionTypes.FirstOrDefault(x => x.Id == disciplinaryAction.SelectedActionType.Id);   
+            disciplinaryAction.SelectedSeverityLevel = SeverityLevels.FirstOrDefault(x => x.Id == disciplinaryAction.SelectedSeverityLevel.Id);
+        }
+        else
+        {
+            disciplinaryAction = new DisciplinaryActionDTO
+            {
+                UserId = UserId,
+                SelectedActionType = ActionTypes.FirstOrDefault(),
+                SelectedSeverityLevel = SeverityLevels.FirstOrDefault(),
+                ActionDate = DateTime.Now
+            };
+        }
+
+        loading = false;
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private async Task SaveDisciplinaryAction()
+    {
+    }
+
+}

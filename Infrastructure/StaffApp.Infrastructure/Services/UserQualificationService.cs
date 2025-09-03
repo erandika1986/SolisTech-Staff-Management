@@ -10,7 +10,8 @@ using StaffApp.Domain.Entity;
 
 namespace StaffApp.Infrastructure.Services
 {
-    public class UserQualificationService(IStaffAppDbContext context,
+    public class UserQualificationService(
+        IStaffAppDbContext context,
         ICurrentUserService currentUserService,
         IAzureBlobService azureBlobService,
         IConfiguration configuration,

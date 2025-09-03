@@ -4,12 +4,14 @@ using Microsoft.Extensions.Logging;
 using StaffApp.Application.Contracts;
 using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.DisciplinaryAction;
+using StaffApp.Application.Extensions.Helpers;
 using StaffApp.Application.Services;
 using StaffApp.Domain.Entity;
 
 namespace StaffApp.Infrastructure.Services
 {
-    public class UserDisciplinaryService(IStaffAppDbContext context,
+    public class UserDisciplinaryService(
+        IStaffAppDbContext context,
         ICurrentUserService currentUserService,
         IAzureBlobService azureBlobService,
         IConfiguration configuration,
@@ -23,7 +25,7 @@ namespace StaffApp.Infrastructure.Services
                 {
                     UserId = action.UserId,
                     ActionType = action.ActionType,
-                    ActionDate = action.ActionDate,
+                    ActionDate = action.ActionDate.Value,
                     EffectiveUntil = action.EffectiveUntil,
                     Reason = action.Reason,
                     SeverityLevel = action.SeverityLevel,
@@ -160,7 +162,7 @@ namespace StaffApp.Infrastructure.Services
                 }
 
                 entity.ActionType = action.ActionType;
-                entity.ActionDate = action.ActionDate;
+                entity.ActionDate = action.ActionDate.Value;
                 entity.EffectiveUntil = action.EffectiveUntil;
                 entity.Reason = action.Reason;
                 entity.SeverityLevel = action.SeverityLevel;
@@ -186,6 +188,18 @@ namespace StaffApp.Infrastructure.Services
                     Message = "An error occurred while updating the disciplinary action."
                 };
             }
+        }
+
+        public DisciplinaryActionMasterDTO GetDisciplinaryActionMasterData()
+        {
+            var actionTypes = EnumHelper.GetDropDownList<Domain.Enum.DisciplinaryActionType>();
+            var severityLevels = EnumHelper.GetDropDownList<Domain.Enum.SeverityLevel>();
+
+            return new DisciplinaryActionMasterDTO
+            {
+                ActionTypes = actionTypes,
+                SeverityLevels = severityLevels
+            };
         }
 
         private async Task<PaginatedResultDTO<DisciplinaryActionDTO>> GetPaginatedResultAsync(IOrderedQueryable<UserDisciplinaryAction> query, int pageNumber, int pageSize)
@@ -217,5 +231,6 @@ namespace StaffApp.Infrastructure.Services
                 IsReadOnly = true
             };
         }
+
     }
 }

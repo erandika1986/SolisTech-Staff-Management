@@ -72,8 +72,14 @@
                             <MudTooltip Text="Manage bank accounts" Color="Color.Success" Placement="Placement.Top">
                                 <MudIconButton Icon="@Icons.Material.Filled.AccountBalance" Color="Color.Success" Variant="Variant.Filled" OnClick="() => ManageBankAccountAsync(user.Item)"></MudIconButton>
                             </MudTooltip>
-                            <MudTooltip Text="Manage Employee File" Color="Color.Secondary" Placement="Placement.Top">
-                                <MudIconButton Icon="@Icons.Material.Filled.Badge" Color="Color.Secondary" Variant="Variant.Filled" OnClick="() => EditEmployeeFileAsync(user.Item)"></MudIconButton>
+                            <MudTooltip Text="Manage Qualification" Color="Color.Secondary" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.CastForEducation" Color="Color.Secondary" Variant="Variant.Filled" OnClick="() => EditEmployeeQualificationsAsync(user.Item)"></MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Manage Appraisals" Color="Color.Secondary" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Secondary" Variant="Variant.Filled" OnClick="() => EditEmployeeAppraisalsAsync(user.Item)"></MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Report Disciplinary Action" Color="Color.Secondary" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Gavel" Color="Color.Secondary" Variant="Variant.Filled" OnClick="() => EditEmployeeDisciplinaryActionsAsync(user.Item)"></MudIconButton>
                             </MudTooltip>
                             <MudTooltip Text="Edit User" Color="Color.Primary" Placement="Placement.Top">
                                 <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => EditUserAsync(user.Item)"></MudIconButton>
@@ -160,14 +166,35 @@
         await Dialog.ShowAsync<EditUserDialog>($"Edit Employee : {user.FullName}", parameters, _maxWidth);
     }
 
-    private async Task EditEmployeeFileAsync(BasicUserDTO user)
+    private async Task EditEmployeeQualificationsAsync(BasicUserDTO user)
     {
         var parameters = new DialogParameters
         {
             { "UserId", user.Id },
             { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
         };
-        await Dialog.ShowAsync<EmployeeFileDialog>($"Manage Employee File Detail For : {user.FullName}", parameters, _maxWidth);
+        await Dialog.ShowAsync<EmployeeQualificationsDialog>($"Qualifications For {user.FullName}", parameters, _maxWidth);
+    }
+
+    private async Task EditEmployeeAppraisalsAsync(BasicUserDTO user)
+    {
+        var parameters = new DialogParameters
+        {
+            { "UserId", user.Id },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EmployeeAppraisalsDialog>($"Appraisals For {user.FullName}", parameters, _maxWidth);
+    }
+
+    private async Task EditEmployeeDisciplinaryActionsAsync(BasicUserDTO user)
+    {
+        var parameters = new DialogParameters
+        {
+            { "UserId", user.Id },
+            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+        };
+        await Dialog.ShowAsync<EmployeeDisciplinaryActionsDialog>($"Disciplinary Actions For {user.FullName}", parameters, _maxWidth);
+
     }
 
     private async Task AddNewUserAsync()

@@ -11,5 +11,6 @@ namespace StaffApp.Application.Services
         Task<GeneralResponseDTO> AddAsync(DisciplinaryActionDTO action);
         Task<GeneralResponseDTO> UpdateAsync(DisciplinaryActionDTO action);
         Task<GeneralResponseDTO> DeleteAsync(int id);
+        DisciplinaryActionMasterDTO GetDisciplinaryActionMasterData();
     }
 }

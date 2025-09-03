@@ -8,7 +8,7 @@ namespace StaffApp.Domain.Entity
     {
         public int AppraisalPeriodId { get; set; }
         public string UserId { get; set; }
-        public string ReviewerId { get; set; }
+        public string? ReviewerId { get; set; }
         public decimal OverallRating { get; set; }
         public string Comments { get; set; }
         public AppraisalStatus Status { get; set; }

@@ -35,7 +35,7 @@ namespace StaffApp.Infrastructure.Data.Configurations
                .WithMany(c => c.ReviewAppraisals)
                .HasForeignKey(c => c.ReviewerId)
                .OnDelete(DeleteBehavior.Restrict)
-               .IsRequired(true);
+               .IsRequired(false);
         }
     }
 }

@@ -1,0 +1,141 @@
+﻿@using StaffApp.Application.DTOs.DisciplinaryAction
+@using StaffApp.Application.Extensions.Helpers
+
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Employee Disciplinary Actions</PageTitle>
+<MudDialog>
+        <TitleContent>
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <div class="d-flex justify-space-between align-center flex-wrap">
+                <div>
+                    <MudText Typo="Typo.h4" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Person" Class="mr-3" />
+                        Manage Employee Disciplinary Actions
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                        Manage Employee Disciplinary Actions
+                    </MudText>
+                </div>
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.Add"
+                           Class="mt-2 mt-sm-0" OnClick="AddNewEmployeeDisciplinaryActionsDialog">
+                    Add New
+                </MudButton>
+            </div>
+        </MudPaper>
+        </TitleContent>
+        <DialogContent>
+        <MudPaper Class="pa-0" Elevation="1">
+            <!-- Groups Table -->
+            <MudTable Items="@disciplinaryActions"
+                      Dense="true"
+                      Hover="true"
+                      Striped="true"
+                      Loading="@loading"
+                      LoadingProgressColor="Color.Info">
+                <HeaderContent>
+                    <MudTh>Action Type</MudTh>
+                    <MudTh>Action Date</MudTh>
+                    <MudTh>Severity Level</MudTh>
+                    <MudTh>Remarks</MudTh>
+                    <MudTh Style="text-align:center">Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="ActionType">
+                        <MudText Typo="Typo.body1">
+                            @EnumHelper.GetEnumDescription(context.ActionType)
+                        </MudText>
+                    </MudTd>
+                    <MudTd DataLabel="ActionDate">
+                        <MudText Typo="Typo.body1">
+                            context.ActionDate
+                        </MudText>
+                    </MudTd>
+                    <MudTd DataLabel="Role">
+
+                    </MudTd>
+                    <MudTd DataLabel="Users Count">
+                        <div class="d-flex flex-wrap gap-1">
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info"></MudChip>
+                        </div>
+
+                    </MudTd>
+                    <MudTd DataLabel="Users">
+
+                    </MudTd>
+                    <MudTd DataLabel="Actions" Style="text-align:center">
+
+                        <MudTooltip Text="Edit Group Detail" Color="Color.Primary" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                           Color="Color.Primary"
+                                           Variant="Variant.Filled" />
+                        </MudTooltip>
+
+                        <MudTooltip Text="Delete Group" Color="Color.Error" Placement="Placement.Top">
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                           Color="Color.Error"
+                                           Variant="Variant.Filled" />
+                        </MudTooltip>
+                    </MudTd>
+                </RowTemplate>
+                <NoRecordsContent>
+                    <MudText>No disciplinary actions found. Click "Add New" to create new disciplinary action.</MudText>
+                </NoRecordsContent>
+            </MudTable>
+        </MudPaper>
+        </DialogContent>
+</MudDialog>
+
+
+@code {
+    bool open = true;
+
+    [Parameter] public string UserId { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
+
+
+    private List<DisciplinaryActionDTO> disciplinaryActions = new();
+    private bool loading = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    private async Task AddNewEmployeeDisciplinaryActionsDialog()
+    {
+        var parameters = new DialogParameters<AddEditEmployeeDisciplinaryDialog>
+        {
+            { x => x.IsEdit, false },
+            { x => x.UserId, UserId },
+            { x => x.Id, 0 },
+            // { x => x.DonationId, 0 },
+            // { x => x.PreSelectedCampaignId, SelectedCampaign.Id }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddEditEmployeeDisciplinaryDialog>("Add New Employee Disciplinary Action", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}
