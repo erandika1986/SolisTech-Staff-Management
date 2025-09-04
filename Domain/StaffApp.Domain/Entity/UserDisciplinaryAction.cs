@@ -14,7 +14,7 @@ namespace StaffApp.Domain.Entity
         public DateTime? EffectiveUntil { get; set; }
         public string Reason { get; set; }
         public SeverityLevel SeverityLevel { get; set; }
-        public string Remarks { get; set; }
+        public string? Remarks { get; set; }
 
         public virtual ApplicationUser User { get; set; }
     }

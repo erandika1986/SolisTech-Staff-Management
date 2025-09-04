@@ -193,7 +193,15 @@
             { "UserId", user.Id },
             { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
         };
-        await Dialog.ShowAsync<EmployeeDisciplinaryActionsDialog>($"Disciplinary Actions For {user.FullName}", parameters, _maxWidth);
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            BackdropClick = true
+        };
+        await Dialog.ShowAsync<EmployeeDisciplinaryActionsDialog>($"Disciplinary Actions For {user.FullName}", parameters, options);
 
     }
 

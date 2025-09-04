@@ -1,8 +1,14 @@
 ﻿@using StaffApp.Application.DTOs.DisciplinaryAction
 @using StaffApp.Application.Extensions.Helpers
+@using StaffApp.Application.Services
+@using StaffApp.Components.Shared
+@using StaffApp.Infrastructure.Services
 
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
+@inject IUserDisciplinaryService UserDisciplinaryService
+@inject LoadingService LoadingService
+@inject IDialogService Dialog
 
 <PageTitle>Employee Disciplinary Actions</PageTitle>
 <MudDialog>
@@ -40,8 +46,8 @@
                     <MudTh>Action Type</MudTh>
                     <MudTh>Action Date</MudTh>
                     <MudTh>Severity Level</MudTh>
-                    <MudTh>Remarks</MudTh>
-                    <MudTh Style="text-align:center">Actions</MudTh>
+                    <MudTh>Reason</MudTh>
+                    <MudTh>Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd DataLabel="ActionType">
@@ -51,33 +57,33 @@
                     </MudTd>
                     <MudTd DataLabel="ActionDate">
                         <MudText Typo="Typo.body1">
-                            context.ActionDate
+                            @($"{context.ActionDate:dd MMM yyyy, hh:mm tt}")   
                         </MudText>
                     </MudTd>
                     <MudTd DataLabel="Role">
-
+                        <MudText Typo="Typo.body1">
+                            @EnumHelper.GetEnumDescription(context.SeverityLevel)
+                        </MudText>
                     </MudTd>
-                    <MudTd DataLabel="Users Count">
-                        <div class="d-flex flex-wrap gap-1">
-                            <MudChip T="string" Size="Size.Small" Color="Color.Info"></MudChip>
-                        </div>
-
-                    </MudTd>
-                    <MudTd DataLabel="Users">
-
+                    <MudTd DataLabel="Reason">
+                        <MudText Typo="Typo.body1">
+                            @(context.Reason?.Length > 75
+                                                        ? context.Reason.Substring(0, 75) + "..."
+                                                        : context.Reason)
+                        </MudText>
                     </MudTd>
                     <MudTd DataLabel="Actions" Style="text-align:center">
 
                         <MudTooltip Text="Edit Group Detail" Color="Color.Primary" Placement="Placement.Top">
                             <MudIconButton Icon="@Icons.Material.Filled.Edit"
                                            Color="Color.Primary"
-                                           Variant="Variant.Filled" />
+                                           Variant="Variant.Filled" OnClick="() => EditDisciplinaryActionAsync(context)" />
                         </MudTooltip>
 
                         <MudTooltip Text="Delete Group" Color="Color.Error" Placement="Placement.Top">
                             <MudIconButton Icon="@Icons.Material.Filled.Delete"
                                            Color="Color.Error"
-                                           Variant="Variant.Filled" />
+                                           Variant="Variant.Filled" OnClick="() => DeleteDisciplinaryActionAsync(context)" />
                         </MudTooltip>
                     </MudTd>
                 </RowTemplate>
@@ -106,7 +112,17 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadDisciplinaryActions();
+    }
 
+    private async Task LoadDisciplinaryActions()
+    {
+        LoadingService.Show();
+
+        disciplinaryActions = await UserDisciplinaryService.GetByUserIdAsync(UserId);
+
+
+        LoadingService.Hide();
     }
 
     private async Task AddNewEmployeeDisciplinaryActionsDialog()
@@ -133,9 +149,64 @@
 
         if (!result.Canceled)
         {
-
+            await LoadDisciplinaryActions();
         }
     }
+
+    private async Task EditDisciplinaryActionAsync(DisciplinaryActionDTO item)
+    {
+        var parameters = new DialogParameters<AddEditEmployeeDisciplinaryDialog>
+        {
+            { x => x.IsEdit, true },
+            { x => x.UserId, UserId },
+            { x => x.Id, item.Id},
+            // { x => x.DonationId, 0 },
+            // { x => x.PreSelectedCampaignId, SelectedCampaign.Id }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddEditEmployeeDisciplinaryDialog>("Edit Employee Disciplinary Action", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            await LoadDisciplinaryActions();
+        }
+    }
+
+    private Task DeleteDisciplinaryActionAsync(DisciplinaryActionDTO item)
+    {
+        var parameters = new DialogParameters<ConfirmationDialog>
+        {
+            { "Id", item.Id.ToString() },
+            { x => x.ContentText, "Do you really want to delete these records? This process cannot be undone." },
+            { x => x.ButtonText, "Delete" },
+            { x => x.Color, Color.Error },
+             { "OnDialogClosed", EventCallback.Factory.Create<string>(this, HandleDeleteConfirmationDialogClosedAsync)  }
+        };
+
+        var options = new DialogOptions() { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        return Dialog.ShowAsync<ConfirmationDialog>("Delete", parameters, options);
+    }
+
+    private async Task HandleDeleteConfirmationDialogClosedAsync(string id)
+    {
+        var result = await UserDisciplinaryService.DeleteAsync(int.Parse(id));
+
+        await LoadDisciplinaryActions();
+
+        StateHasChanged();
+    }
+
+
 
     private void Cancel() => MudDialog.Cancel();
 }

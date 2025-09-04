@@ -16,6 +16,10 @@ namespace StaffApp.Infrastructure.Data.Configurations
             builder.Property(p => p.Id)
                 .ValueGeneratedOnAdd();
 
+
+            builder.Property(p => p.Remarks)
+                .IsRequired(false);
+
             builder.Property(p => p.EffectiveUntil)
                 .IsRequired(false);
 

@@ -2,8 +2,11 @@
 @using StaffApp.Application.DTOs.DisciplinaryAction
 @using StaffApp.Application.Extensions.Helpers
 @using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
 
 @inject IUserDisciplinaryService UserDisciplinaryService
+@inject LoadingService LoadingService
+@inject ISnackbar Snackbar
 
 <PageTitle>Employee Disciplinary Actions</PageTitle>
 <MudDialog>
@@ -70,9 +73,7 @@
                 <!-- EffectiveUntil -->
                 <MudItem xs="6" sm="6" md="4" lg="4">
                     <MudDatePicker @bind-Date="disciplinaryAction.EffectiveUntil"
-                                   Label="Effective Until"
-                                   Required="true"
-                                   RequiredError="Effective Date is required!"
+                                   Label="Effective Until"                              
                                    Variant="Variant.Outlined"
                                    Margin="Margin.Dense"
                                    MaxDate="DateTime.Today" />
@@ -81,6 +82,8 @@
                 <MudItem xs="12" sm="12" md="12" lg="12">
                     <MudTextField @bind-Value="disciplinaryAction.Reason"
                                   Label="Reason"
+                                  Required="true"
+                                  RequiredError="Reason is required!"
                                   Lines="3"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense" />
@@ -152,7 +155,7 @@
         SeverityLevels = masterData.SeverityLevels;
         if (IsEdit)
         {
-  
+
             disciplinaryAction = await UserDisciplinaryService.GetByIdAsync(Id);
             disciplinaryAction.SelectedActionType = ActionTypes.FirstOrDefault(x => x.Id == disciplinaryAction.SelectedActionType.Id);   
             disciplinaryAction.SelectedSeverityLevel = SeverityLevels.FirstOrDefault(x => x.Id == disciplinaryAction.SelectedSeverityLevel.Id);
@@ -175,6 +178,35 @@
 
     private async Task SaveDisciplinaryAction()
     {
+        LoadingService.Show();
+
+        if (!IsEdit)
+        {
+            var result = await UserDisciplinaryService.AddAsync(disciplinaryAction);
+            await ShowSnackbar(result);
+        }
+        else
+        {
+            var result = await UserDisciplinaryService.UpdateAsync(disciplinaryAction);
+            await ShowSnackbar(result);
+        }
+
+        LoadingService.Hide();
+
+        await OnDialogClosed.InvokeAsync(true); // Notify parent
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
     }
 
 }

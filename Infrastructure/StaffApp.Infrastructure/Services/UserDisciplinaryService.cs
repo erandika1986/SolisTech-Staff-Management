@@ -7,6 +7,7 @@ using StaffApp.Application.DTOs.DisciplinaryAction;
 using StaffApp.Application.Extensions.Helpers;
 using StaffApp.Application.Services;
 using StaffApp.Domain.Entity;
+using StaffApp.Domain.Enum;
 
 namespace StaffApp.Infrastructure.Services
 {
@@ -24,11 +25,11 @@ namespace StaffApp.Infrastructure.Services
                 var disciplinaryAction = new UserDisciplinaryAction
                 {
                     UserId = action.UserId,
-                    ActionType = action.ActionType,
+                    ActionType = (DisciplinaryActionType)action.SelectedActionType.Id,
                     ActionDate = action.ActionDate.Value,
                     EffectiveUntil = action.EffectiveUntil,
                     Reason = action.Reason,
-                    SeverityLevel = action.SeverityLevel,
+                    SeverityLevel = (SeverityLevel)action.SelectedSeverityLevel.Id,
                     Remarks = action.Remarks,
                     CreatedByUserId = currentUserService.UserId,
                     CreatedDate = DateTime.UtcNow,
@@ -125,26 +126,40 @@ namespace StaffApp.Infrastructure.Services
                 Id = disciplinaryAction.Id,
                 UserId = disciplinaryAction.UserId,
                 ActionType = disciplinaryAction.ActionType,
+                SelectedActionType = new DropDownDTO() { Id = (int)disciplinaryAction.ActionType },
                 ActionDate = disciplinaryAction.ActionDate,
                 EffectiveUntil = disciplinaryAction.EffectiveUntil,
                 Reason = disciplinaryAction.Reason,
                 SeverityLevel = disciplinaryAction.SeverityLevel,
+                SelectedSeverityLevel = new DropDownDTO() { Id = (int)disciplinaryAction.SeverityLevel },
                 Remarks = disciplinaryAction.Remarks
             };
 
             return response;
         }
 
-        public async Task<PaginatedResultDTO<DisciplinaryActionDTO>> GetByUserIdAsync(int pageNumber, int pageSize, string userId)
+        public async Task<List<DisciplinaryActionDTO>> GetByUserIdAsync(string userId)
         {
             var query = context.UserDisciplinaryActions
                 .Include(u => u.User) // optional if you want user details
                 .Where(uda => uda.IsActive && uda.UserId == userId)
                 .OrderByDescending(x => x.ActionDate);
 
-            var newResult = await GetPaginatedResultAsync(query, pageNumber, pageSize);
+            var items = await query
+                .Select(uda => new DisciplinaryActionDTO
+                {
+                    Id = uda.Id,
+                    UserId = uda.UserId,
+                    ActionType = uda.ActionType,
+                    ActionDate = uda.ActionDate,
+                    EffectiveUntil = uda.EffectiveUntil,
+                    Reason = uda.Reason,
+                    SeverityLevel = uda.SeverityLevel,
+                    Remarks = uda.Remarks
+                })
+                .ToListAsync();
 
-            return newResult;
+            return items;
         }
 
         public async Task<GeneralResponseDTO> UpdateAsync(DisciplinaryActionDTO action)
@@ -161,11 +176,11 @@ namespace StaffApp.Infrastructure.Services
                     };
                 }
 
-                entity.ActionType = action.ActionType;
+                entity.ActionType = (DisciplinaryActionType)action.SelectedActionType.Id;
                 entity.ActionDate = action.ActionDate.Value;
                 entity.EffectiveUntil = action.EffectiveUntil;
                 entity.Reason = action.Reason;
-                entity.SeverityLevel = action.SeverityLevel;
+                entity.SeverityLevel = (SeverityLevel)action.SelectedSeverityLevel.Id;
                 entity.Remarks = action.Remarks;
                 entity.UpdatedByUserId = currentUserService.UserId;
                 entity.UpdateDate = DateTime.UtcNow;
