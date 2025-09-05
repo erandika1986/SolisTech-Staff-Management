@@ -191,6 +191,7 @@
         var parameters = new DialogParameters
         {
             { "UserId", user.Id },
+            { "UserName", user.FullName},
             { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
         };
 

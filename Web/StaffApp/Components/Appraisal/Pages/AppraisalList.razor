@@ -1,0 +1,200 @@
+﻿@page "/Appraisal/List"
+
+@using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.Appraisal
+@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@inject IMasterDataService MasterDataService
+@inject IAppraisalService AppraisalService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+@inject IJSRuntime JSRuntime
+@attribute [Authorize]
+<PageTitle>Appraisal Management</PageTitle>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="padding:4px !important;">
+    @if (!_isMasterDataLoaded)
+    {
+        <MudProgressCircular Color="Color.Primary" Indeterminate="true" />
+        <MudText>Loading master data...</MudText>
+    }
+    else
+    {
+        <!-- Page Header -->
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <div class="d-flex justify-space-between align-center flex-wrap">
+                <div>
+                    <MudText Typo="Typo.h4" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-3" />
+                        Appraisal Period Management
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                        Generate and manage Appraisal Period.
+                    </MudText>
+                </div>
+            </div>
+        </MudPaper>
+
+        <!-- Filters Section -->
+        <MudPaper Class="pa-4 mb-4" Elevation="1">
+            <MudGrid AlignItems="Center">
+                <!-- Search -->
+
+
+                <!-- Category Filter -->
+                <MudItem xs="12" sm="6" md="3" lg="5">
+                    <MudSelect T="DropDownDTO" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" Label="Company Year" Variant="Variant.Outlined" Margin="Margin.Dense" Value="SelectedCompanyYear" ValueChanged="@CompanyYearChanged">
+                        @foreach (var companyYear in CompanyYears)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@companyYear">@companyYear.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- Actions -->
+                <MudItem xs="12" sm="6" md="9" lg="7" Class="d-flex justify-end">
+@*                     <MudButtonGroup Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Class="d-flex justify-content-end">
+ 
+                        <MudButton StartIcon="@(!_isDataGenerated ? Icons.Material.Filled.PlayArrow : Icons.Material.Filled.Refresh)"
+                                   Color="Color.Success" Variant="Variant.Filled" OnClick="() => GenerateAppraisalPeriodData()">
+                            @(!_isDataGenerated ? "Generate" : "Regenerate")
+                        </MudButton>
+                    </MudButtonGroup> *@
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudItem xs="12" sm="12" md="12" lg="12">
+            <MudDataGrid @ref="_dataGrid" T="AppraisalPeriodDTO" ServerData="@(LoadData)" Sortable="true"
+                         Filterable="false"
+                         Hideable="true"
+                         Hover="true"
+                         Striped="true"
+                         Elevation="25"
+                         Loading="@_loading">
+                <Columns>
+                    <PropertyColumn Property="x => x.CompanyYearId" Title="@GetDisplayName(typeof(AppraisalPeriodDTO), nameof(AppraisalPeriodDTO.CompanyYearId))" />
+                    <PropertyColumn Property="x => x.AppraisalPeriodName" Title="@GetDisplayName(typeof(AppraisalPeriodDTO), nameof(AppraisalPeriodDTO.AppraisalPeriodName))" />
+                    <PropertyColumn Property="x => x.AppraisalStatus" Title="@GetDisplayName(typeof(AppraisalPeriodDTO), nameof(AppraisalPeriodDTO.AppraisalStatus))" />
+                    <PropertyColumn Property="x => x.StartDate" Title="@GetDisplayName(typeof(AppraisalPeriodDTO), nameof(AppraisalPeriodDTO.StartDate))" />
+                    <PropertyColumn Property="x => x.EndDate" Title="@GetDisplayName(typeof(AppraisalPeriodDTO), nameof(AppraisalPeriodDTO.EndDate))" />
+                    <TemplateColumn CellClass="d-flex justify-end">
+                        <CellTemplate Context="appraisalPeriod">
+                            <MudStack Row>
+                                <MudTooltip Text="@(appraisalPeriod.Item.Id == 0 ? "Generate" : "Regenerate")" Color="Color.Info" Placement="Placement.Top">
+                                    <MudIconButton Icon="@(appraisalPeriod.Item.Id == 0 ? Icons.Material.Filled.PlayArrow : Icons.Material.Filled.Refresh)" Color="Color.Info" Variant="Variant.Filled" OnClick="() => GenerateAppraisalPeriodData(appraisalPeriod.Item)"></MudIconButton>
+                                </MudTooltip>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+
+                </Columns>
+                <PagerContent>
+                    <MudDataGridPager T="AppraisalPeriodDTO" />
+                </PagerContent>
+            </MudDataGrid>
+        </MudItem>
+    }
+</MudContainer>
+
+@code {
+    //private List<DonationSummaryDTO> Donations = new();
+    private bool _loading = false;
+    private bool _isMasterDataLoaded = false;
+    private bool _isDataGenerated = false;
+
+    private int TotalRecords = 0;
+    private MudDataGrid<AppraisalPeriodDTO> _dataGrid;
+
+    private IEnumerable<DropDownDTO> CompanyYears = new List<DropDownDTO>();
+    private DropDownDTO SelectedCompanyYear = new DropDownDTO();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _isMasterDataLoaded = false;
+        await LoadMasterData();
+    }
+
+    private async Task LoadMasterData()
+    {
+        // Load your master data
+        CompanyYears = await MasterDataService.GetAvailableCompanyYears(true);
+        SelectedCompanyYear = CompanyYears.FirstOrDefault();
+
+        _isMasterDataLoaded = true;
+        StateHasChanged();
+    }
+
+    private async Task CompanyYearChanged(DropDownDTO value)
+    {
+        SelectedCompanyYear = value;
+        _dataGrid?.ReloadServerData();
+        StateHasChanged();
+    }
+
+    private async Task GenerateAppraisalPeriodData(AppraisalPeriodDTO appraisalPeriod)
+    {
+        var response = await AppraisalService.GenerateAppraisalDataForSelectedCompanyYear(appraisalPeriod.CompanyYearId);
+
+        StateHasChanged();
+        ShowSnackbar(response);
+    }
+
+    private async Task<GridData<AppraisalPeriodDTO>> LoadData(GridState<AppraisalPeriodDTO> state)
+    {
+        _loading = true;
+
+        try
+        {
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            var result = await AppraisalService.GetAppraisalPeriodForSelectedYear(SelectedCompanyYear.Id);
+
+            return new GridData<AppraisalPeriodDTO>
+            {
+                Items = result.Items,
+                TotalItems = result.TotalItems
+            };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ShowSnackbar(GeneralResponseDTO result)
+    {
+        if (result.Flag)
+        {
+            Snackbar.Add(result.Message, Severity.Success, c => c.SnackbarVariant = Variant.Filled);
+        }
+        else
+        {
+            Snackbar.Add(result.Message, Severity.Error, c => c.SnackbarVariant = Variant.Filled);
+        }
+    }
+
+
+    private string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    private string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+}

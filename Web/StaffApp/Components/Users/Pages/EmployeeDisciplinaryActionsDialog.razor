@@ -18,10 +18,10 @@
                 <div>
                     <MudText Typo="Typo.h4" Class="mb-2">
                         <MudIcon Icon="@Icons.Material.Filled.Person" Class="mr-3" />
-                        Manage Employee Disciplinary Actions
+                        Disciplinary Actions For @(UserName)
                     </MudText>
                     <MudText Typo="Typo.body1" Class="mud-text-secondary">
-                        Manage Employee Disciplinary Actions
+                        Manage Employee Disciplinary Actions Here
                     </MudText>
                 </div>
                 <MudButton Variant="Variant.Filled"
@@ -44,9 +44,9 @@
                       LoadingProgressColor="Color.Info">
                 <HeaderContent>
                     <MudTh>Action Type</MudTh>
-                    <MudTh>Action Date</MudTh>
                     <MudTh>Severity Level</MudTh>
                     <MudTh>Reason</MudTh>
+                    <MudTh>Action Date</MudTh>
                     <MudTh>Actions</MudTh>
                 </HeaderContent>
                 <RowTemplate>
@@ -55,12 +55,7 @@
                             @EnumHelper.GetEnumDescription(context.ActionType)
                         </MudText>
                     </MudTd>
-                    <MudTd DataLabel="ActionDate">
-                        <MudText Typo="Typo.body1">
-                            @($"{context.ActionDate:dd MMM yyyy, hh:mm tt}")   
-                        </MudText>
-                    </MudTd>
-                    <MudTd DataLabel="Role">
+                    <MudTd DataLabel="SeverityLevel">
                         <MudText Typo="Typo.body1">
                             @EnumHelper.GetEnumDescription(context.SeverityLevel)
                         </MudText>
@@ -72,6 +67,13 @@
                                                         : context.Reason)
                         </MudText>
                     </MudTd>
+                    <MudTd DataLabel="ActionDate">
+                        <MudText Typo="Typo.body1">
+                            @($"{context.ActionDate:dd MMM yyyy, hh:mm tt}")   
+                        </MudText>
+                    </MudTd>
+
+
                     <MudTd DataLabel="Actions" Style="text-align:center">
 
                         <MudTooltip Text="Edit Group Detail" Color="Color.Primary" Placement="Placement.Top">
@@ -100,6 +102,8 @@
     bool open = true;
 
     [Parameter] public string UserId { get; set; }
+
+    [Parameter] public string UserName { get; set; }
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; }

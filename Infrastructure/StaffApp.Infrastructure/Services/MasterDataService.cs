@@ -67,11 +67,13 @@ namespace StaffApp.Infrastructure.Services
             return response;
         }
 
-        public async Task<List<DropDownDTO>> GetAvailableCompanyYears()
+        public async Task<List<DropDownDTO>> GetAvailableCompanyYears(bool hasDefaultValue = false)
         {
             var response = new List<DropDownDTO>();
             try
             {
+                if (hasDefaultValue)
+                    response.Add(new DropDownDTO() { Id = 0, Name = "All" });
                 var companyCurrentYear = await context.CompanyYears.FirstOrDefaultAsync(x => x.IsCurrentYear);
                 var currentYearId = 0;
                 if (companyCurrentYear is not null)

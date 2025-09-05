@@ -46,6 +46,8 @@ Add-Migration 00043 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00044 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00045 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 Add-Migration 00046 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00047 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
+Add-Migration 00048 -Project StaffApp.Infrastructure -StartUp StaffApp -Verbose
 
 Database Update Command
 ====================================================================================================

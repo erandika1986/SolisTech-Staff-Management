@@ -84,7 +84,7 @@
                                   Label="Reason"
                                   Required="true"
                                   RequiredError="Reason is required!"
-                                  Lines="3"
+                                  Lines="10"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense" />
                 </MudItem>
@@ -93,7 +93,7 @@
                 <MudItem xs="12" sm="12" md="12" lg="12">
                     <MudTextField @bind-Value="disciplinaryAction.Remarks"
                                   Label="Remarks"
-                                  Lines="3"
+                                  Lines="5"
                                   Variant="Variant.Outlined"
                                   Margin="Margin.Dense" />
                 </MudItem>
@@ -179,7 +179,7 @@
     private async Task SaveDisciplinaryAction()
     {
         LoadingService.Show();
-
+        isSubmitting = true;
         if (!IsEdit)
         {
             var result = await UserDisciplinaryService.AddAsync(disciplinaryAction);
@@ -192,7 +192,7 @@
         }
 
         LoadingService.Hide();
-
+        isSubmitting = false;
         await OnDialogClosed.InvokeAsync(true); // Notify parent
         MudDialog.Close(DialogResult.Ok(true));
     }

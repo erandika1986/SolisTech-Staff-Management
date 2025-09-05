@@ -464,10 +464,10 @@ namespace StaffApp.Infrastructure.Data
             {
                 var appraisalPeriods = new List<AppraisalPeriod>
                 {
-                    new AppraisalPeriod(){ AppraisalPeriodName ="Annual Appraisal(2025)", StartDate = new DateTime(2025,1,1), EndDate = new DateTime(2025,12,31) },
-                    new AppraisalPeriod(){ AppraisalPeriodName ="Annual Appraisal(2026)", StartDate = new DateTime(2026,1,1), EndDate = new DateTime(2026,12,31) },
-                    new AppraisalPeriod(){ AppraisalPeriodName ="Annual Appraisal(2027)", StartDate = new DateTime(2027,1,1), EndDate = new DateTime(2027,12,31) },
-                    new AppraisalPeriod(){ AppraisalPeriodName ="Annual Appraisal(2028)", StartDate = new DateTime(2028,1,1), EndDate = new DateTime(2028,12,31) }
+                    new AppraisalPeriod(){ AppraisalPeriodName ="Annual Appraisal(2025)", StartDate = new DateTime(2025,1,1), EndDate = new DateTime(2025,12,31),CompanyYearId =2025,AppraisalStatus = AppraisalStatus.Pending },
+                    //new AppraisalPeriod(){ AppraisalPeriodName ="Annual Appraisal(2026)", StartDate = new DateTime(2026,1,1), EndDate = new DateTime(2026,12,31) },
+                    //new AppraisalPeriod(){ AppraisalPeriodName ="Annual Appraisal(2027)", StartDate = new DateTime(2027,1,1), EndDate = new DateTime(2027,12,31) },
+                    //new AppraisalPeriod(){ AppraisalPeriodName ="Annual Appraisal(2028)", StartDate = new DateTime(2028,1,1), EndDate = new DateTime(2028,12,31) }
                 };
                 await context.AppraisalPeriods.AddRangeAsync(appraisalPeriods);
                 await context.SaveChangesAsync();

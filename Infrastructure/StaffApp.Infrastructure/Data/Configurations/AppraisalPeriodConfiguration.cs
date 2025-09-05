@@ -9,6 +9,13 @@ namespace StaffApp.Infrastructure.Data.Configurations
         public void Configure(EntityTypeBuilder<AppraisalPeriod> builder)
         {
             builder.ToTable("AppraisalPeriod");
+
+            builder
+               .HasOne<CompanyYear>(c => c.CompanyYear)
+               .WithMany(c => c.AppraisalPeriods)
+               .HasForeignKey(c => c.CompanyYearId)
+               .OnDelete(DeleteBehavior.Restrict)
+               .IsRequired(true);
         }
     }
 

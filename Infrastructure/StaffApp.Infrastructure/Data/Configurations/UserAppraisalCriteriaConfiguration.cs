@@ -14,6 +14,10 @@ namespace StaffApp.Infrastructure.Data.Configurations
 
             builder.Property(p => p.Id)
                 .ValueGeneratedOnAdd();
+
+            builder.Property(p => p.IsActive)
+                .IsRequired(true)
+                .HasDefaultValue(true);
         }
     }
 }
