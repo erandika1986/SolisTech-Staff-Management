@@ -215,5 +215,50 @@ namespace StaffApp.Infrastructure.Services
                 };
             }
         }
+
+        public async Task<Application.DTOs.Appraisal.EmployeeAppraisalDTO> GetEmployeeAppraisalById(int userAppraisalId)
+        {
+            var employeeAppraisal = new Application.DTOs.Appraisal.EmployeeAppraisalDTO();
+
+            var userAppraisal = await context.UserAppraisals
+                .FirstOrDefaultAsync(ua => ua.Id == userAppraisalId);
+
+            var assignedRoles = await userService.GetLoggedInUserAssignedRoles(userAppraisal.UserId);
+
+            var assignedDepartments = await context.EmployeeDepartments
+                .Include(u => u.Department)
+                .Where(u => u.UserId == userAppraisal.UserId)
+                .Select(x => x.Department.Name).ToListAsync();
+
+            if (userAppraisal == null)
+                return employeeAppraisal;
+
+            employeeAppraisal.Id = userAppraisal.Id;
+            employeeAppraisal.AppraisalPeriod = userAppraisal.AppraisalPeriod.AppraisalPeriodName;
+            employeeAppraisal.ManagerComments = userAppraisal.Comments;
+            employeeAppraisal.DevelopmentAreas = userAppraisal.AreaForDevelopment;
+            employeeAppraisal.Goals = userAppraisal.GoalsForNextPeriod;
+            employeeAppraisal.EmployeeId = userAppraisal.User.EmployeeNumber.HasValue ? userAppraisal.User.EmployeeNumber.Value.ToString() : string.Empty;
+            employeeAppraisal.EmployeeName = userAppraisal.User.FullName;
+            employeeAppraisal.Department = assignedDepartments.Count > 0 ? string.Join(',', assignedDepartments) : string.Empty;
+            employeeAppraisal.Status = userAppraisal.Status;
+            employeeAppraisal.Position = assignedRoles.Count > 0 ? string.Join(',', assignedRoles) : string.Empty;
+
+            foreach (var detail in userAppraisal.UserAppraisalDetails)
+            {
+                employeeAppraisal.AppraisalCriteria.Add(new Application.DTOs.Appraisal.AppraisalCriteriaDTO
+                {
+                    Id = detail.Id,
+                    CriteriaName = detail.UserAppraisalCriteria.CriteriaName,
+                    AppraisalID = detail.AppraisalID,
+                    CriteriaId = detail.CriteriaID,
+                    Rating = (double)detail.Rating,
+                    Comments = detail.Comment
+                });
+            }
+
+            return employeeAppraisal;
+
+        }
     }
 }

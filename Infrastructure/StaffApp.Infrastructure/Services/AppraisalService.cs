@@ -168,6 +168,28 @@ namespace StaffApp.Infrastructure.Services
             return newResult;
         }
 
+        public async Task<List<UserAppraisalSummaryDTO>> GetMyAssignedAppraisal(int companyYearId)
+        {
+            var assignedAppraisals = await (from ua in context.UserAppraisals
+                                            join ap in context.AppraisalPeriods on ua.AppraisalPeriodId equals ap.Id
+                                            join u in context.ApplicationUsers on ua.UserId equals u.Id
+                                            join r in context.ApplicationUsers on ua.ReviewerId equals r.Id into reviewers
+                                            from reviewer in reviewers.DefaultIfEmpty()
+                                            where ap.CompanyYearId == companyYearId && ua.ReviewerId == currentUserService.UserId
+                                            select new UserAppraisalSummaryDTO
+                                            {
+                                                AppraisalPeriod = ap.AppraisalPeriodName,
+                                                Id = ua.Id,
+                                                Comments = ua.Comments,
+                                                OverallRating = ua.OverallRating,
+                                                ReviewerName = reviewer != null ? reviewer.FullName : "N/A",
+                                                Status = EnumHelper.GetEnumDescription(ua.Status),
+                                                UserFullName = u.FullName
+                                            }).ToListAsync(CancellationToken.None);
+
+            return assignedAppraisals;
+        }
+
         private async Task<UserAppraisal> GenerateNewUserAppraisalRecord(
             ApplicationUser activeEmployee,
             List<UserAppraisalCriteria> userAppraisalCriterias)

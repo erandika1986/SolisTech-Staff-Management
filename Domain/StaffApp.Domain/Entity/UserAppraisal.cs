@@ -11,6 +11,8 @@ namespace StaffApp.Domain.Entity
         public string? ReviewerId { get; set; }
         public decimal OverallRating { get; set; }
         public string Comments { get; set; }
+        public string AreaForDevelopment { get; set; }
+        public string GoalsForNextPeriod { get; set; }
         public AppraisalStatus Status { get; set; }
 
         public virtual AppraisalPeriod AppraisalPeriod { get; set; }

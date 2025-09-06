@@ -16,6 +16,12 @@ namespace StaffApp.Infrastructure.Data.Configurations
             builder.Property(p => p.Id)
                 .ValueGeneratedOnAdd();
 
+            builder.Property(p => p.AreaForDevelopment)
+                .IsRequired(false);
+
+            builder.Property(p => p.GoalsForNextPeriod)
+                .IsRequired(false);
+
             builder
                .HasOne<AppraisalPeriod>(c => c.AppraisalPeriod)
                .WithMany(c => c.UserAppraisals)

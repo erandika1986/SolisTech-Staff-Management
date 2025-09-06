@@ -7,5 +7,6 @@ namespace StaffApp.Application.Services
     {
         Task<GeneralResponseDTO> GenerateAppraisalDataForSelectedCompanyYear(int companyYearId);
         Task<PaginatedResultDTO<AppraisalPeriodDTO>> GetAppraisalPeriodForSelectedYear(int companyYearId);
+        Task<List<UserAppraisalSummaryDTO>> GetMyAssignedAppraisal(int companyYearId);
     }
 }

@@ -10,5 +10,6 @@ namespace StaffApp.Application.Services
         Task<UserAppraisalDTO> GetUserAppraisalDetailsById(int userAppraisalId);
         Task<GeneralResponseDTO> SaveUserAppraisal(UserAppraisalDTO userAppraisalDetail);
         Task<GeneralResponseDTO> CompleteUserAppraisal(int userAppraisalId);
+        Task<StaffApp.Application.DTOs.Appraisal.EmployeeAppraisalDTO> GetEmployeeAppraisalById(int userAppraisalId);
     }
 }

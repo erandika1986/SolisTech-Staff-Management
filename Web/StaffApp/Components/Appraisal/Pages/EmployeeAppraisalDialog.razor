@@ -1,0 +1,311 @@
+﻿@using MudBlazor
+@using StaffApp.Application.DTOs.Appraisal
+@using StaffApp.Application.Services
+
+@inject ISnackbar Snackbar
+@inject IAppraisalService AppraisalService
+@inject IUserAppraisalService UserAppraisalService
+@inject IDialogService Dialog
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Employee Appraisal</PageTitle>
+
+<MudDialog>
+    <TitleContent>
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <div class="d-flex justify-space-between align-center flex-wrap">
+                <div>
+                    <MudText Typo="Typo.h4" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="mr-3" />
+                        Employee Performance Appraisal For @(EmployeeName)
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                        Manage Employee Yearly Performance Appraisal Here
+                    </MudText>
+                </div>
+            </div>
+        </MudPaper>
+    </TitleContent>
+    <DialogContent>
+        <MudPaper Class="pa-6" Elevation="2">
+            <!-- Employee Information Section -->
+            <MudGrid>
+                <MudItem xs="12" md="6">
+                    <MudCard Class="mb-4" Elevation="1">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6" Class="mb-3">Employee Information</MudText>
+                            <MudGrid>
+                                <MudItem xs="12">
+                                    <MudTextField @bind-Value="employeeAppraisal.EmployeeName"
+                                                  Label="Employee Name"
+                                                  ReadOnly="true"
+                                                  Variant="Variant.Outlined" />
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudTextField @bind-Value="employeeAppraisal.EmployeeId"
+                                                  Label="Employee ID"
+                                                  ReadOnly="true"
+                                                  Variant="Variant.Outlined" />
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudTextField @bind-Value="employeeAppraisal.Department"
+                                                  Label="Department"
+                                                  ReadOnly="true"
+                                                  Variant="Variant.Outlined" />
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudTextField @bind-Value="employeeAppraisal.Position"
+                                                  Label="Position"
+                                                  ReadOnly="true"
+                                                  Variant="Variant.Outlined" />
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudTextField @bind-Value="employeeAppraisal.AppraisalPeriod"
+                                                  Label="Appraisal Period"
+                                                  ReadOnly="true"
+                                                  Variant="Variant.Outlined" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+
+                <!-- Summary Card -->
+                <MudItem xs="12" md="6">
+                    <MudCard Class="mb-4" Elevation="1">
+                        <MudCardContent>
+                            <MudText Typo="Typo.h6" Class="mb-3">Appraisal Summary</MudText>
+                            <MudGrid>
+                                <MudItem xs="6">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">Overall Rating</MudText>
+                                    <MudText Typo="Typo.h4" Color="GetOverallRatingColor()">
+                                        @($"{overallRating:F1}/10")
+                                    </MudText>
+                                </MudItem>
+                                <MudItem xs="6">
+                                    <MudText Typo="Typo.subtitle2" Color="Color.Primary">Performance Level</MudText>
+                                    <MudChip T="string" Color="GetPerformanceChipColor()" Size="Size.Medium">
+                                        @GetPerformanceLevel()
+                                    </MudChip>
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudProgressLinear Value="@((overallRating / 10) * 100)"
+                                                       Color="GetOverallRatingColor()"
+                                                       Size="Size.Large"
+                                                       Class="mt-2" />
+                                </MudItem>
+                            </MudGrid>
+                        </MudCardContent>
+                    </MudCard>
+                </MudItem>
+            </MudGrid>
+
+            <!-- Appraisal Criteria Section -->
+            <MudCard Elevation="1">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="Icons.Material.Filled.Checklist" Class="mr-2" />
+                            Appraisal Criteria & Ratings
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid>
+                        @foreach (var criteria in employeeAppraisal.AppraisalCriteria)
+                        {
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="mb-3" Elevation="0" Style="border: 1px solid #e0e0e0;">
+                                    <MudCardContent Class="pb-2">
+                                        <MudGrid AlignItems="Center">
+                                            <MudItem xs="12">
+                                                <MudText Typo="Typo.subtitle1" Class="font-weight-medium">
+                                                    @criteria.CriteriaName
+                                                </MudText>
+@*                                                 <MudText Typo="Typo.body2" Class="text-muted mb-2">
+                                                    @criteria.Description
+                                                </MudText> *@
+                                            </MudItem>
+                                            <MudItem xs="12">
+                                                <MudGrid AlignItems="Center">
+                                                    <MudItem xs="8">
+                                                        <MudSlider @bind-Value="criteria.Rating"
+                                                                   Min="0"
+                                                                   Max="10"
+                                                                   Step="0.5"
+                                                                   Color="GetRatingColor(criteria.Rating)"
+                                                                   Class="mt-2" />
+                                                    </MudItem>
+                                                    <MudItem xs="4" Class="text-center">
+                                                        <MudChip T="string" Color="GetRatingColor(criteria.Rating)"
+                                                                 Size="Size.Medium"
+                                                                 Class="font-weight-bold">
+                                                            @criteria.Rating.ToString("F1")
+                                                        </MudChip>
+                                                    </MudItem>
+                                                </MudGrid>
+                                            </MudItem>
+                                            <MudItem xs="12">
+                                                <MudTextField @bind-Value="criteria.Comments"
+                                                              Label="Comments (Optional)"
+                                                              Lines="2"
+                                                              Variant="Variant.Outlined"
+                                                              Class="mt-2" />
+                                            </MudItem>
+                                        </MudGrid>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+
+            <!-- Overall Comments Section -->
+            <MudCard Class="mt-4" Elevation="1">
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">
+                            <MudIcon Icon="Icons.Material.Filled.Comment" Class="mr-2" />
+                            Overall Comments & Feedback
+                        </MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="employeeAppraisal.ManagerComments"
+                                          Label="Manager's Comments"
+                                          Lines="4"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="employeeAppraisal.DevelopmentAreas"
+                                          Label="Areas for Development"
+                                          Lines="4"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="employeeAppraisal.Goals"
+                                          Label="Goals for Next Period"
+                                          Lines="3"
+                                          Variant="Variant.Outlined" />
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+
+            <!-- Action Buttons -->
+            <MudGrid Class="mt-6" Justify="Justify.FlexEnd">
+                <MudItem>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Default"
+                               StartIcon="@Icons.Material.Filled.Cancel"
+                               OnClick="Cancel">
+                        Cancel
+                    </MudButton>
+                </MudItem>
+                <MudItem>
+                    <MudButton Variant="Variant.Outlined"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Save"
+                               OnClick="SaveDraft">
+                        Save as Draft
+                    </MudButton>
+                </MudItem>
+                <MudItem>
+                    <MudButton Variant="Variant.Filled"
+                               Color="Color.Primary"
+                               StartIcon="@Icons.Material.Filled.Send"
+                               OnClick="SubmitAppraisal">
+                        Submit Appraisal
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    </DialogContent>
+</MudDialog>
+
+
+
+@code {
+
+    [Parameter] 
+    public int EmployeeAppraisalId { get; set; }
+    [Parameter]
+    public string EmployeeName { get; set; }
+
+    private EmployeeAppraisalDTO employeeAppraisal = new();
+    private double overallRating => employeeAppraisal.AppraisalCriteria.Any() ? 
+        employeeAppraisal.AppraisalCriteria.Average(c => c.Rating) : 0;
+
+    protected override async Task OnInitializedAsync()  
+    {
+        // Initialize with sample data
+        employeeAppraisal = await UserAppraisalService.GetEmployeeAppraisalById(EmployeeAppraisalId);
+        
+    }
+
+    private Color GetRatingColor(double rating)
+    {
+        return rating switch
+        {
+            >= 9.0 => Color.Success,
+            >= 7.0 => Color.Info,
+            >= 5.0 => Color.Warning,
+            _ => Color.Error
+        };
+    }
+
+    private Color GetOverallRatingColor()
+    {
+        return GetRatingColor(overallRating);
+    }
+
+    private Color GetPerformanceChipColor()
+    {
+        return overallRating switch
+        {
+            >= 9.0 => Color.Success,
+            >= 7.0 => Color.Info,
+            >= 5.0 => Color.Warning,
+            _ => Color.Error
+        };
+    }
+
+    private string GetPerformanceLevel()
+    {
+        return overallRating switch
+        {
+            >= 9.0 => "Outstanding",
+            >= 7.0 => "Good",
+            >= 5.0 => "Satisfactory",
+            _ => "Needs Improvement"
+        };
+    }
+
+    private async Task SaveDraft()
+    {
+        // Implement save draft logic
+        Snackbar.Add("Appraisal saved as draft successfully!", Severity.Success);
+    }
+
+    private async Task SubmitAppraisal()
+    {
+        // Validation
+        if (employeeAppraisal.AppraisalCriteria.Any(c => c.Rating == 0))
+        {
+            Snackbar.Add("Please provide ratings for all criteria before submitting.", Severity.Warning);
+            return;
+        }
+
+        // Implement submit logic
+        Snackbar.Add("Appraisal submitted successfully!", Severity.Success);
+    }
+
+    private void Cancel()
+    {
+        // Implement cancel logic - navigate back or show confirmation dialog
+        Snackbar.Add("Appraisal cancelled", Severity.Info);
+    }
+}
