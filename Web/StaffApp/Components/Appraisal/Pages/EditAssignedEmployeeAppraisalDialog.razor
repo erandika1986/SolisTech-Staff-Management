@@ -4,7 +4,6 @@
 
 @inject ISnackbar Snackbar
 @inject IAppraisalService AppraisalService
-@inject IUserAppraisalService UserAppraisalService
 @inject IDialogService Dialog
 @inject IJSRuntime JSRuntime
 
@@ -134,6 +133,7 @@
                                                                    Max="10"
                                                                    Step="0.5"
                                                                    Color="GetRatingColor(criteria.Rating)"
+                                                                   Disabled="IsReadOnly"
                                                                    Class="mt-2" />
                                                     </MudItem>
                                                     <MudItem xs="4" Class="text-center">
@@ -149,6 +149,7 @@
                                                 <MudTextField @bind-Value="criteria.Comments"
                                                               Label="Comments (Optional)"
                                                               Lines="2"
+                                                              ReadOnly="IsReadOnly"
                                                               Variant="Variant.Outlined"
                                                               Class="mt-2" />
                                             </MudItem>
@@ -176,18 +177,21 @@
                         <MudItem xs="12" md="6">
                             <MudTextField @bind-Value="employeeAppraisal.ManagerComments"
                                           Label="Manager's Comments"
+                                          ReadOnly="IsReadOnly"
                                           Lines="4"
                                           Variant="Variant.Outlined" />
                         </MudItem>
                         <MudItem xs="12" md="6">
                             <MudTextField @bind-Value="employeeAppraisal.DevelopmentAreas"
                                           Label="Areas for Development"
+                                          ReadOnly="IsReadOnly"
                                           Lines="4"
                                           Variant="Variant.Outlined" />
                         </MudItem>
                         <MudItem xs="12">
                             <MudTextField @bind-Value="employeeAppraisal.Goals"
                                           Label="Goals for Next Period"
+                                          ReadOnly="IsReadOnly"
                                           Lines="3"
                                           Variant="Variant.Outlined" />
                         </MudItem>
@@ -205,22 +209,26 @@
                         Cancel
                     </MudButton>
                 </MudItem>
-                <MudItem>
-                    <MudButton Variant="Variant.Outlined"
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Save"
-                               OnClick="SaveDraft">
-                        Save as Draft
-                    </MudButton>
-                </MudItem>
-                <MudItem>
-                    <MudButton Variant="Variant.Filled"
-                               Color="Color.Primary"
-                               StartIcon="@Icons.Material.Filled.Send"
-                               OnClick="SubmitAppraisal">
-                        Submit Appraisal
-                    </MudButton>
-                </MudItem>
+                @if (!IsReadOnly)
+                {
+                    <MudItem>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Save"
+                                   OnClick="SaveDraft">
+                            Save as Draft
+                        </MudButton>
+                    </MudItem>
+                    <MudItem>
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   StartIcon="@Icons.Material.Filled.Send"
+                                   OnClick="SubmitAppraisal">
+                            Submit Appraisal
+                        </MudButton>
+                    </MudItem>
+                }
+
             </MudGrid>
         </MudPaper>
     </DialogContent>
@@ -230,20 +238,31 @@
 
 @code {
 
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+    [Parameter] 
+    public EventCallback<bool> OnDialogClosed { get; set; }
+
+    [Parameter]
+    public bool IsReadOnly { get; set; }
+
     [Parameter] 
     public int EmployeeAppraisalId { get; set; }
+
     [Parameter]
     public string EmployeeName { get; set; }
 
     private EmployeeAppraisalDTO employeeAppraisal = new();
+
     private double overallRating => employeeAppraisal.AppraisalCriteria.Any() ? 
         employeeAppraisal.AppraisalCriteria.Average(c => c.Rating) : 0;
 
     protected override async Task OnInitializedAsync()  
     {
         // Initialize with sample data
-        employeeAppraisal = await UserAppraisalService.GetEmployeeAppraisalById(EmployeeAppraisalId);
-        
+        employeeAppraisal = await AppraisalService.GetEmployeeAppraisalById(EmployeeAppraisalId);
+
     }
 
     private Color GetRatingColor(double rating)
@@ -286,8 +305,18 @@
 
     private async Task SaveDraft()
     {
-        // Implement save draft logic
-        Snackbar.Add("Appraisal saved as draft successfully!", Severity.Success);
+        var response = await AppraisalService.SaveUserAppraisal(employeeAppraisal); 
+
+        if (response.Flag)
+        {
+            // Implement submit logic
+            Snackbar.Add("Appraisal saved as draft successfully!", Severity.Success);
+            await OnDialogClosed.InvokeAsync(true); // Notify parent
+        }
+        else
+        {
+            Snackbar.Add(response.Message, Severity.Error);
+        }
     }
 
     private async Task SubmitAppraisal()
@@ -299,13 +328,21 @@
             return;
         }
 
-        // Implement submit logic
-        Snackbar.Add("Appraisal submitted successfully!", Severity.Success);
-    }
+        var response = await AppraisalService.CompleteUserAppraisal(employeeAppraisal);
 
-    private void Cancel()
-    {
-        // Implement cancel logic - navigate back or show confirmation dialog
-        Snackbar.Add("Appraisal cancelled", Severity.Info);
+        if(response.Flag)
+        {
+            // Implement submit logic
+            Snackbar.Add(response.Message, Severity.Success);
+            await OnDialogClosed.InvokeAsync(true); // Notify parent
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        else
+        {
+            Snackbar.Add(response.Message, Severity.Error);
+        }
+
     }
+    private void Cancel() => MudDialog.Cancel();
+
 }

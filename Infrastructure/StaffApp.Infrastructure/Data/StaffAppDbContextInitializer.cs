@@ -325,7 +325,8 @@ namespace StaffApp.Infrastructure.Data
                     new AppSetting() { Name = CompanySettingConstants.LeaveRequestCCList, Value = "" },
                     new AppSetting() { Name = CompanySettingConstants.IsPasswordLoginEnable, Value = "False"},
                     new AppSetting() { Name = CompanySettingConstants.SalarySlipFolderPath, Value = "C:\\WordDocuments\\"},
-                    new AppSetting() { Name = CompanySettingConstants.InvoiceFolderPath, Value = "C:\\InvoiceFolderPath\\"}
+                    new AppSetting() { Name = CompanySettingConstants.InvoiceFolderPath, Value = "C:\\InvoiceFolderPath\\"},
+                    new AppSetting() { Name = CompanySettingConstants.EmployeeAppraisalDocumentFolderPath, Value = "C:\\EmployeeAppraisalDocuments\\"}
 
                 };
                 await context.AppSettings.AddRangeAsync(appSettings);

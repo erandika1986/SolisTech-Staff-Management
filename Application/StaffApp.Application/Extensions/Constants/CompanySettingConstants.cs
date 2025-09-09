@@ -21,6 +21,7 @@
 
         public const string SalarySlipFolderPath = "SalarySlipFolderPath";
         public const string InvoiceFolderPath = "InvoiceFolderPath";
+        public const string EmployeeAppraisalDocumentFolderPath = "EmployeeAppraisalDocumentFolderPath";
 
     }
 }

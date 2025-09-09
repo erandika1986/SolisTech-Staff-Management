@@ -16,7 +16,7 @@ namespace StaffApp.Application.DTOs.Appraisal
         public string ReviewerName { get; set; }
 
         [Display(Name = "Overall Rating")]
-        public decimal OverallRating { get; set; }
+        public double OverallRating { get; set; }
 
         [Display(Name = "Comments")]
         public string Comments { get; set; }

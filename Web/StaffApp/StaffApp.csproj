@@ -74,6 +74,9 @@
     <None Update="token.json\Google.Apis.Auth.OAuth2.Responses.TokenResponse-admin">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="WordTemplates\EmployeePerformanceAppraisalReportTemplate.docx">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="WordTemplates\InvoiceTemplate.docx">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

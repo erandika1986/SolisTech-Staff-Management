@@ -8,5 +8,12 @@ namespace StaffApp.Application.Services
         Task<GeneralResponseDTO> GenerateAppraisalDataForSelectedCompanyYear(int companyYearId);
         Task<PaginatedResultDTO<AppraisalPeriodDTO>> GetAppraisalPeriodForSelectedYear(int companyYearId);
         Task<List<UserAppraisalSummaryDTO>> GetMyAssignedAppraisal(int companyYearId);
+        Task<EmployeeAppraisalDTO> GetEmployeeAppraisalById(int userAppraisalId);
+        Task<GeneralResponseDTO> SaveUserAppraisal(EmployeeAppraisalDTO userAppraisalDetail);
+        Task<GeneralResponseDTO> CompleteUserAppraisal(EmployeeAppraisalDTO userAppraisalDetail);
+        Task<GeneralResponseDTO> GenerateUserRecordsForSelectedAppraisalPeriod(int appraisalPeriodId);
+        Task<List<EmployeeAppraisalDTO>> GetEmployeeAppraisalsByEmployeeId();
+        Task<DocumentDTO> GenerateEmployeeAppraisalDocumentAsync(int userAppraisalId);
+
     }
 }

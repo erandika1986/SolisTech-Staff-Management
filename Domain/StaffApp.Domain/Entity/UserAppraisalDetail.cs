@@ -6,7 +6,7 @@ namespace StaffApp.Domain.Entity
     {
         public int AppraisalID { get; set; }
         public int CriteriaID { get; set; }
-        public decimal Rating { get; set; }
+        public double Rating { get; set; }
         public string Comment { get; set; }
 
         public virtual UserAppraisal UserAppraisal { get; set; }

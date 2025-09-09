@@ -1,0 +1,157 @@
+﻿@page "/Appraisal/MyAppraisals"
+
+@using Microsoft.AspNetCore.Authorization
+@using StaffApp.Application.DTOs.Appraisal
+@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+
+@inject IMasterDataService MasterDataService
+@inject IAppraisalService AppraisalService
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
+@inject IJSRuntime JSRuntime
+@attribute [Authorize]
+<PageTitle>Appraisal Management</PageTitle>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="padding:4px !important;">
+        <!-- Page Header -->
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <div class="d-flex justify-space-between align-center flex-wrap">
+                <div>
+                    <MudText Typo="Typo.h4" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Class="mr-3" />
+                        My Appraisals
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                        View and generate your yearly Appraisal report here.
+                    </MudText>
+                </div>
+            </div>
+        </MudPaper>
+
+        <MudItem xs="12" sm="12" md="12" lg="12">
+        <MudDataGrid @ref="_dataGrid" T="EmployeeAppraisalDTO" ServerData="@(LoadData)" Sortable="true"
+                         Filterable="false"
+                         Hideable="true"
+                         Hover="true"
+                         Striped="true"
+                         Elevation="25"
+                         Loading="@_loading">
+                <Columns>
+                <PropertyColumn Property="x => x.AppraisalPeriod" Title="@GetDisplayName(typeof(EmployeeAppraisalDTO), nameof(EmployeeAppraisalDTO.AppraisalPeriod))" />
+                <PropertyColumn Property="x => x.Position" Title="@GetDisplayName(typeof(EmployeeAppraisalDTO), nameof(EmployeeAppraisalDTO.Position))" />
+                <PropertyColumn Property="x => x.Department" Title="@GetDisplayName(typeof(EmployeeAppraisalDTO), nameof(EmployeeAppraisalDTO.Department))" />
+                <PropertyColumn Property="x => x.OverallRating" Title="@GetDisplayName(typeof(EmployeeAppraisalDTO), nameof(EmployeeAppraisalDTO.OverallRating))" />
+                <PropertyColumn Property="x => x.ReviewerName" Title="@GetDisplayName(typeof(EmployeeAppraisalDTO), nameof(EmployeeAppraisalDTO.ReviewerName))" />
+                <PropertyColumn Property="x => x.ReviewedOn" Title="@GetDisplayName(typeof(EmployeeAppraisalDTO), nameof(EmployeeAppraisalDTO.ReviewedOn))" />
+                    <TemplateColumn CellClass="d-flex justify-end">
+                        <CellTemplate Context="appraisal">
+                            <MudStack Row>
+                                <MudTooltip Text="View Detail" Color="Color.Info" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" Variant="Variant.Filled" OnClick="() => ViewDetail(appraisal.Item)"></MudIconButton>
+                                </MudTooltip>
+                            <MudTooltip Text="Download Appraisal Report" Color="Color.Info" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Download" Color="Color.Info" Variant="Variant.Filled" OnClick="() => DownloadPdf(appraisal.Item)"></MudIconButton>
+                            </MudTooltip>
+                            </MudStack>
+                        </CellTemplate>
+                    </TemplateColumn>
+
+                </Columns>
+                <PagerContent>
+                <MudDataGridPager T="EmployeeAppraisalDTO" />
+                </PagerContent>
+            </MudDataGrid>
+        </MudItem>
+</MudContainer>
+
+@code {
+    //private List<DonationSummaryDTO> Donations = new();
+    private bool _loading = false;
+    private bool _isDataGenerated = false;
+
+    private int TotalRecords = 0;
+    private MudDataGrid<EmployeeAppraisalDTO> _dataGrid;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        StateHasChanged();
+    }
+
+
+    private async Task<GridData<EmployeeAppraisalDTO>> LoadData(GridState<EmployeeAppraisalDTO> state)
+    {
+        _loading = true;
+
+        try
+        {
+            // Extract paging parameters
+            var page = state.Page + 1; // MudBlazor uses 0-based indexing
+            var pageSize = state.PageSize;
+
+            // Extract sorting parameters
+            var sortBy = state.SortDefinitions.FirstOrDefault()?.SortBy;
+            var sortDirection = state.SortDefinitions.FirstOrDefault()?.Descending == true ? false : true;
+
+            var result = await AppraisalService.GetEmployeeAppraisalsByEmployeeId();
+
+            return new GridData<EmployeeAppraisalDTO>
+            {
+                Items = result,
+                TotalItems = result.Count
+            };
+        }
+        finally
+        {
+            _loading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DownloadPdf(EmployeeAppraisalDTO appraisal)
+    {
+        // Logic to handle PDF download
+        var documentDto = await AppraisalService.GenerateEmployeeAppraisalDocumentAsync(appraisal.Id);
+
+        var base64Data = Convert.ToBase64String(documentDto.FileArray);
+
+        await JSRuntime.InvokeVoidAsync("downloadFileFromBase64", documentDto.FileName, base64Data);
+    }
+
+    private async Task ViewDetail(EmployeeAppraisalDTO appraisal)
+    {
+        var parameters = new DialogParameters<EditAssignedEmployeeAppraisalDialog>
+        {
+           { x => x.EmployeeAppraisalId, appraisal.Id },
+           { x => x.EmployeeName, appraisal.EmployeeName },
+           { x => x.IsReadOnly, true }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            BackdropClick = true
+        };
+        var dialog = await Dialog.ShowAsync<EditAssignedEmployeeAppraisalDialog>($"Employee Performance Appraisal", parameters, options);
+    }
+
+
+    private string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    private string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+}

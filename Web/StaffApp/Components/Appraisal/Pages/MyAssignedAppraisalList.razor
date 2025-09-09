@@ -84,9 +84,18 @@
                     <TemplateColumn CellClass="d-flex justify-end">
                         <CellTemplate Context="appraisal">
                             <MudStack Row>
-                                <MudTooltip Text="Edit" Color="Color.Info" Placement="Placement.Top">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Variant="Variant.Filled" OnClick="() => Edit(appraisal.Item)"></MudIconButton>
-                                </MudTooltip>
+                                @if(appraisal.Item.Status == "Completed")
+                                {
+                                    <MudTooltip Text="View" Color="Color.Info" Placement="Placement.Top">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Visibility" Color="Color.Info" Variant="Variant.Filled" OnClick="() => View(appraisal.Item)"></MudIconButton>
+                                    </MudTooltip>
+                                }
+                                else
+                                {
+                                    <MudTooltip Text="Edit" Color="Color.Info" Placement="Placement.Top">
+                                        <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Info" Variant="Variant.Filled" OnClick="() => Edit(appraisal.Item)"></MudIconButton>
+                                    </MudTooltip>
+                                }
                             </MudStack>
                         </CellTemplate>
                     </TemplateColumn>
@@ -137,10 +146,11 @@
 
     private async Task Edit(UserAppraisalSummaryDTO appraisal)
     {
-        var parameters = new DialogParameters
+        var parameters = new DialogParameters<EditAssignedEmployeeAppraisalDialog>
         {
-           { "EmployeeAppraisalId", appraisal.Id },
-           { "EmployeeName", appraisal.UserFullName }
+           { x => x.EmployeeAppraisalId, appraisal.Id },
+           { x => x.EmployeeName, appraisal.UserFullName },
+           { x => x.IsReadOnly, false }
         };
 
         var options = new DialogOptions
@@ -150,7 +160,41 @@
             FullWidth = true,
             BackdropClick = true
         };
-        await Dialog.ShowAsync<EmployeeAppraisalDialog>($"Employee Performance Appraisal", parameters, options);
+        var dialog = await Dialog.ShowAsync<EditAssignedEmployeeAppraisalDialog>($"Employee Performance Appraisal", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled || result.Canceled)
+        {
+            _dataGrid?.ReloadServerData();
+            StateHasChanged();
+        }
+    }
+
+
+    private async Task View(UserAppraisalSummaryDTO appraisal)
+    {
+        var parameters = new DialogParameters<EditAssignedEmployeeAppraisalDialog>
+        {
+           { x => x.EmployeeAppraisalId, appraisal.Id },
+           { x => x.EmployeeName, appraisal.UserFullName },
+           { x => x.IsReadOnly, true }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            BackdropClick = true
+        };
+        var dialog = await Dialog.ShowAsync<EditAssignedEmployeeAppraisalDialog>($"Employee Performance Appraisal", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled || result.Canceled)
+        {
+            _dataGrid?.ReloadServerData();
+            StateHasChanged();
+        }
     }
 
 
