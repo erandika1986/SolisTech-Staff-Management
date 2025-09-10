@@ -18,6 +18,9 @@ namespace StaffApp.Domain.Entity
         public string ClientEmail { get; set; }
         public ProjectStatus Status { get; set; }
 
+        public string? ProjectTechnologies { get; set; }
+        public string? RequiredSkills { get; set; }
+
         public virtual ApplicationUser Manager { get; set; }
 
         public virtual ICollection<ProjectMember> ProjectMembers { get; set; } = new HashSet<ProjectMember>();

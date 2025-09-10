@@ -345,6 +345,8 @@ namespace StaffApp.Infrastructure.Services
                             Id = p.Id,
                             Name = p.Name,
                             Description = p.Description,
+                            ProjectTechnologies = p.ProjectTechnologies,
+                            RequiredSkills = p.RequiredSkills,
                             SelectedManagementPlatform = new DropDownDTO() { Id = (int)p.ManagementPlatform },
                             StartDate = p.StartDate,
                             StartDateText = String.Format("{0:MM/dd/yyyy}", p.StartDate),
@@ -434,6 +436,8 @@ namespace StaffApp.Infrastructure.Services
                             Id = p.Id,
                             Name = p.Name,
                             Description = p.Description,
+                            ProjectTechnologies = p.ProjectTechnologies,
+                            RequiredSkills = p.RequiredSkills,
                             SelectedManagementPlatform = new DropDownDTO() { Id = (int)p.ManagementPlatform },
                             StartDate = p.StartDate,
                             StartDateText = String.Format("{0:MM/dd/yyyy}", p.StartDate),
@@ -524,6 +528,8 @@ namespace StaffApp.Infrastructure.Services
                             Id = p.Id,
                             Name = p.Name,
                             Description = p.Description,
+                            ProjectTechnologies = p.ProjectTechnologies,
+                            RequiredSkills = p.RequiredSkills,
                             SelectedManagementPlatform = new DropDownDTO() { Id = (int)p.ManagementPlatform },
                             StartDate = p.StartDate,
                             StartDateText = String.Format("{0:MM/dd/yyyy}", p.StartDate),
@@ -615,6 +621,8 @@ namespace StaffApp.Infrastructure.Services
                     {
                         Name = projectDto.Name,
                         Description = projectDto.Description,
+                        ProjectTechnologies = projectDto.ProjectTechnologies,
+                        RequiredSkills = projectDto.RequiredSkills,
                         ManagementPlatform = (ProjectManagementPlatform)projectDto.SelectedManagementPlatform.Id,
                         StartDate = projectDto.StartDate,
                         EndDate = projectDto.EndDate,
@@ -644,6 +652,8 @@ namespace StaffApp.Infrastructure.Services
                 {
                     project.Name = projectDto.Name;
                     project.Description = projectDto.Description;
+                    project.ProjectTechnologies = projectDto.ProjectTechnologies;
+                    project.RequiredSkills = projectDto.RequiredSkills;
                     project.ManagementPlatform = (ProjectManagementPlatform)projectDto.SelectedManagementPlatform.Id;
                     project.StartDate = projectDto.StartDate;
                     project.EndDate = projectDto.EndDate;
@@ -692,6 +702,8 @@ namespace StaffApp.Infrastructure.Services
                 Id = project.Id,
                 Name = project.Name,
                 Description = project.Description,
+                ProjectTechnologies = project.ProjectTechnologies,
+                RequiredSkills = project.RequiredSkills,
                 SelectedManagementPlatform = new DropDownDTO() { Id = (int)project.ManagementPlatform },
                 StartDate = project.StartDate,
                 StartDateText = String.Format("{0:MM/dd/yyyy}", project.StartDate),

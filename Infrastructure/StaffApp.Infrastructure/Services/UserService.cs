@@ -51,6 +51,9 @@ namespace StaffApp.Infrastructure.Services
                     MaritalStatus = (MaritalStatus)model.SelectedMaritalStatus.Id,
                     EmployeeTypeId = model.SelectedEmploymentType.Id,
                     CompanyLocationId = model.SelectedCompanyLocation.Id,
+                    EmergencyContactPerson = model.EmergencyContactPerson,
+                    EmergencyContactPersonRelationship = model.EmergencyContactPersonRelationship,
+                    EmergencyContactPersonPhoneNumber = model.EmergencyContactPersonPhoneNumber,
                     IsActive = true
                 };
 
@@ -102,6 +105,9 @@ namespace StaffApp.Infrastructure.Services
                 user.CompanyLocationId = model.SelectedCompanyLocation.Id;
                 user.Gender = (Gender)model.SelectedGender.Id;
                 user.IsActive = true;
+                user.EmergencyContactPerson = model.EmergencyContactPerson;
+                user.EmergencyContactPersonRelationship = model.EmergencyContactPersonRelationship;
+                user.EmergencyContactPersonPhoneNumber = model.EmergencyContactPersonPhoneNumber;
 
                 await userManager.UpdateAsync(user);
 
@@ -240,6 +246,9 @@ namespace StaffApp.Infrastructure.Services
             return new UserDTO()
             {
                 FullName = user.FullName,
+                EmergencyContactPerson = user.EmergencyContactPerson,
+                EmergencyContactPersonRelationship = user.EmergencyContactPersonRelationship,
+                EmergencyContactPersonPhoneNumber = user.EmergencyContactPersonPhoneNumber,
                 Email = user.Email,
                 PhoneNumber = user.PhoneNumber,
                 BirthDate = user.BirthDate ?? DateTime.Now,

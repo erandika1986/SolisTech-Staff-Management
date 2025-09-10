@@ -47,6 +47,12 @@ namespace StaffApp.Application.DTOs.Project
         [Display(Name = "Client Email")]
         public string ClientEmail { get; set; }
 
+        [Display(Name = "Project Technologies")]
+        public string? ProjectTechnologies { get; set; }
+
+        [Display(Name = "Required Skills")]
+        public string? RequiredSkills { get; set; }
+
         public List<ProjectMemberDTO> ProjectMembers { get; set; } = new List<ProjectMemberDTO>();
         public List<ProjectDocumentDTO> Projects { get; set; } = new List<ProjectDocumentDTO>();
     }

@@ -16,6 +16,9 @@ namespace StaffApp.Domain.Entity.Authentication
         public int? EmployeeTypeId { get; set; }
         public int? CompanyLocationId { get; set; }
         public Gender? Gender { get; set; }
+        public string? EmergencyContactPerson { get; set; }
+        public string? EmergencyContactPersonRelationship { get; set; }
+        public string? EmergencyContactPersonPhoneNumber { get; set; }
         public bool IsActive { get; set; }
 
         public virtual EmployeeType EmployeeType { get; set; }

@@ -13,6 +13,7 @@ namespace StaffApp.Infrastructure.Data
         private readonly StaffAppDbContext context;
         private readonly IRoleService roleService;
         private readonly ILogger<StaffAppDbContextInitializer> logger;
+
         public StaffAppDbContextInitializer(StaffAppDbContext context,
             IRoleService roleService,
             ILogger<StaffAppDbContextInitializer> logger)
@@ -61,8 +62,6 @@ namespace StaffApp.Infrastructure.Data
                 throw;
             }
         }
-
-
 
         private async Task SeedUserRolesAsync()
         {

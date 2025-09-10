@@ -13,7 +13,9 @@ namespace StaffApp.Application.DTOs.User
         public string? NICNumber { get; set; }
         public string? LandNumber { get; set; }
 
-        //public string? RoleName { get; set; }
+        public string? EmergencyContactPerson { get; set; }
+        public string? EmergencyContactPersonRelationship { get; set; }
+        public string? EmergencyContactPersonPhoneNumber { get; set; }
 
 
         public string? PhoneNumber { get; set; }

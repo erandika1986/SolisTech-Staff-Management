@@ -14,6 +14,10 @@ namespace StaffApp.Infrastructure.Data.Configurations
 
             builder.Property(p => p.Id).ValueGeneratedOnAdd();
 
+            builder.Property(p => p.ConsiderForSocialSecurityScheme)
+                .HasDefaultValue(false)
+                .IsRequired(true);
+
             builder
                .HasOne<EmployeeSalaryHistory>(c => c.EmployeeSalaryHistory)
                .WithMany(c => c.EmployeeSalaryAddonHistories)

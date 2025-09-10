@@ -9,6 +9,7 @@ namespace StaffApp.Domain.Entity
         public decimal OriginalValue { get; set; }
         public decimal AdjustedValue { get; set; }
         public DateTime EffectiveFrom { get; set; }
+        public bool ConsiderForSocialSecurityScheme { get; set; }
 
         public virtual EmployeeSalary EmployeeSalary { get; set; }
         public virtual SalaryAddon SalaryAddon { get; set; }

@@ -94,7 +94,25 @@
                                 Placeholder="Enter project description..." />
                             </MudItem>
 
+                            <MudItem xs="12" sm="12" md="12" lg="12">
+                                <MudTextField @bind-Value="Project.ProjectTechnologies"
+                                              Label="Project Technologies"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="mt-3"
+                                              Lines="3"
+                                              Placeholder="Enter project technologies." />
+                            </MudItem>
 
+                            <MudItem xs="12" sm="12" md="12" lg="12">
+                                <MudTextField @bind-Value="Project.RequiredSkills"
+                                              Label="Required Skills"
+                                              Variant="Variant.Outlined"
+                                              Margin="Margin.Dense"
+                                              Class="mt-3"
+                                              Lines="3"
+                                              Placeholder="Enter required skills." />
+                            </MudItem>
 
                         </MudGrid>
 

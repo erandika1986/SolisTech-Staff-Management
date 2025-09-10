@@ -52,6 +52,7 @@
                         <MudTh>Original Value</MudTh>
                         <MudTh>Adjusted Value</MudTh>
                         <MudTh>Effective From</MudTh>
+                        <MudTh>Consider For Social Security Scheme</MudTh>
                         <MudTh>Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate>
@@ -64,6 +65,9 @@
                         </MudTd>
                         <MudTd>
                             <MudDatePicker Date="context.EffectiveFrom" Immediate="true" Required="true" RequiredError="Effective date is required!" />
+                        </MudTd>
+                        <MudTd>
+                            <MudCheckBox Variant="Variant.Outlined" Adornment="Adornment.End" Label="Consider" @bind-Value="context.ConsiderForSocialSecurityScheme" Color="Color.Primary" Disabled="context.SalaryAddonType != Domain.Enum.SalaryAddonType.Allowance"></MudCheckBox>
                         </MudTd>
                         <MudTd>
                             <MudStack Row>

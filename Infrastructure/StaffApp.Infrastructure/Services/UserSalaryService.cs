@@ -547,7 +547,9 @@ namespace StaffApp.Infrastructure.Services
                         OriginalValue = addon.DefaultValue,
                         AdjustedValue = addon.DefaultValue,
                         ApplyForAllEmployees = addon.ApplyForAllEmployees,
-                        EffectiveFrom = DateTime.Now
+                        EffectiveFrom = DateTime.Now,
+                        SalaryAddonType = addon.AddonType,
+                        ConsiderForSocialSecurityScheme = false
                     });
                 }
             }
@@ -574,9 +576,11 @@ namespace StaffApp.Infrastructure.Services
                         OriginalValue = addon.OriginalValue,
                         AdjustedValue = addon.AdjustedValue,
                         EffectiveFrom = addon.EffectiveFrom,
+                        SalaryAddonType = addon.SalaryAddon.AddonType,
                         ApplyForAllEmployees = salaryAddon.ApplyForAllEmployees,
                         CreatedOn = addon.CreatedDate.ToString("yyyy-MM-dd"),
-                        UpdatedOn = addon.UpdateDate.Value.ToString("yyyy-MM-dd")
+                        UpdatedOn = addon.UpdateDate.Value.ToString("yyyy-MM-dd"),
+                        ConsiderForSocialSecurityScheme = addon.ConsiderForSocialSecurityScheme
                     });
                 }
             }
@@ -727,6 +731,8 @@ namespace StaffApp.Infrastructure.Services
                     SalaryAddonId = x.Id,
                     OriginalValue = x.DefaultValue,
                     AdjustedValue = x.DefaultValue,
+                    ConsiderForSocialSecurityScheme = false,
+                    SalaryAddonType = x.AddonType,
                     EffectiveFrom = DateTime.Now,
                     ApplyForAllEmployees = x.ApplyForAllEmployees
                 })
@@ -794,6 +800,7 @@ namespace StaffApp.Infrastructure.Services
                             OriginalValue = addon.OriginalValue,
                             AdjustedValue = addon.AdjustedValue,
                             EffectiveFrom = addon.EffectiveFrom,
+                            ConsiderForSocialSecurityScheme = addon.ConsiderForSocialSecurityScheme,
                             CreatedByUserId = currentUserService.UserId,
                             CreatedDate = DateTime.Now,
                             UpdatedByUserId = currentUserService.UserId,
@@ -854,6 +861,7 @@ namespace StaffApp.Infrastructure.Services
                             OriginalValue = addon.OriginalValue,
                             AdjustedValue = addon.AdjustedValue,
                             EffectiveFrom = addon.EffectiveFrom,
+                            ConsiderForSocialSecurityScheme = addon.ConsiderForSocialSecurityScheme,
                             CreatedByUserId = currentUserService.UserId,
                             CreatedDate = DateTime.Now,
                             UpdatedByUserId = currentUserService.UserId,
@@ -875,6 +883,7 @@ namespace StaffApp.Infrastructure.Services
                             existingAddon.OriginalValue = addon.OriginalValue;
                             existingAddon.AdjustedValue = addon.AdjustedValue;
                             existingAddon.EffectiveFrom = addon.EffectiveFrom;
+                            existingAddon.ConsiderForSocialSecurityScheme = addon.ConsiderForSocialSecurityScheme;
                             existingAddon.UpdatedByUserId = currentUserService.UserId;
                             existingAddon.UpdateDate = DateTime.Now;
 
@@ -1151,7 +1160,7 @@ namespace StaffApp.Infrastructure.Services
         {
             var currentUserId = currentUserService.UserId;
             var employeeSalaryQuery = context.EmployeeMonthlySalaries
-                .Where(x => x.EmployeeSalary.UserId == currentUserId);
+                .Where(x => x.EmployeeSalary.UserId == currentUserId && (x.Status == EmployeeSalaryStatus.Approved));
 
             int totalCount = await employeeSalaryQuery.CountAsync();
 
@@ -1657,6 +1666,7 @@ namespace StaffApp.Infrastructure.Services
                     OriginalValue = addon.OriginalValue,
                     AdjustedValue = addon.AdjustedValue,
                     EffectiveFrom = addon.EffectiveFrom,
+                    ConsiderForSocialSecurityScheme = addon.ConsiderForSocialSecurityScheme,
                     CreatedByUserId = addon.CreatedByUserId,
                     CreatedDate = addon.CreatedDate,
                     UpdatedByUserId = addon.UpdatedByUserId,
