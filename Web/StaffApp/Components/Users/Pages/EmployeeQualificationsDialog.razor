@@ -1,6 +1,7 @@
 ﻿@using StaffApp.Application.DTOs.Common
 @using StaffApp.Application.DTOs.Department
 @using StaffApp.Application.DTOs.User
+@using StaffApp.Application.DTOs.UserQualification
 @using StaffApp.Application.Extensions.Constants
 @using StaffApp.Application.Extensions.Helpers
 @using StaffApp.Application.Services
@@ -11,102 +12,175 @@
 
 @inject IUserService UserService
 @inject IDepartmentService DepartmentService
+@inject IAzureBlobService AzureBlobService
 @inject IMasterDataService MasterDateService
+@inject IUserQualificationService UserQualificationService
 @inject LoadingService LoadingService
+@inject IJSRuntime JSRuntime
+@using MudBlazor
+@using System.ComponentModel.DataAnnotations
+@inject ISnackbar Snackbar
+@inject IDialogService Dialog
 
 <MudDialog>
+    <TitleContent>
+        <MudPaper Class="pa-4 mb-4" Elevation="2">
+            <div class="d-flex justify-space-between align-center flex-wrap">
+                <div>
+                    <MudText Typo="Typo.h4" Class="mb-2">
+                        <MudIcon Icon="@Icons.Material.Filled.Assessment" Class="mr-3" />
+                        Manage Documents For @(EmployeeName)
+                    </MudText>
+                    <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                        Manage documents related to the employee here.
+                    </MudText>
+                </div>
+            </div>
+        </MudPaper>
+    </TitleContent>
     <DialogContent>
-        <MudGrid>
-            <MudItem xs="12" sm="12">
-                <MudPaper Class="pa-2">
-                    <div>
-                        <MudExpansionPanels MultiExpansion="true">
-                            <MudExpansionPanel Expanded="true">
-                                <TitleContent>
-                                    <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Style="width: 100%">
-                                        <div class="d-flex">
-                                            <MudIcon Icon="@Icons.Material.Filled.CastForEducation" class="mr-3"></MudIcon>
-                                            <MudText><strong>Qualification and other document upload</strong></MudText>
-                                        </div>
+          <MudItem xs="12" Class="mb-2">
+            <MudCard Class="mb-4">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">Upload Documents</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudGrid>
+                            <MudItem xs="12" md="4" lg="4">
+                            <MudSelect T="DocumentCategoryDTO" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" Label="Document Category" Variant="Variant.Outlined" Margin="Margin.Dense" Value="selectedDocumentCategory" ValueChanged="@DocumentCategoryChanged">
+                                    @foreach (var category in DocumentCategories)
+                                    {
+                                        <MudSelectItem Value="@category">@category.Name</MudSelectItem>
+                                    }
+                                </MudSelect>
+                            </MudItem>
+                        <MudItem xs="12" md="4" lg="4">
+                            <MudSelect T="DropDownDTO" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" Label="Document Name" Variant="Variant.Outlined" Margin="Margin.Dense" Value="selectedDocumentName" ValueChanged="@DocumentNameChanged">
+                                @foreach (var documentName in DocumentNames)
+                                {
+                                    <MudSelectItem Value="@documentName">@documentName.Name</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        @if (selectedDocumentName.Name == "Other")
+                        {
+                            <MudItem xs="12" md="4" lg="4">
+                                <MudTextField @bind-Value="otherFileName" Label="Other Document Name" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            </MudItem>
+                        }
 
-                                        <MudIconButton Variant="Variant.Filled"
-                                                       Color="Color.Primary"
-                                                       Icon="@Icons.Material.Filled.Add"
-                                                       Size="Size.Small">
-                                        </MudIconButton>
-                                    </MudStack>
-                                </TitleContent>
-                                <ChildContent>
-                                    Panel Content
-                                </ChildContent>
-                            </MudExpansionPanel>
-                            <MudExpansionPanel Expanded="true">
-                                <TitleContent>
-                                    <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Style="width: 100%">
-                                        <div class="d-flex">
-                                            <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" class="mr-3"></MudIcon>
-                                            <MudText><strong>Appraisals</strong></MudText>
-                                        </div>
+                            <MudItem xs="12" md="6" lg="6">
+                                <MudFileUpload T="IReadOnlyList<IBrowserFile>"
+                                           OnFilesChanged="OnInputFileChanged"
+                                           Hidden="@false"
+                                           InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20"
+                                           InputStyle="opacity:0"
+                                           Accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                           MaximumFileCount="1">
+                                    <ActivatorContent>
+                                        <MudPaper Height="100px"
+                                              Outlined="true"
+                                              Class="relative rounded-lg border-2 border-dashed pa-4 mud-width-full mud-height-full d-flex flex-column justify-center mud-text-align-center">
+                                            <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Style="font-size: 3rem;" Color="Color.Primary" />
+                                            <MudText Typo="Typo.body1">Click to upload or drag and drop</MudText>
+                                            <MudText Typo="Typo.body2" Class="mud-text-secondary">PDF, DOC, DOCX, JPG, PNG (Max 10MB each)</MudText>
+                                        </MudPaper>
+                                    </ActivatorContent>
+                                </MudFileUpload>
+                            </MudItem>
+                            <MudItem xs="12" md="6" lg="6">
+                                <MudButton Variant="Variant.Filled"
+                                       Color="Color.Primary"
+                                       StartIcon="@Icons.Material.Filled.Upload"
+                                       OnClick="UploadDocument"
+                                       Disabled="@(selectedFiles == null || !selectedFiles.Any() || selectedDocumentCategory == null)">
+                                Upload Documents
+                                </MudButton>
+                            </MudItem>
+                    </MudGrid>
+                    </MudCardContent>
+                 </MudCard>
+                 <MudCard>
+                     <MudCardContent>
+                        <MudGrid>
+                            <MudItem xs="12" sm="12">
+                                <MudPaper Class="pa-2">
+                                    <div>
+                                        <MudExpansionPanels MultiExpansion="true">
 
-                                        <MudIconButton Variant="Variant.Filled"
-                                                       Color="Color.Primary"
-                                                       Icon="@Icons.Material.Filled.Add"
-                                                       Size="Size.Small">
-                                        </MudIconButton>
-                                    </MudStack>
-                                </TitleContent>
-                                <ChildContent>
-                                    Panel Content
-                                </ChildContent>
-                            </MudExpansionPanel>
-                            <MudExpansionPanel Expanded="true">
-                                <TitleContent>
-                                    <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Style="width: 100%">
-                                        <div class="d-flex">
-                                            <MudIcon Icon="@Icons.Material.Filled.Warning" class="mr-3"></MudIcon>
-                                            <MudText><strong>Warnings</strong></MudText>
-                                        </div>
+                                        @foreach (var category in EmployeeDocumentCategories)
+                                            {
+                                            <MudExpansionPanel Expanded="true">
+                                                <TitleContent>
+                                                    <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Style="width: 100%">
+                                                        <div class="d-flex">
+                                                            <MudIcon Icon="@GetCategoryIcon(@category.DocumentCategory.Id)" class="mr-3"></MudIcon>
+                                                            <MudText><strong>@category.DocumentCategory.Name</strong></MudText>
+                                                            <MudChip T="string" Size="Size.Small" Color="Color.Info">
+                                                                @category.DocumentCategory.NoOfDocuments
+                                                            </MudChip>
+                                                        </div>
+                                                    </MudStack>
+                                                </TitleContent>
+                                                <ChildContent>
+                                                    <MudList T="string" Clickable="true" Dense="true">
+                                                        @foreach (var document in @category.EmployeeDocuments)
+                                                        {
+                                                            <MudListItem>
+                                                                <div class="d-flex justify-space-between align-center full-width">
+                                                                    <div class="d-flex flex-column">
+                                                                        <MudText Typo="Typo.body2" Class="mud-text-truncate">
+                                                                            @document.OriginalFileName
+                                                                        </MudText>
+                                                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                                                            @document.UploadDate.ToString("MMM dd, yyyy") • @GetFileSize(document.FileSize)
+                                                                        </MudText>
+                                                                    </div>
+                                                                    <div class="d-flex gap-2">
+                                                                        <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                                                                                       Color="Color.Primary"
+                                                                                       Size="Size.Medium"
+                                                                                       OnClick="@(() => ViewDocument(document))" />
+                                                                        <MudIconButton Icon="@Icons.Material.Filled.Download"
+                                                                                       Color="Color.Success"
+                                                                                       Size="Size.Medium"
+                                                                                       OnClick="@(() => DownloadDocument(document))" />
+                                                                        <MudIconButton Icon="@Icons.Material.Filled.Delete"
+                                                                                       Color="Color.Error"
+                                                                                       Size="Size.Medium"
+                                                                                       OnClick="@(() => DeleteDocument(document))" />
+                                                                    </div>
+                                                                </div>
+                                                            </MudListItem>
+                                                            <MudDivider />
+                                                        }
+                                                        @if (!category.EmployeeDocuments.Any())
+                                                        {
+                                                            <MudListItem>
+                                                                <MudText Typo="Typo.body2" Class="mud-text-secondary text-center pa-4">
+                                                                    No documents uploaded
+                                                                </MudText>
+                                                            </MudListItem>
+                                                        }
+                                                    </MudList>
+                                                </ChildContent>
+                                            </MudExpansionPanel>
+                                        }
+                                        </MudExpansionPanels>
+                                    </div>
+                                </MudPaper>
+                            </MudItem>
+                        </MudGrid>
+                     </MudCardContent>
+                 </MudCard>
+          </MudItem>
 
-                                        <MudIconButton Variant="Variant.Filled"
-                                                       Color="Color.Primary"
-                                                       Icon="@Icons.Material.Filled.Add"
-                                                       Size="Size.Small">
-                                        </MudIconButton>
-                                    </MudStack>
-                                </TitleContent>
-                                <ChildContent>
-                                    Panel Content
-                                </ChildContent>
-                            </MudExpansionPanel>
-                            <MudExpansionPanel Expanded="true">
-                                <TitleContent>
-                                    <MudStack Row Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Style="width: 100%">
-                                        <div class="d-flex">
-                                            <MudIcon Icon="@Icons.Material.Filled.Gavel" class="mr-3"></MudIcon>
-                                            <MudText><strong>Disciplinary Actions</strong></MudText>
-                                        </div>
-
-                                        <MudIconButton Variant="Variant.Filled"
-                                                       Color="Color.Primary"
-                                                       Icon="@Icons.Material.Filled.Add"
-                                                       Size="Size.Small">
-                                        </MudIconButton>
-                                    </MudStack>
-                                </TitleContent>
-                                <ChildContent>
-                                    Panel Content
-                                </ChildContent>
-                            </MudExpansionPanel>
-                        </MudExpansionPanels>
-                    </div>
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
     </DialogContent>
     <DialogActions>
         <MudPaper Class="pa-2">
             <MudButton OnClick="Cancel">Cancel</MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="ml-auto">Register</MudButton>
         </MudPaper>
     </DialogActions>
 </MudDialog>
@@ -115,17 +189,206 @@
 
     bool open = true;
 
-    [Parameter] public string UserId { get; set; }
+    [Parameter] 
+    public string UserId { get; set; }
+
+    [Parameter]
+    public string EmployeeName { get; set; }
 
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; }
 
     [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
 
+    private string selectedEmployeeId = "";
+    private DocumentCategoryDTO selectedDocumentCategory = new();
+    private DropDownDTO selectedDocumentName = new();
+
+    private IEnumerable<DocumentCategoryDTO> DocumentCategories = new List<DocumentCategoryDTO>();
+    private IEnumerable<DropDownDTO> DocumentNames = new List<DropDownDTO>();
+    private IEnumerable<EmployeeDocumentCategoryContainerDTO> EmployeeDocumentCategories = new List<EmployeeDocumentCategoryContainerDTO>();
+
+    private string otherFileName = "";
+    private List<IBrowserFile> selectedFiles;
+    private bool showDocumentViewer = false;
+    private EmployeeDocumentDTO? selectedDocument;
 
     protected override async Task OnInitializedAsync()
     {
+        DocumentCategories = UserQualificationService.GetDocumentCategories();
+        selectedDocumentCategory = DocumentCategories.FirstOrDefault();
+        await GetDocumentNames();
+        await LoadEmployeeDocuments();
+    }
 
+    private async Task GetDocumentNames()
+    {
+        DocumentNames = await UserQualificationService.GetDocumentsByCategory(selectedDocumentCategory.Id);
+        selectedDocumentName = DocumentNames.FirstOrDefault();
+    }
+
+    private async Task DocumentCategoryChanged(DocumentCategoryDTO value)
+    {
+        selectedDocumentCategory = value;
+        await GetDocumentNames();
+        StateHasChanged();
+    }
+
+    private async Task DocumentNameChanged(DropDownDTO value)
+    {
+        selectedDocumentName = value;
+        StateHasChanged();
+    }
+
+    private async Task LoadEmployeeDocuments()
+    {
+        EmployeeDocumentCategories = await UserQualificationService.GetEmployeeDocumentsByUserId(UserId);
+    }
+
+    private readonly DialogOptions dialogOptions = new()
+    {
+        MaxWidth = MaxWidth.Medium,
+        FullWidth = true,
+        CloseButton = true,
+        BackdropClick = false,
+        CloseOnEscapeKey = true
+    };
+
+    private List<EmployeeDocumentDTO> employeeDocuments = new();
+
+    private void OnInputFileChanged(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles().ToList();
+    }
+
+    private async Task UploadDocument()
+    {
+        if (selectedFiles == null || !selectedFiles.Any() || selectedDocumentCategory == null)
+        {
+            Snackbar.Add("Please select document type, and files to upload.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            var qualification = new UserQualificationDTO()
+            {
+                OtherName = otherFileName,
+                Id = 0,
+                SelectedDocumentCategory = selectedDocumentCategory,
+                SelectedDocumentName = selectedDocumentName,
+                UserId = UserId
+            };
+
+            foreach (var file in selectedFiles)
+            {
+                // Validate file size (10MB max)
+                if (file.Size > 10 * 1024 * 1024)
+                {
+                    Snackbar.Add($"File {file.Name} is too large. Maximum size is 10MB.", Severity.Warning);
+                    return;
+                }
+
+                qualification.Files.Add(file);
+            }
+
+
+
+            Snackbar.Add($"Successfully uploaded {selectedFiles.Count} document(s).", Severity.Success);
+
+            await UserQualificationService.CreateAsync(qualification);
+
+            await LoadEmployeeDocuments();
+
+            // Reset form
+            selectedFiles = null;
+            selectedEmployeeId = "";
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error uploading documents: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ViewDocument(EmployeeDocumentDTO document)
+    {
+        selectedDocument = document;
+        var parameters = new DialogParameters<EmployeeDocumentDialog>
+        {
+            {  x => x.selectedDocument, document }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+        await Dialog.ShowAsync<EmployeeDocumentDialog>($"Document", parameters, options);
+    }
+
+    private async Task DownloadDocument(EmployeeDocumentDTO document)
+    {
+        // In a real application, this would trigger a file download
+        Snackbar.Add($"Downloading {document.SaveFileName}...", Severity.Info);
+
+        var sasUrl = await AzureBlobService.GenerateSasTokenForBlobAsync(document.SaveFileName, ApplicationConstants.AzureBlobStorageName, DateTimeOffset.UtcNow.AddMinutes(5));
+
+        LoadingService.Hide();
+        await JSRuntime.InvokeVoidAsync("open", sasUrl, "_blank");
+    }
+
+    private async Task DeleteDocument(EmployeeDocumentDTO document)
+    {
+        var response = await UserQualificationService.DeleteAsync(document.Id);
+        if(response.Flag)
+        {
+            Snackbar.Add($"Document {document.OriginalFileName} has been deleted.", Severity.Success);
+            await LoadEmployeeDocuments();
+        }
+        else
+        {
+            Snackbar.Add(response.Message, Severity.Error);
+        }
+
+    }
+
+    private async Task<IEnumerable<EmployeeDocumentDTO>> GetDocumentsByCategory(int categoryId)
+    {
+        return Enumerable.Empty<EmployeeDocumentDTO>();
+
+    }
+
+    private string GetCategoryIcon(int Id)
+    {
+        return (EmployeeDocumentCategory)Id switch
+        {
+            EmployeeDocumentCategory.MandatoryIdentificationAndLegalDocuments => Icons.Material.Filled.Badge,
+            EmployeeDocumentCategory.QualificationsAndExperience => Icons.Material.Filled.School,
+            EmployeeDocumentCategory.ComplianceAndPolicyDocuments => Icons.Material.Filled.Gavel,
+            EmployeeDocumentCategory.HealthAndSafetyRecords => Icons.Material.Filled.HealthAndSafety,
+            _ => Icons.Material.Filled.Folder
+        };
+    }
+
+    private string GetFileSize(long bytes)
+    {
+        string[] suffixes = { "B", "KB", "MB", "GB" };
+        int counter = 0;
+        decimal number = bytes;
+        while (Math.Round(number / 1024) >= 1)
+        {
+            number /= 1024;
+            counter++;
+        }
+        return $"{number:N1} {suffixes[counter]}";
+    }
+
+    private bool IsImageFile(string fileType)
+    {
+        string[] imageTypes = { "jpg", "jpeg", "png", "gif", "bmp" };
+        return imageTypes.Contains(fileType.ToLower());
     }
 
     private void Cancel() => MudDialog.Cancel();

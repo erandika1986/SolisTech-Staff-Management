@@ -17,6 +17,13 @@ namespace StaffApp.Infrastructure.Data.Configurations
                 .ValueGeneratedOnAdd();
 
             builder
+               .HasOne<DocumentName>(c => c.DocumentName)
+               .WithMany(c => c.UserQualificationDocuments)
+               .HasForeignKey(c => c.DocumentNameId)
+               .OnDelete(DeleteBehavior.Restrict)
+               .IsRequired(true);
+
+            builder
                .HasOne<ApplicationUser>(c => c.User)
                .WithMany(c => c.UserQualificationDocuments)
                .HasForeignKey(c => c.UserId)

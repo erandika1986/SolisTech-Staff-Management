@@ -1,0 +1,117 @@
+﻿@using StaffApp.Application.DTOs.UserQualification
+@inject IUserService UserService
+@inject IDepartmentService DepartmentService
+@inject IAzureBlobService AzureBlobService
+@inject IMasterDataService MasterDateService
+@inject IUserQualificationService UserQualificationService
+@inject LoadingService LoadingService
+@inject IJSRuntime JSRuntime
+@using MudBlazor
+@using System.ComponentModel.DataAnnotations
+@using StaffApp.Application.Extensions.Constants
+@using StaffApp.Application.Services
+@using StaffApp.Infrastructure.Services
+@inject ISnackbar Snackbar
+
+<!-- Document Viewer Dialog -->
+<MudDialog>
+    <TitleContent>
+        <div class="d-flex align-center">
+            <MudIcon Icon="@Icons.Material.Filled.Description" Class="mr-3" />
+            <MudText Typo="Typo.h6">@selectedDocument?.OriginalFileName</MudText>
+        </div>
+    </TitleContent>
+    <DialogContent>
+        @if (selectedDocument != null)
+        {
+            <MudGrid>
+                <MudItem xs="12">
+                    <MudText Typo="Typo.body2"><strong>Document Type:</strong> @selectedDocument.DocumentCategory</MudText>
+                    <MudText Typo="Typo.body2"><strong>Upload Date:</strong> @selectedDocument.UploadDate.ToString("MMM dd, yyyy HH:mm")</MudText>
+                    <MudText Typo="Typo.body2"><strong>File Size:</strong> @GetFileSize(selectedDocument.FileSize)</MudText>
+                    <MudText Typo="Typo.body2"><strong>File Type:</strong> @selectedDocument.FileType</MudText>
+                </MudItem>
+                <MudItem xs="12" Class="mt-4">
+                    @if (IsImageFile(selectedDocument.FileType))
+                    {
+                        <MudImage Src="@selectedDocument.Path"
+                                  Alt="@selectedDocument.OriginalFileName"
+                                  Class="mud-width-full"
+                                  ObjectFit="ObjectFit.Contain"
+                                  Height="400" />
+                    }
+                    else if (selectedDocument.FileType.ToLower() == "pdf")
+                    {
+                        <MudPaper Class="pa-4 text-center">
+                            <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Style="font-size: 4rem;" Color="Color.Error" />
+                            <MudText Typo="Typo.h6" Class="mt-2">PDF Document</MudText>
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">Click download to view the full document</MudText>
+                        </MudPaper>
+                    }
+                    else
+                    {
+                        <MudPaper Class="pa-4 text-center">
+                            <MudIcon Icon="@Icons.Material.Filled.InsertDriveFile" Style="font-size: 4rem;" Color="Color.Primary" />
+                            <MudText Typo="Typo.h6" Class="mt-2">@selectedDocument.FileType.ToUpper() Document</MudText>
+                            <MudText Typo="Typo.body2" Class="mud-text-secondary">Click download to view the document</MudText>
+                        </MudPaper>
+                    }
+                </MudItem>
+            </MudGrid>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@(() => DownloadDocument(selectedDocument))"
+                   Color="Color.Success"
+                   StartIcon="@Icons.Material.Filled.Download">
+            Download
+        </MudButton>
+        <MudButton OnClick="Cancel"
+                   Color="Color.Primary">
+            Close
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+    [Parameter] 
+    public EmployeeDocumentDTO selectedDocument { get; set; }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; }
+
+
+    private async Task DownloadDocument(EmployeeDocumentDTO document)
+    {
+        LoadingService.Show();
+        // In a real application, this would trigger a file download
+        Snackbar.Add($"Downloading {document.SaveFileName}...", Severity.Info);
+
+        var sasUrl = await AzureBlobService.GenerateSasTokenForBlobAsync(document.SaveFileName, ApplicationConstants.AzureBlobStorageName, DateTimeOffset.UtcNow.AddMinutes(5));
+
+        LoadingService.Hide();
+        await JSRuntime.InvokeVoidAsync("open", sasUrl, "_blank");
+    }
+
+    private bool IsImageFile(string fileType)
+    {
+        string[] imageTypes = { "jpg", "jpeg", "png", "gif", "bmp" };
+        return imageTypes.Contains(fileType.ToLower());
+    }
+
+    private string GetFileSize(long bytes)
+    {
+        string[] suffixes = { "B", "KB", "MB", "GB" };
+        int counter = 0;
+        decimal number = bytes;
+        while (Math.Round(number / 1024) >= 1)
+        {
+            number /= 1024;
+            counter++;
+        }
+        return $"{number:N1} {suffixes[counter]}";
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}
