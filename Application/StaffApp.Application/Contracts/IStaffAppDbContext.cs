@@ -54,6 +54,7 @@ namespace StaffApp.Application.Contracts
         DbSet<UserAppraisalDetail> UserAppraisalDetails { get; }
         DbSet<UserDisciplinaryAction> UserDisciplinaryActions { get; }
         DbSet<UserQualificationDocument> UserQualificationDocuments { get; }
+        DbSet<DocumentName> DocumentNames { get; }
 
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);

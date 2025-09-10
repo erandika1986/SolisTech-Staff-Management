@@ -75,9 +75,6 @@
                             <MudTooltip Text="Manage Qualification" Color="Color.Secondary" Placement="Placement.Top">
                                 <MudIconButton Icon="@Icons.Material.Filled.CastForEducation" Color="Color.Secondary" Variant="Variant.Filled" OnClick="() => EditEmployeeQualificationsAsync(user.Item)"></MudIconButton>
                             </MudTooltip>
-                            <MudTooltip Text="Manage Appraisals" Color="Color.Secondary" Placement="Placement.Top">
-                                <MudIconButton Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Secondary" Variant="Variant.Filled" OnClick="() => EditEmployeeAppraisalsAsync(user.Item)"></MudIconButton>
-                            </MudTooltip>
                             <MudTooltip Text="Report Disciplinary Action" Color="Color.Secondary" Placement="Placement.Top">
                                 <MudIconButton Icon="@Icons.Material.Filled.Gavel" Color="Color.Secondary" Variant="Variant.Filled" OnClick="() => EditEmployeeDisciplinaryActionsAsync(user.Item)"></MudIconButton>
                             </MudTooltip>
@@ -168,12 +165,21 @@
 
     private async Task EditEmployeeQualificationsAsync(BasicUserDTO user)
     {
-        var parameters = new DialogParameters
+        var parameters = new DialogParameters<EmployeeQualificationsDialog>
         {
-            { "UserId", user.Id },
-            { "OnDialogClosed", EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
+            {  x => x.UserId, user.Id },
+            {  x => x.EmployeeName, user.FullName },
+            {  x => x.OnDialogClosed, EventCallback.Factory.Create<bool>(this, HandleEditDialogClosedAsync)  }
         };
-        await Dialog.ShowAsync<EmployeeQualificationsDialog>($"Qualifications For {user.FullName}", parameters, _maxWidth);
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.ExtraLarge,
+            FullWidth = true,
+            BackdropClick = true
+        };
+        await Dialog.ShowAsync<EmployeeQualificationsDialog>($"Qualifications For {user.FullName}", parameters, options);
     }
 
     private async Task EditEmployeeAppraisalsAsync(BasicUserDTO user)

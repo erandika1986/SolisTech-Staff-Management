@@ -1,20 +1,352 @@
-﻿<h3>EmployeeAppraisalsDialog</h3>
+﻿@page "/employee-documents"
+
+@using MudBlazor
+@using System.ComponentModel.DataAnnotations
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <MudText Typo="Typo.h4" Class="mb-6" Color="Color.Primary">
+        <MudIcon Icon="@Icons.Material.Filled.FolderOpen" Class="mr-2" />
+        Employee Document Management
+    </MudText>
+
+    <MudGrid>
+        <!-- Employee Selection -->
+        <MudItem xs="12" md="4">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Select Employee</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudSelect @bind-Value="selectedEmployeeId" Label="Employee" Variant="Variant.Outlined" AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var employee in employees)
+                        {
+                            <MudSelectItem Value="@employee.Id">@employee.Name (@employee.EmployeeId)</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+
+        <!-- Document Upload Section -->
+        <MudItem xs="12" md="8">
+            <MudCard>
+                <MudCardHeader>
+                    <CardHeaderContent>
+                        <MudText Typo="Typo.h6">Upload Documents</MudText>
+                    </CardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudGrid>
+                        <MudItem xs="12" md="6">
+                            <MudSelect @bind-Value="selectedDocumentType" Label="Document Type" Variant="Variant.Outlined">
+                                @foreach (var docType in documentTypes)
+                                {
+                                    <MudSelectItem Value="@docType.Key">@docType.Value</MudSelectItem>
+                                }
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12" md="6">
+                            <MudTextField @bind-Value="documentTitle" Label="Document Title" Variant="Variant.Outlined" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudFileUpload T="IReadOnlyList<IBrowserFile>" 
+                                         OnFilesChanged="OnInputFileChanged" 
+                                         Hidden="@false" 
+                                         InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20" 
+                                         InputStyle="opacity:0"
+                                         Accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                                         MaximumFileCount="10">
+                                <ActivatorContent>
+                                    <MudPaper Height="100px" 
+                                            Outlined="true" 
+                                            Class="relative rounded-lg border-2 border-dashed pa-4 mud-width-full mud-height-full d-flex flex-column justify-center mud-text-align-center">
+                                        <MudIcon Icon="@Icons.Material.Filled.CloudUpload" Style="font-size: 3rem;" Color="Color.Primary" />
+                                        <MudText Typo="Typo.body1">Click to upload or drag and drop</MudText>
+                                        <MudText Typo="Typo.body2" Class="mud-text-secondary">PDF, DOC, DOCX, JPG, PNG (Max 10MB each)</MudText>
+                                    </MudPaper>
+                                </ActivatorContent>
+                            </MudFileUpload>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudButton Variant="Variant.Filled" 
+                                     Color="Color.Primary" 
+                                     StartIcon="@Icons.Material.Filled.Upload"
+                                     OnClick="UploadDocument"
+                                     Disabled="@(selectedFiles == null || !selectedFiles.Any() || string.IsNullOrEmpty(selectedDocumentType))">
+                                Upload Documents
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <!-- Document Categories Display -->
+    <MudGrid Class="mt-6">
+        @foreach (var category in documentCategories)
+        {
+            <MudItem xs="12" md="6" lg="4">
+                <MudCard Class="mud-height-full">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">
+                                <MudIcon Icon="@GetCategoryIcon(category.Key)" Class="mr-2" />
+                                @category.Value
+                            </MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudChip T="string" Size="Size.Small" Color="Color.Info">
+                                @GetDocumentCount(category.Key)
+                            </MudChip>
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent Class="pa-0">
+                        <MudList T="string" Clickable="true" Dense="true">
+                            @foreach (var document in GetDocumentsByCategory(category.Key))
+                            {
+                                <MudListItem>
+                                    <div class="d-flex justify-space-between align-center full-width">
+                                        <div class="d-flex flex-column">
+                                            <MudText Typo="Typo.body2" Class="mud-text-truncate">
+                                                @document.Title
+                                            </MudText>
+                                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                                @document.UploadDate.ToString("MMM dd, yyyy") • @GetFileSize(document.FileSize)
+                                            </MudText>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                                         Color="Color.Primary" 
+                                                         Size="Size.Small"
+                                                         OnClick="@(() => ViewDocument(document))" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.Download" 
+                                                         Color="Color.Success" 
+                                                         Size="Size.Small"
+                                                         OnClick="@(() => DownloadDocument(document))" />
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                                         Color="Color.Error" 
+                                                         Size="Size.Small"
+                                                         OnClick="@(() => DeleteDocument(document))" />
+                                        </div>
+                                    </div>
+                                </MudListItem>
+                                <MudDivider />
+                            }
+                            @if (!GetDocumentsByCategory(category.Key).Any())
+                            {
+                                <MudListItem>
+                                    <MudText Typo="Typo.body2" Class="mud-text-secondary text-center pa-4">
+                                        No documents uploaded
+                                    </MudText>
+                                </MudListItem>
+                            }
+                        </MudList>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        }
+    </MudGrid>
+</MudContainer>
 
 @code {
-    bool open = true;
+    private string selectedEmployeeId = "";
+    private string selectedDocumentType = "";
+    private string documentTitle = "";
+    private IReadOnlyList<IBrowserFile>? selectedFiles;
+    private bool showDocumentViewer = false;
+    private EmployeeDocument? selectedDocument;
 
-    [Parameter] public string UserId { get; set; }
-
-    [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; }
-
-    [Parameter] public EventCallback<bool> OnDialogClosed { get; set; }
-
-
-    protected override async Task OnInitializedAsync()
+    private readonly DialogOptions dialogOptions = new()
     {
+        MaxWidth = MaxWidth.Medium,
+        FullWidth = true,
+        CloseButton = true,
+        BackdropClick = false,
+        CloseOnEscapeKey = true
+    };
 
+    // Sample data
+    private List<Employee> employees = new()
+    {
+        new Employee { Id = "EMP001", EmployeeId = "EMP001", Name = "John Doe" },
+        new Employee { Id = "EMP002", EmployeeId = "EMP002", Name = "Jane Smith" },
+        new Employee { Id = "EMP003", EmployeeId = "EMP003", Name = "Mike Johnson" }
+    };
+
+    private Dictionary<string, string> documentTypes = new()
+    {
+        { "national_id", "National ID" },
+        { "passport", "Passport" },
+        { "employment_pass", "Employment Pass" },
+        { "qualification", "Qualification Certificate" },
+        { "experience", "Experience Certificate" },
+        { "tax_form", "Tax Form" },
+        { "code_of_conduct", "Code of Conduct" },
+        { "confidentiality", "Confidentiality Agreement" },
+        { "data_protection", "Data Protection Agreement" },
+        { "health_safety", "Health & Safety Record" }
+    };
+
+    private Dictionary<string, string> documentCategories = new()
+    {
+        { "identity", "Identity Documents" },
+        { "qualifications", "Qualifications & Experience" },
+        { "compliance", "Compliance & Policy" },
+        { "health_safety", "Health & Safety" }
+    };
+
+    private List<EmployeeDocument> employeeDocuments = new();
+
+    private void OnInputFileChanged(InputFileChangeEventArgs e)
+    {
+        selectedFiles = e.GetMultipleFiles().ToList();
     }
 
-    private void Cancel() => MudDialog.Cancel();
+    private async Task UploadDocument()
+    {
+        if (selectedFiles == null || !selectedFiles.Any() || string.IsNullOrEmpty(selectedEmployeeId) || string.IsNullOrEmpty(selectedDocumentType))
+        {
+            Snackbar.Add("Please select an employee, document type, and files to upload.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            foreach (var file in selectedFiles)
+            {
+                // Validate file size (10MB max)
+                if (file.Size > 10 * 1024 * 1024)
+                {
+                    Snackbar.Add($"File {file.Name} is too large. Maximum size is 10MB.", Severity.Warning);
+                    continue;
+                }
+
+                var document = new EmployeeDocument
+                {
+                    Id = Guid.NewGuid().ToString(),
+                    EmployeeId = selectedEmployeeId,
+                    DocumentType = selectedDocumentType,
+                    Title = !string.IsNullOrEmpty(documentTitle) ? documentTitle : file.Name,
+                    FileName = file.Name,
+                    FileType = Path.GetExtension(file.Name).TrimStart('.'),
+                    FileSize = file.Size,
+                    UploadDate = DateTime.Now,
+                    FileUrl = $"/documents/{selectedEmployeeId}/{file.Name}" // Placeholder URL
+                };
+
+                employeeDocuments.Add(document);
+            }
+
+            Snackbar.Add($"Successfully uploaded {selectedFiles.Count} document(s).", Severity.Success);
+            
+            // Reset form
+            selectedFiles = null;
+            documentTitle = "";
+            selectedDocumentType = "";
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error uploading documents: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void ViewDocument(EmployeeDocument document)
+    {
+        selectedDocument = document;
+        showDocumentViewer = true;
+    }
+
+    private void DownloadDocument(EmployeeDocument document)
+    {
+        // In a real application, this would trigger a file download
+        Snackbar.Add($"Downloading {document.Title}...", Severity.Info);
+    }
+
+    private void DeleteDocument(EmployeeDocument document)
+    {
+        employeeDocuments.Remove(document);
+        Snackbar.Add($"Document {document.Title} has been deleted.", Severity.Success);
+    }
+
+    private IEnumerable<EmployeeDocument> GetDocumentsByCategory(string category)
+    {
+        if (string.IsNullOrEmpty(selectedEmployeeId))
+            return Enumerable.Empty<EmployeeDocument>();
+
+        var categoryTypes = GetDocumentTypesByCategory(category);
+        return employeeDocuments.Where(d => d.EmployeeId == selectedEmployeeId && categoryTypes.Contains(d.DocumentType));
+    }
+
+    private List<string> GetDocumentTypesByCategory(string category)
+    {
+        return category switch
+        {
+            "identity" => new List<string> { "national_id", "passport", "employment_pass" },
+            "qualifications" => new List<string> { "qualification", "experience" },
+            "compliance" => new List<string> { "tax_form", "code_of_conduct", "confidentiality", "data_protection" },
+            "health_safety" => new List<string> { "health_safety" },
+            _ => new List<string>()
+        };
+    }
+
+    private int GetDocumentCount(string category)
+    {
+        return GetDocumentsByCategory(category).Count();
+    }
+
+    private string GetCategoryIcon(string category)
+    {
+        return category switch
+        {
+            "identity" => Icons.Material.Filled.Badge,
+            "qualifications" => Icons.Material.Filled.School,
+            "compliance" => Icons.Material.Filled.Gavel,
+            "health_safety" => Icons.Material.Filled.HealthAndSafety,
+            _ => Icons.Material.Filled.Folder
+        };
+    }
+
+    private string GetFileSize(long bytes)
+    {
+        string[] suffixes = { "B", "KB", "MB", "GB" };
+        int counter = 0;
+        decimal number = bytes;
+        while (Math.Round(number / 1024) >= 1)
+        {
+            number /= 1024;
+            counter++;
+        }
+        return $"{number:N1} {suffixes[counter]}";
+    }
+
+    private bool IsImageFile(string fileType)
+    {
+        string[] imageTypes = { "jpg", "jpeg", "png", "gif", "bmp" };
+        return imageTypes.Contains(fileType.ToLower());
+    }
+
+    // Data models
+    public class Employee
+    {
+        public string Id { get; set; } = "";
+        public string EmployeeId { get; set; } = "";
+        public string Name { get; set; } = "";
+    }
+
+    public class EmployeeDocument
+    {
+        public string Id { get; set; } = "";
+        public string EmployeeId { get; set; } = "";
+        public string DocumentType { get; set; } = "";
+        public string Title { get; set; } = "";
+        public string FileName { get; set; } = "";
+        public string FileType { get; set; } = "";
+        public long FileSize { get; set; }
+        public DateTime UploadDate { get; set; }
+        public string FileUrl { get; set; } = "";
+    }
 }

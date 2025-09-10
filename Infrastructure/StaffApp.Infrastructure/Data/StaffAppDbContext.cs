@@ -152,5 +152,6 @@ namespace StaffApp.Infrastructure.Data
         public DbSet<UserAppraisalDetail> UserAppraisalDetails => Set<UserAppraisalDetail>();
         public DbSet<UserDisciplinaryAction> UserDisciplinaryActions => Set<UserDisciplinaryAction>();
         public DbSet<UserQualificationDocument> UserQualificationDocuments => Set<UserQualificationDocument>();
+        public DbSet<DocumentName> DocumentNames => Set<DocumentName>();
     }
 }

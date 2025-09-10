@@ -53,6 +53,7 @@ namespace StaffApp.Infrastructure.Data
                 await SeedIncomeTypeAsync();
                 await SeedAppraisalCriteriaAsync();
                 await SeedAppraisalPeriodAsync();
+                await SeedDocumentNameAsync();
             }
             catch (Exception ex)
             {
@@ -60,6 +61,7 @@ namespace StaffApp.Infrastructure.Data
                 throw;
             }
         }
+
 
 
         private async Task SeedUserRolesAsync()
@@ -471,6 +473,98 @@ namespace StaffApp.Infrastructure.Data
                     //new AppraisalPeriod(){ AppraisalPeriodName ="Annual Appraisal(2028)", StartDate = new DateTime(2028,1,1), EndDate = new DateTime(2028,12,31) }
                 };
                 await context.AppraisalPeriods.AddRangeAsync(appraisalPeriods);
+                await context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SeedDocumentNameAsync()
+        {
+            if (!context.DocumentNames.Any())
+            {
+                foreach (EmployeeDocumentCategory category in (EmployeeDocumentCategory[])Enum.GetValues(typeof(EmployeeDocumentCategory)))
+                {
+                    switch (category)
+                    {
+                        case EmployeeDocumentCategory.MandatoryIdentificationAndLegalDocuments:
+                            {
+                                var mandatoryIdentificationAndLegalDocuments = new List<DocumentName>
+                                {
+                                    new DocumentName(){ Name ="Passport", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Social Security Card (National ID Card)", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Driver's License", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Birth Certificate", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Social Security Card", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Work Permit/Visa (if applicable)", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Tax Identification Number (TIN) Document", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Photograph", EmployeeDocumentCategory = category },
+                                };
+
+                                await context.DocumentNames.AddRangeAsync(mandatoryIdentificationAndLegalDocuments);
+                            }
+                            break;
+                        case EmployeeDocumentCategory.EmploymentRecords:
+                            {
+                                var employmentRecords = new List<DocumentName>
+                                {
+                                    new DocumentName(){ Name ="Employment Contract", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Offer Letter", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Resignation Letter", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Termination Letter", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Experience Letter", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Relieving Letter", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Promotion Letter", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Salary Increment Letter", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Transfer Letter", EmployeeDocumentCategory = category }
+                                };
+                                await context.DocumentNames.AddRangeAsync(employmentRecords);
+                            }
+                            break;
+                        case EmployeeDocumentCategory.QualificationsAndExperience:
+                            {
+                                var qualificationsAndExperience = new List<DocumentName>
+                                {
+                                    new DocumentName(){ Name ="Resume/CV", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Educational Certificates", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Professional Certifications", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Training Completion Certificates", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Reference Letters", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Portfolio", EmployeeDocumentCategory = category }
+                                };
+                                await context.DocumentNames.AddRangeAsync(qualificationsAndExperience);
+                            }
+                            break;
+                        case EmployeeDocumentCategory.ComplianceAndPolicyDocuments:
+                            {
+                                var complianceAndPolicyDocuments = new List<DocumentName>
+                                {
+                                    new DocumentName(){ Name ="Tax Forms / Declarations", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Non-Disclosure Agreement (NDA)", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Code of Conduct Acknowledgment", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="IT and Data Security Policy Acknowledgment", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Conflict of Interest Disclosure", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Social Media Policy Acknowledgment", EmployeeDocumentCategory = category }
+                                };
+                                await context.DocumentNames.AddRangeAsync(complianceAndPolicyDocuments);
+                            }
+                            break;
+                        case EmployeeDocumentCategory.HealthAndSafetyRecords:
+                            {
+                                var healthAndSafetyRecords = new List<DocumentName>
+                                {
+                                    new DocumentName(){ Name ="Medical Examination Report", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Vaccination Records", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Health Insurance Documents", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Workplace Safety Training Certificates", EmployeeDocumentCategory = category },
+                                    new DocumentName(){ Name ="Accident/Incident Reports", EmployeeDocumentCategory = category }
+                                };
+                                await context.DocumentNames.AddRangeAsync(healthAndSafetyRecords);
+                            }
+                            break;
+                    }
+
+                    context.DocumentNames.Add(new DocumentName() { Name = "Other", EmployeeDocumentCategory = category });
+                }
+
                 await context.SaveChangesAsync();
             }
         }
