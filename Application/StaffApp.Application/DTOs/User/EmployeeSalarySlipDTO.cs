@@ -24,6 +24,8 @@ namespace StaffApp.Application.DTOs.User
         public string JoinDate { get; set; }
         public string DaysWorked { get; set; }
         public string LeaveTaken { get; set; }
+        public decimal TotalEarning { get; set; }
+        public decimal EearningConsiderForSocialSecurityScheme { get; set; }
         public decimal NetSalary { get; set; }
 
         // Earnings
@@ -41,5 +43,6 @@ namespace StaffApp.Application.DTOs.User
         public SalaryAddonType SalaryAddonType { get; set; }
         public string Description { get; set; }
         public decimal Amount { get; set; }
+        public bool ConsiderForSocialSecurityScheme { get; set; }
     }
 }

@@ -10,7 +10,7 @@ namespace StaffApp.Domain.Entity
         public decimal AdjustedValue { get; set; }
         public decimal Amount { get; set; }
         public bool IsPayeApplicable { get; set; }
-
+        public bool ConsiderForSocialSecurityScheme { get; set; }
         public virtual EmployeeMonthlySalary EmployeeMonthlySalary { get; set; }
         public virtual SalaryAddon SalaryAddon { get; set; }
     }

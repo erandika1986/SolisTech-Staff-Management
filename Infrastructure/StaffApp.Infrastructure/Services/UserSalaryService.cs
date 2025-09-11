@@ -418,8 +418,30 @@ namespace StaffApp.Infrastructure.Services
             {
                 var employeeSalary = employee.EmployeeSalaries.FirstOrDefault();
 
-                response.Earnings.Add(new PaymentDescriptionDTO() { Amount = employeeSalary is not null ? employeeSalary.BaseSalary : 0, Description = "Basic Salary" });
+                response.Earnings.Add(new PaymentDescriptionDTO() { Amount = employeeSalary is not null ? employeeSalary.BaseSalary : 0, Description = "Basic Salary", ConsiderForSocialSecurityScheme = true });
                 var taxSalaryAddons = new List<EmployeeSalaryAddon>();
+
+                var allowanceAddons = employeeSalary.EmployeeSalaryAddons
+                        .Where(x => x.SalaryAddon.AddonType == SalaryAddonType.Allowance).ToList();
+
+                foreach (var allowance in allowanceAddons)
+                {
+                    var allowanceAmount = allowance.SalaryAddon.ProportionType == ProportionType.FixedAmount ? allowance.AdjustedValue : (employeeSalary.BaseSalary * allowance.AdjustedValue) / 100.00m;
+                    response.Earnings.Add(new PaymentDescriptionDTO()
+                    {
+                        SalaryAddonType = allowance.SalaryAddon.AddonType,
+                        Amount = allowanceAmount,
+                        Description = allowance.SalaryAddon.Name,
+                        ConsiderForSocialSecurityScheme = allowance.ConsiderForSocialSecurityScheme
+                    });
+                }
+
+                response.TotalEarning = response.Earnings.Sum(x => x.Amount);
+                response.EearningConsiderForSocialSecurityScheme = response.Earnings.Where(x => x.ConsiderForSocialSecurityScheme).Sum(x => x.Amount);
+
+                var addonWithoutAllowance = employeeSalary.EmployeeSalaryAddons
+                    .Where(x => x.SalaryAddon.AddonType != SalaryAddonType.Allowance).ToList();
+
 
                 foreach (var addon in employeeSalary.EmployeeSalaryAddons)
                 {
@@ -431,19 +453,19 @@ namespace StaffApp.Infrastructure.Services
                     };
                     switch (addon.SalaryAddon.AddonType)
                     {
-                        case SalaryAddonType.Allowance:
-                            {
-                                paymentDescription.Amount = addon.SalaryAddon.ProportionType == ProportionType.FixedAmount ? addon.AdjustedValue : (employeeSalary.BaseSalary * addon.AdjustedValue) / 100;
-                                response.Earnings.Add(paymentDescription);
-                            }
-                            break;
+                        //case SalaryAddonType.Allowance:
+                        //    {
+                        //        paymentDescription.Amount = addon.SalaryAddon.ProportionType == ProportionType.FixedAmount ? addon.AdjustedValue : (employeeSalary.BaseSalary * addon.AdjustedValue) / 100;
+                        //        response.Earnings.Add(paymentDescription);
+                        //    }
+                        //    break;
                         case SalaryAddonType.Tax:
                         case SalaryAddonType.Deduction:
                         case SalaryAddonType.SocialSecuritySchemesEmployeeShare:
                             {
                                 if (addon.SalaryAddon.AddonType != SalaryAddonType.Tax)
                                 {
-                                    paymentDescription.Amount = addon.SalaryAddon.ProportionType == ProportionType.FixedAmount ? addon.AdjustedValue : (employeeSalary.BaseSalary * addon.AdjustedValue) / 100;
+                                    paymentDescription.Amount = addon.SalaryAddon.ProportionType == ProportionType.FixedAmount ? addon.AdjustedValue : (response.EearningConsiderForSocialSecurityScheme * addon.AdjustedValue) / 100;
                                 }
                                 else
                                 {
@@ -454,7 +476,7 @@ namespace StaffApp.Infrastructure.Services
                             break;
                         case SalaryAddonType.SocialSecuritySchemesCompanyShare:
                             {
-                                paymentDescription.Amount = addon.SalaryAddon.ProportionType == ProportionType.FixedAmount ? addon.AdjustedValue : (employeeSalary.BaseSalary * addon.AdjustedValue) / 100;
+                                paymentDescription.Amount = addon.SalaryAddon.ProportionType == ProportionType.FixedAmount ? addon.AdjustedValue : (response.EearningConsiderForSocialSecurityScheme * addon.AdjustedValue) / 100;
                                 response.EmployerContributions.Add(paymentDescription);
                             }
                             break;
@@ -474,18 +496,18 @@ namespace StaffApp.Infrastructure.Services
                             break;
                         case ProportionType.Percentage:
                             {
-                                deductionRecord.Amount = (response.Earnings.Sum(x => x.Amount) * taxAddon.AdjustedValue) / 100.00m;
+                                deductionRecord.Amount = (response.TotalEarning * taxAddon.AdjustedValue) / 100.00m;
                             }
                             break;
                         case ProportionType.MultipleRange:
                             {
-                                deductionRecord.Amount = CalculateMonthlyTaxForMultipleRange(response.Earnings.Sum(x => x.Amount), taxAddon.SalaryAddon.TaxLogics.ToList());
+                                deductionRecord.Amount = CalculateMonthlyTaxForMultipleRange(response.TotalEarning, taxAddon.SalaryAddon.TaxLogics.ToList());
                             }
                             break;
                     }
                 }
 
-                response.NetSalary = response.Earnings.Sum(x => x.Amount) - response.Deductions.Sum(x => x.Amount);
+                response.NetSalary = response.TotalEarning - response.Deductions.Sum(x => x.Amount);
             }
 
             return response;
@@ -574,7 +596,7 @@ namespace StaffApp.Infrastructure.Services
                         SalaryAddon = $"{salaryAddon.Name} ({propostionType})",
                         SalaryAddonId = addon.SalaryAddonId,
                         OriginalValue = addon.OriginalValue,
-                        AdjustedValue = addon.AdjustedValue,
+                        AdjustedValue = addon.SalaryAddon.AddonType == SalaryAddonType.Allowance ? addon.OriginalValue : addon.AdjustedValue,
                         EffectiveFrom = addon.EffectiveFrom,
                         SalaryAddonType = addon.SalaryAddon.AddonType,
                         ApplyForAllEmployees = salaryAddon.ApplyForAllEmployees,
@@ -641,11 +663,31 @@ namespace StaffApp.Infrastructure.Services
                 response.Branch = primaryBankAccount.BranchName;
             }
 
-
-            response.Earnings.Add(new PaymentDescriptionDTO() { Amount = employeeMonthlySalary is not null ? employeeMonthlySalary.BasicSalary : 0, Description = "Basic Salary" });
+            response.Earnings.Add(new PaymentDescriptionDTO() { Amount = employeeMonthlySalary is not null ? employeeMonthlySalary.BasicSalary : 0, Description = "Basic Salary", ConsiderForSocialSecurityScheme = true });
             var employeeTaxSalaryAddons = new List<EmployeeMonthlySalaryAddon>();
 
-            foreach (var addon in employeeMonthlySalary.EmployeeMonthlySalaryAddons)
+            var allowanceAddons = employeeMonthlySalary.EmployeeMonthlySalaryAddons
+                .Where(x => x.SalaryAddon.AddonType == SalaryAddonType.Allowance).ToList();
+
+            foreach (var allowance in allowanceAddons)
+            {
+                var allowanceAmount = allowance.SalaryAddon.ProportionType == ProportionType.FixedAmount ? allowance.AdjustedValue : (employeeMonthlySalary.BasicSalary * allowance.AdjustedValue) / 100.00m;
+                response.Earnings.Add(new PaymentDescriptionDTO()
+                {
+                    SalaryAddonType = allowance.SalaryAddon.AddonType,
+                    Amount = allowanceAmount,
+                    Description = allowance.SalaryAddon.Name,
+                    ConsiderForSocialSecurityScheme = allowance.ConsiderForSocialSecurityScheme
+                });
+            }
+
+            response.TotalEarning = response.Earnings.Sum(x => x.Amount);
+            response.EearningConsiderForSocialSecurityScheme = response.Earnings.Where(x => x.ConsiderForSocialSecurityScheme).Sum(x => x.Amount);
+
+            var addonWithoutAllowance = employeeMonthlySalary.EmployeeMonthlySalaryAddons
+                .Where(x => x.SalaryAddon.AddonType != SalaryAddonType.Allowance).ToList();
+
+            foreach (var addon in addonWithoutAllowance)
             {
                 var paymentDescription = new PaymentDescriptionDTO()
                 {
@@ -655,19 +697,19 @@ namespace StaffApp.Infrastructure.Services
                 };
                 switch (addon.SalaryAddon.AddonType)
                 {
-                    case SalaryAddonType.Allowance:
-                        {
-                            paymentDescription.Amount = addon.SalaryAddon.ProportionType == ProportionType.FixedAmount ? addon.AdjustedValue : (employeeMonthlySalary.BasicSalary * addon.AdjustedValue) / 100.00m;
-                            response.Earnings.Add(paymentDescription);
-                        }
-                        break;
+                    //case SalaryAddonType.Allowance:
+                    //    {
+                    //        paymentDescription.Amount = addon.SalaryAddon.ProportionType == ProportionType.FixedAmount ? addon.AdjustedValue : (employeeMonthlySalary.BasicSalary * addon.AdjustedValue) / 100.00m;
+                    //        response.Earnings.Add(paymentDescription);
+                    //    }
+                    //    break;
                     case SalaryAddonType.Tax:
                     case SalaryAddonType.Deduction:
                     case SalaryAddonType.SocialSecuritySchemesEmployeeShare:
                         {
                             if (addon.SalaryAddon.AddonType != SalaryAddonType.Tax)
                             {
-                                paymentDescription.Amount = addon.SalaryAddon.ProportionType == ProportionType.FixedAmount ? addon.AdjustedValue : (employeeMonthlySalary.BasicSalary * addon.AdjustedValue) / 100.00m;
+                                paymentDescription.Amount = addon.SalaryAddon.ProportionType == ProportionType.FixedAmount ? addon.AdjustedValue : (response.EearningConsiderForSocialSecurityScheme * addon.AdjustedValue) / 100.00m;
                             }
                             else
                             {
@@ -678,7 +720,7 @@ namespace StaffApp.Infrastructure.Services
                         break;
                     case SalaryAddonType.SocialSecuritySchemesCompanyShare:
                         {
-                            paymentDescription.Amount = addon.SalaryAddon.ProportionType == ProportionType.FixedAmount ? addon.AdjustedValue : (employeeMonthlySalary.BasicSalary * addon.AdjustedValue) / 100.00m;
+                            paymentDescription.Amount = addon.SalaryAddon.ProportionType == ProportionType.FixedAmount ? addon.AdjustedValue : (response.EearningConsiderForSocialSecurityScheme * addon.AdjustedValue) / 100.00m;
                             response.EmployerContributions.Add(paymentDescription);
                         }
                         break;
@@ -698,18 +740,18 @@ namespace StaffApp.Infrastructure.Services
                         break;
                     case ProportionType.Percentage:
                         {
-                            deductionRecord.Amount = (response.Earnings.Sum(x => x.Amount) * taxAddon.AdjustedValue) / 100.00m;
+                            deductionRecord.Amount = (response.TotalEarning * taxAddon.AdjustedValue) / 100.00m;
                         }
                         break;
                     case ProportionType.MultipleRange:
                         {
-                            deductionRecord.Amount = CalculateMonthlyTaxForMultipleRange(response.Earnings.Sum(x => x.Amount), taxAddon.SalaryAddon.TaxLogics.ToList());
+                            deductionRecord.Amount = CalculateMonthlyTaxForMultipleRange(response.TotalEarning, taxAddon.SalaryAddon.TaxLogics.ToList());
                         }
                         break;
                 }
             }
 
-            response.NetSalary = response.Earnings.Sum(x => x.Amount) - response.Deductions.Sum(x => x.Amount);
+            response.NetSalary = response.TotalEarning - response.Deductions.Sum(x => x.Amount);
 
 
             return response;
@@ -757,6 +799,7 @@ namespace StaffApp.Infrastructure.Services
                     SalaryAddonId = x.Id,
                     OriginalValue = x.DefaultValue,
                     AdjustedValue = x.DefaultValue,
+                    AddonType = x.AddonType,
                     Amount = 0,
                     EmployeeMonthlySalaryId = employeeMonthlySalaryId,
                     ApplyForAllEmployees = x.ApplyForAllEmployees,
@@ -948,8 +991,48 @@ namespace StaffApp.Infrastructure.Services
                         var totalAllowances = 0.00m;
                         var totalDeductions = 0.00m;
                         var totalEmployerContributions = 0.00m;
+                        var earningConsiderForSocialSecurityScheme = 0.00m;
                         var employeeTaxSalaryAddons = new List<EmployeeSalaryAddon>();
-                        foreach (var addon in item.EmployeeSalaryAddons)
+
+                        earningConsiderForSocialSecurityScheme += item.BaseSalary;
+
+                        var allowanceAddons = item.EmployeeSalaryAddons
+                        .Where(x => x.SalaryAddon.AddonType == SalaryAddonType.Allowance).ToList();
+
+                        foreach (var allowance in allowanceAddons)
+                        {
+                            var allowanceAmount = allowance.SalaryAddon.ProportionType == ProportionType.FixedAmount ? allowance.AdjustedValue : (item.BaseSalary * allowance.AdjustedValue) / 100.00m;
+
+                            totalAllowances += allowanceAmount;
+                            if (allowance.ConsiderForSocialSecurityScheme)
+                            {
+                                earningConsiderForSocialSecurityScheme += allowanceAmount;
+                            }
+
+                            var monthlyAddon = new EmployeeMonthlySalaryAddon()
+                            {
+                                SalaryAddonId = allowance.SalaryAddonId,
+                                AdjustedValue = allowance.AdjustedValue,
+                                OriginalValue = allowance.OriginalValue,
+                                ConsiderForSocialSecurityScheme = allowance.ConsiderForSocialSecurityScheme,
+                                Amount = allowanceAmount,
+                                CreatedDate = DateTime.Now,
+                                CreatedByUserId = currentUserService.UserId,
+                                UpdateDate = DateTime.Now,
+                                UpdatedByUserId = currentUserService.UserId,
+                                IsActive = true
+                            };
+
+                            monthlyPaymentAddons.Add(monthlyAddon);
+                        }
+
+
+                        var addonWithoutAllowance = item.EmployeeSalaryAddons
+                            .Where(x => x.SalaryAddon.AddonType != SalaryAddonType.Allowance).ToList();
+
+
+
+                        foreach (var addon in addonWithoutAllowance)
                         {
                             var amount = addon.AdjustedValue;
                             if (addon.SalaryAddon.AddonType == SalaryAddonType.Tax)
@@ -961,14 +1044,10 @@ namespace StaffApp.Infrastructure.Services
                             }
                             else if (addon.SalaryAddon.ProportionType == ProportionType.Percentage)
                             {
-                                amount = (item.BaseSalary * addon.AdjustedValue) / 100.00m;
+                                amount = (earningConsiderForSocialSecurityScheme * addon.AdjustedValue) / 100.00m;
                             }
 
-                            if (addon.SalaryAddon.AddonType == SalaryAddonType.Allowance)
-                            {
-                                totalAllowances += amount;
-                            }
-                            else if (addon.SalaryAddon.AddonType == SalaryAddonType.Deduction || addon.SalaryAddon.AddonType == SalaryAddonType.Tax ||
+                            if (addon.SalaryAddon.AddonType == SalaryAddonType.Deduction || addon.SalaryAddon.AddonType == SalaryAddonType.Tax ||
                                 addon.SalaryAddon.AddonType == SalaryAddonType.SocialSecuritySchemesEmployeeShare)
                             {
                                 totalDeductions += amount;
@@ -984,6 +1063,7 @@ namespace StaffApp.Infrastructure.Services
                                 SalaryAddonId = addon.SalaryAddonId,
                                 AdjustedValue = addon.AdjustedValue,
                                 OriginalValue = addon.OriginalValue,
+                                ConsiderForSocialSecurityScheme = addon.ConsiderForSocialSecurityScheme,
                                 Amount = amount,
                                 CreatedDate = DateTime.Now,
                                 CreatedByUserId = currentUserService.UserId,
@@ -1628,6 +1708,7 @@ namespace StaffApp.Infrastructure.Services
                     Amount = addon.Amount,
                     SalaryAddonId = addon.SalaryAddonId,
                     OriginalValue = addon.OriginalValue,
+                    AddonType = addon.SalaryAddon.AddonType,
                     AdjustedValue = addon.AdjustedValue,
                     ApplyForAllEmployees = addon.SalaryAddon.ApplyForAllEmployees,
                     IsApplicableForPaye = addon.IsPayeApplicable,

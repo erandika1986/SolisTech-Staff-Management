@@ -57,7 +57,7 @@
                             <MudNumericField @bind-Value="context.OriginalValue" Immediate="true" Required="true" Disabled="true" RequiredError="Original value is required!" />
                         </MudTd>
                         <MudTd>
-                            <MudNumericField @bind-Value="context.AdjustedValue" Immediate="true" Required="true" Disabled="context.ProportionType == Domain.Enum.ProportionType.MultipleRange" RequiredError="Adjusted value is required!" />
+                            <MudNumericField @bind-Value="context.AdjustedValue" Immediate="true" Required="true" Disabled="context.ProportionType == Domain.Enum.ProportionType.MultipleRange || context.AddonType == Domain.Enum.SalaryAddonType.Allowance"  RequiredError="Adjusted value is required!" />
                         </MudTd>
                         <MudTd>
                             <MudStack Row>
@@ -145,6 +145,12 @@
         AvailableSalaryAddons = salaryAddons;
 
         SelectedSalaryAddon = AvailableSalaryAddons.Count() > 0 ? AvailableSalaryAddons.FirstOrDefault() : null;
+    }
+
+    private void OriginalValueChanged(decimal value)
+    {
+        // This method can be used to handle any logic when the original value changes.
+        // Currently, it does nothing but can be expanded as needed.
     }
 
     private void RemoveAddon(EmployeeMonthlySalaryAddonDTO addonDTO)

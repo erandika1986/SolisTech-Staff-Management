@@ -19,6 +19,10 @@ namespace StaffApp.Infrastructure.Data.Configurations
                 .HasDefaultValue(false)
                 .IsRequired(true);
 
+            builder.Property(p => p.ConsiderForSocialSecurityScheme)
+                .HasDefaultValue(false)
+                .IsRequired(true);
+
             builder
                .HasOne<EmployeeMonthlySalary>(c => c.EmployeeMonthlySalary)
                .WithMany(c => c.EmployeeMonthlySalaryAddons)

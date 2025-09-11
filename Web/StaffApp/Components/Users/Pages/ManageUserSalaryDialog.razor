@@ -58,10 +58,10 @@
                     <RowTemplate>
                         <MudTd>@context.SalaryAddon</MudTd>
                         <MudTd>                        
-                            <MudNumericField @bind-Value="context.OriginalValue" Immediate="true" Required="true" RequiredError="Original value is required!" />
+                            <MudNumericField T="decimal" Value="@context.OriginalValue" ValueChanged="@(v => OriginalValueChanged(v, context))" Immediate="true" Required="true" RequiredError="Original value is required!" />
                         </MudTd>
                         <MudTd>
-                            <MudNumericField @bind-Value="context.AdjustedValue" Immediate="true" Required="true" RequiredError="Adjusted value is required!" />
+                            <MudNumericField @bind-Value="context.AdjustedValue" Immediate="true" Disabled="context.SalaryAddonType == Domain.Enum.SalaryAddonType.Allowance" Required="true" RequiredError="Adjusted value is required!" />
                         </MudTd>
                         <MudTd>
                             <MudDatePicker Date="context.EffectiveFrom" Immediate="true" Required="true" RequiredError="Effective date is required!" />
@@ -155,6 +155,14 @@
             await ShowSnackbar(response);
             LoadingService.Hide();
         }
+    }
+
+    private void OriginalValueChanged(decimal value, EmployeeSalaryAddonDTO row)
+    {
+        row.OriginalValue = value;
+        row.AdjustedValue = value;
+        // This method can be used to handle any logic when the original value changes.
+        // Currently, it does nothing but can be expanded as needed.
     }
 
     private void Cancel() => MudDialog.Cancel();
