@@ -32,7 +32,6 @@
   <ItemGroup>
     <Folder Include="Components\FinancialYear\Pages\" />
     <Folder Include="Components\Documents\" />
-    <Folder Include="Components\Meals\" />
     <Folder Include="Components\Events\" />
     <Folder Include="Components\Supports\" />
     <Folder Include="Components\Transports\" />

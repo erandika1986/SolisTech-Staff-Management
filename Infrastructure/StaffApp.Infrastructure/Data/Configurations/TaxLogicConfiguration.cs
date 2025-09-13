@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using StaffApp.Domain.Entity;
+using StaffApp.Domain.Entity.Salary;
 
 namespace StaffApp.Infrastructure.Data.Configurations
 {

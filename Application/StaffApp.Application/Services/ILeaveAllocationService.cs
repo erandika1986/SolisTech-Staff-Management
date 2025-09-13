@@ -1,6 +1,6 @@
 ﻿using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.EmploymentLeave;
-using StaffApp.Domain.Entity;
+using StaffApp.Domain.Entity.Leave;
 
 namespace StaffApp.Application.Services
 {

@@ -1,0 +1,201 @@
+﻿@page "/Vehicle/List"
+@using Microsoft.AspNetCore.Authorization
+@using MudBlazor
+@using StaffApp.Application.DTOs.Vehicle
+@using StaffApp.Application.Services
+@using StaffApp.Components.Shared
+@using StaffApp.Domain.Enum
+@using System.Reflection
+@using System.ComponentModel.DataAnnotations
+@inject NavigationManager Navigation
+@inject IVehicleService VehicleService
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+@attribute [Authorize]
+
+<PageTitle>Vehicle Management</PageTitle>
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4" Style="padding:4px !important;">
+    <!-- Page Header -->
+    <MudPaper Class="pa-4 mb-4" Elevation="2">
+        <div class="d-flex justify-space-between align-center flex-wrap">
+            <div>
+                <MudText Typo="Typo.h4" Class="mb-2">
+                    <MudIcon Icon="@Icons.Material.Filled.DirectionsBus" Class="mr-3" />
+                    Vehicles
+                </MudText>
+                <MudText Typo="Typo.body1" Class="mud-text-secondary">
+                    Manage company vehicle here.
+                </MudText>
+            </div>
+            <MudButton Variant="Variant.Filled"
+                       Color="Color.Primary"
+                       StartIcon="@Icons.Material.Filled.Add"
+                       OnClick="OpenAddNewVehicleDialog"
+                       Class="mt-2 mt-sm-0">
+                New Vehicle
+            </MudButton>
+        </div>
+    </MudPaper>
+
+    <MudItem xs="12" sm="12" md="12" lg="12">
+        <MudDataGrid @ref="_dataGrid" T="VehicleDTO" Items="_vehicles" Dense="true" Hover="true" Bordered="true"
+                     Sortable="true" Filterable="true" Groupable="true" Striped="true">
+            <Columns>
+                <PropertyColumn Property="x => x.Registration" Title="@GetDisplayName(typeof(VehicleDTO), nameof(VehicleDTO.Registration))" />
+                <PropertyColumn Property="x => x.ManufactureName" Title="@GetDisplayName(typeof(VehicleDTO), nameof(VehicleDTO.ManufactureName))" />
+                <PropertyColumn Property="x => x.VehicleType.Name" Title="@GetDisplayName(typeof(VehicleDTO), nameof(VehicleDTO.VehicleType))" />
+                <PropertyColumn Property="x => x.MonthlyRent" Title="@GetDisplayName(typeof(VehicleDTO), nameof(VehicleDTO.MonthlyRent))" />
+                <PropertyColumn Property="x => x.VehicleOwner.Name" Title="@GetDisplayName(typeof(VehicleDTO), nameof(VehicleDTO.VehicleOwner))" />
+                <PropertyColumn Property="x => x.Capacity" Title="@GetDisplayName(typeof(VehicleDTO), nameof(VehicleDTO.Capacity))" />
+                <PropertyColumn Property="x => x.CreatedOn" Title="@GetDisplayName(typeof(VehicleDTO), nameof(VehicleDTO.CreatedOn))" />
+                <TemplateColumn CellClass="d-flex justify-end">
+                    <CellTemplate Context="vehicle">
+                        <MudStack Row>
+                            <MudTooltip Text="Edit Vehicle" Color="Color.Primary" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Variant="Variant.Filled" OnClick="() => OpenEditVehicleDialog(vehicle.Item)"></MudIconButton>
+                            </MudTooltip>
+                            <MudTooltip Text="Delete Vehicle" Color="Color.Error" Placement="Placement.Top">
+                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Variant="Variant.Filled" OnClick="() => DeleteVehicle(vehicle.Item)"></MudIconButton>
+                            </MudTooltip>
+                        </MudStack>
+                    </CellTemplate>
+                </TemplateColumn>
+
+            </Columns>
+            <PagerContent>
+                <MudDataGridPager T="VehicleDTO" />
+            </PagerContent>
+        </MudDataGrid>
+    </MudItem>
+</MudContainer>
+
+@code {
+
+    //private List<DonationSummaryDTO> Donations = new();
+    private bool _loading = false;
+    private bool _isDataGenerated = false;
+
+    private int TotalRecords = 0;
+    private MudDataGrid<VehicleDTO> _dataGrid;
+    private List<VehicleDTO> _vehicles = new();
+    private VehicleMasterDataDTO _vehicleMasterData = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMasterData();
+        await LoadAllVehicle();
+    }
+
+    private async Task LoadMasterData()
+    {
+        _vehicleMasterData = await VehicleService.GetVehicleMasterData();
+
+    }
+
+    private async Task LoadAllVehicle()
+    {
+        _vehicles = await VehicleService.GetAllVehicles();
+    }
+
+    private async Task  OpenAddNewVehicleDialog()
+    {
+        var vehicle = new VehicleDTO()
+        {
+            Capacity = 0,
+            Id = 0,
+            MonthlyRent = 10000,
+            VehicleOwner = _vehicleMasterData.VehicleOwnerTypes.FirstOrDefault(),
+            VehicleType = _vehicleMasterData.VehicleTypes.FirstOrDefault()
+
+        };
+
+        await OpenVehicleManageDialog(vehicle, false, false, "Add New Vehicle");
+    }
+
+    private async Task OpenEditVehicleDialog(VehicleDTO vehicle)
+    {
+        vehicle.VehicleType = _vehicleMasterData.VehicleTypes.FirstOrDefault(x => x.Id == vehicle.VehicleType.Id);
+        vehicle.VehicleOwner = _vehicleMasterData.VehicleOwnerTypes.FirstOrDefault(x => x.Id == vehicle.VehicleOwner.Id);
+        vehicle.AssignedPurposes = _vehicleMasterData.VehiclePurposes.Where(x => vehicle.AssignedPurposes.Any(v => v.Id == x.Id)).ToList();
+
+        await OpenVehicleManageDialog(vehicle, true, false, "Edit Vehicle");
+    }
+
+    private async Task OpenVehicleManageDialog(VehicleDTO vehicle, bool isEdit, bool isReadOnly, string dialogText = "")
+    {
+        var parameters = new DialogParameters<AddEditVehicleDialog>
+        {
+            { x => x.IsEdit, isEdit },
+            { x => x.IsViewOnly, isReadOnly },
+            { x => x.Vehicle, vehicle},
+            { x => x.MasterData, _vehicleMasterData }
+        };
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            MaxWidth = MaxWidth.Medium,
+            FullWidth = true,
+            BackdropClick = true
+        };
+
+        var dialog = await DialogService.ShowAsync<AddEditVehicleDialog>("Edit Vehicle", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled && result.Data is VehicleDTO donation)
+        {
+            await LoadAllVehicle();
+        }
+    }
+
+    private async Task DeleteVehicle(VehicleDTO vehicle)
+    {
+        var parameters = new DialogParameters<StaffyConfirmationDialog>
+        {
+            { "ContentText", $"Are you sure you want to delete vehicle with registration No '{vehicle.Registration}'? This action cannot be undone." },
+            { "ButtonText", "Delete" },
+            { "Color", Color.Error }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+        var dialog = await DialogService.ShowAsync<StaffyConfirmationDialog>("Confirm Delete", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                var response = await VehicleService.DeleteVehicle(vehicle.Id);
+
+                if (response.Flag)
+                {
+                    await LoadAllVehicle();
+                    StateHasChanged();
+                    Snackbar.Add("Vehicle deleted successfully!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Failed to delete Vehicle.", Severity.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error deleting Vehicle: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private string GetDisplayNameByPropertyInfro(PropertyInfo prop)
+    {
+        var displayAttribute = prop.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? prop.Name;
+    }
+
+    private string GetDisplayName(Type type, string propertyName)
+    {
+        var prop = type.GetProperty(propertyName);
+        var displayAttribute = prop?.GetCustomAttribute<DisplayAttribute>();
+        return displayAttribute?.Name ?? propertyName;
+    }
+}

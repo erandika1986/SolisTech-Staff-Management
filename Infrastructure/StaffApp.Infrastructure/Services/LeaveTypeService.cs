@@ -4,6 +4,7 @@ using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.Leave;
 using StaffApp.Application.Extensions.Constants;
 using StaffApp.Application.Services;
+using StaffApp.Domain.Entity.Leave;
 using StaffApp.Domain.Enum;
 
 namespace StaffApp.Infrastructure.Services
@@ -93,7 +94,7 @@ namespace StaffApp.Infrastructure.Services
 
                     if (leaveTypeConfig is null)
                     {
-                        leaveTypeConfig = new Domain.Entity.LeaveTypeConfig()
+                        leaveTypeConfig = new LeaveTypeConfig()
                         {
                             AnnualLeaveAllowance = model.AnnualLeaveAllowance,
                             LeaveTypeId = model.LeaveTypeId,
@@ -145,7 +146,7 @@ namespace StaffApp.Infrastructure.Services
 
             if (leaveType == null)
             {
-                leaveType = new Domain.Entity.LeaveType()
+                leaveType = new LeaveType()
                 {
                     Name = model.Name,
                     DefaultDays = model.DefaultDays,

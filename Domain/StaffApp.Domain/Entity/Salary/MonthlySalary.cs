@@ -1,0 +1,18 @@
+﻿using StaffApp.Domain.Entity.Common;
+using StaffApp.Domain.Entity.Master;
+using StaffApp.Domain.Enum;
+
+namespace StaffApp.Domain.Entity.Salary
+{
+    public class MonthlySalary : BaseAuditableEntity
+    {
+        public int CompanyYearId { get; set; }
+        public Month Month { get; set; }
+        public MonthlySalaryStatus Status { get; set; }
+
+        public virtual CompanyYear CompanyYear { get; set; }
+
+        public virtual ICollection<MonthlySalaryComment> MonthlySalaryComments { get; set; } = new HashSet<MonthlySalaryComment>();
+        public virtual ICollection<EmployeeMonthlySalary> EmployeeMonthlySalaries { get; set; } = new HashSet<EmployeeMonthlySalary>();
+    }
+}

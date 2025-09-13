@@ -4,7 +4,7 @@ using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.CompanySettings;
 using StaffApp.Application.Extensions.Constants;
 using StaffApp.Application.Services;
-using StaffApp.Domain.Entity;
+using StaffApp.Domain.Entity.Master;
 
 namespace StaffApp.Infrastructure.Services
 {

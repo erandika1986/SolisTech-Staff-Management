@@ -1,0 +1,116 @@
+﻿@using Microsoft.JSInterop
+@inject IJSRuntime JS
+
+<MudCard Class="max-w-xl mx-auto p-4 shadow-xl rounded-2xl bg-gray-900 text-white">
+    <video id="@VideoId" width="100%" class="rounded-lg mb-2 bg-black">
+        <source src="@VideoUrl" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+
+    <!-- Controls Row -->
+    <div class="flex items-center space-x-4 mt-2 bg-gray-800 px-3 py-2 rounded-lg">
+        <!-- Play/Pause -->
+        <MudIconButton Icon="@(_isPlaying ? Icons.Material.Filled.Pause : Icons.Material.Filled.PlayArrow)" 
+                       Color="Color.Primary" OnClick="@TogglePlay" />
+
+        <!-- Stop -->
+        <MudIconButton Icon="@Icons.Material.Filled.Stop" 
+                       Color="Color.Secondary" OnClick="@StopVideo" />
+
+        <!-- Progress bar (seek) -->
+        <MudSlider T="double" Value="_progress" Min="0" Max="100" Step="0.1"
+                   ValueChanged="@OnSeek"
+                   Class="flex-grow"
+                   Color="Color.Info" />
+
+        <!-- Mute/Unmute -->
+        <MudIconButton Icon="@(_isMuted ? Icons.Material.Filled.VolumeOff : Icons.Material.Filled.VolumeUp)" 
+                       Color="Color.Default" OnClick="@ToggleMute" />
+
+        <!-- Volume Slider -->
+        <MudSlider T="double" Value="_volume" Min="0" Max="1" Step="0.05"
+                   ValueChanged="@OnVolumeChanged"
+                   Style="width:120px"
+                   Color="Color.Success" />
+    </div>
+
+    <!-- Status -->
+    <div class="flex justify-between text-sm text-gray-400 mt-1">
+        <span>@_progress.ToString("0.0")%</span>
+        <span>Vol: @(_volume * 100):0</span>
+    </div>
+</MudCard>
+
+@code {
+    private string VideoId = "myVideoPlayer";
+    [Parameter] public string VideoUrl { get; set; } = "sample.mp4";
+
+    private bool _isPlaying;
+    private bool _isMuted;
+    private double _progress;
+    private double _volume = 0.5;
+
+    private DotNetObjectReference<VideoPlayer>? _objRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _objRef = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("videoInterop.registerProgress", VideoId, _objRef);
+            await JS.InvokeVoidAsync("videoInterop.changeVolume", VideoId, _volume);
+        }
+    }
+
+    private async Task TogglePlay()
+    {
+        if (_isPlaying)
+            await JS.InvokeVoidAsync("videoInterop.pauseVideo", VideoId);
+        else
+            await JS.InvokeVoidAsync("videoInterop.playVideo", VideoId);
+
+        _isPlaying = !_isPlaying;
+    }
+
+    private async Task StopVideo()
+    {
+        await JS.InvokeVoidAsync("videoInterop.stopVideo", VideoId);
+        _isPlaying = false;
+        _progress = 0;
+    }
+
+    private async Task OnSeek(double percent)
+    {
+        await JS.InvokeVoidAsync("videoInterop.seekVideo", VideoId, percent);
+    }
+
+    private async Task OnVolumeChanged(double value)
+    {
+        _volume = value;
+        await JS.InvokeVoidAsync("videoInterop.changeVolume", VideoId, _volume);
+    }
+
+    private async Task ToggleMute()
+    {
+        _isMuted = !_isMuted;
+        await JS.InvokeVoidAsync("videoInterop.toggleMute", VideoId);
+    }
+
+    [JSInvokable]
+    public void UpdateProgress(double percent, double volume, bool muted)
+    {
+        _progress = percent;
+        _volume = volume;
+        _isMuted = muted;
+        StateHasChanged();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_objRef != null)
+        {
+            await JS.InvokeVoidAsync("videoInterop.cleanup", VideoId);
+            _objRef.Dispose();
+        }
+    }
+}

@@ -3,7 +3,7 @@ using StaffApp.Application.Contracts;
 using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.CompanyYear;
 using StaffApp.Application.Services;
-using StaffApp.Domain.Entity;
+using StaffApp.Domain.Entity.Master;
 
 namespace StaffApp.Infrastructure.Services
 {
@@ -84,7 +84,7 @@ namespace StaffApp.Infrastructure.Services
             }
             else
             {
-                companyYear = new Domain.Entity.CompanyFinancialYear
+                companyYear = new CompanyFinancialYear
                 {
                     Id = model.Year,
                     Year = model.Year,

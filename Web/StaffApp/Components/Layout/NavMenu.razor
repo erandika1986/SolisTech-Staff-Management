@@ -20,6 +20,8 @@
                 <MudNavLink Href="CompanySettings/CompanyYear/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarMonth">Company Years</MudNavLink>
                 <MudNavLink Href="CompanySettings/FinancialYear/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.CalendarToday">Financial Years</MudNavLink>
 @*                 <MudNavLink Href="Project/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.WorkOutline">Projects</MudNavLink> *@
+                <MudNavLink Href="Vehicle/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.DirectionsBus">Vehicles</MudNavLink>
+                <MudNavLink Href="Route/List" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.DirectionsBus">Routes</MudNavLink>
                 <MudNavLink Href="CompanySettings/CompanySetting" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Settings">Company Settings</MudNavLink>
             </MudNavGroup>
         </Authorized>
@@ -82,6 +84,7 @@
             <MudNavLink Href="EmployeeLeave/MyLeaveList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Celebration">Upcoming Events</MudNavLink>
             <MudNavLink Href="EmployeeLeave/MyLeaveList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Commute">My Transport</MudNavLink>
             <MudNavLink Href="EmployeeLeave/MyLeaveList" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.ContactSupport">My Support Request</MudNavLink>
+            <MudNavLink Href="video-demo" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">Video</MudNavLink>
             <MudNavLink Href="Account/Manage" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Person">@context.User.Identity?.Name</MudNavLink>
             <form action="Account/Logout" method="post">
                 <AntiforgeryToken />

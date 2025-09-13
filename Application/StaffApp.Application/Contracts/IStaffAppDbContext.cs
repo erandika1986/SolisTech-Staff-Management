@@ -1,6 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StaffApp.Domain.Entity;
+using StaffApp.Domain.Entity.Appraisal;
 using StaffApp.Domain.Entity.Authentication;
+using StaffApp.Domain.Entity.Leave;
+using StaffApp.Domain.Entity.Master;
+using StaffApp.Domain.Entity.Salary;
+using StaffApp.Domain.Entity.Transport;
 
 namespace StaffApp.Application.Contracts
 {
@@ -55,6 +60,16 @@ namespace StaffApp.Application.Contracts
         DbSet<UserDisciplinaryAction> UserDisciplinaryActions { get; }
         DbSet<UserQualificationDocument> UserQualificationDocuments { get; }
         DbSet<DocumentName> DocumentNames { get; }
+
+        DbSet<Vehicle> Vehicles { get; }
+        DbSet<VehiclePurpose> VehiclePurposes { get; }
+        DbSet<VehicleAssignedPurpose> VehicleAssignedPurposes { get; }
+        DbSet<Route> Routes { get; }
+        DbSet<PredefineRoute> PredefineRoutes { get; }
+        DbSet<DailyTransportRoute> DailyTransportRoutes { get; }
+        DbSet<DailyTransportRouteSeat> DailyTransportRouteSeats { get; }
+        DbSet<DailyTransportRouteAssignedVehicle> DailyTransportRouteAssignedVehicles { get; }
+
 
 
         Task<int> SaveChangesAsync(CancellationToken cancellationToken);

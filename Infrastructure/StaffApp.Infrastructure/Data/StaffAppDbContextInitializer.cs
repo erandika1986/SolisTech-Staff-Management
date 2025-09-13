@@ -4,6 +4,10 @@ using StaffApp.Application.Extensions.Constants;
 using StaffApp.Application.Extensions.Helpers;
 using StaffApp.Application.Services;
 using StaffApp.Domain.Entity;
+using StaffApp.Domain.Entity.Appraisal;
+using StaffApp.Domain.Entity.Leave;
+using StaffApp.Domain.Entity.Master;
+using StaffApp.Domain.Entity.Salary;
 using StaffApp.Domain.Enum;
 
 namespace StaffApp.Infrastructure.Data
@@ -55,6 +59,7 @@ namespace StaffApp.Infrastructure.Data
                 await SeedAppraisalCriteriaAsync();
                 await SeedAppraisalPeriodAsync();
                 await SeedDocumentNameAsync();
+                await SeedVehiclePurposesAsync();
             }
             catch (Exception ex)
             {
@@ -62,6 +67,8 @@ namespace StaffApp.Infrastructure.Data
                 throw;
             }
         }
+
+
 
         private async Task SeedUserRolesAsync()
         {
@@ -564,6 +571,24 @@ namespace StaffApp.Infrastructure.Data
                     context.DocumentNames.Add(new DocumentName() { Name = "Other", EmployeeDocumentCategory = category });
                 }
 
+                await context.SaveChangesAsync();
+            }
+        }
+
+        private async Task SeedVehiclePurposesAsync()
+        {
+            if (!context.VehiclePurposes.Any())
+            {
+                var vehiclePurposes = new List<VehiclePurpose>
+                {
+                    new VehiclePurpose(){ Name ="Employee Transport" },
+                    new VehiclePurpose(){ Name ="Logistics & Goods Transport" },
+                    new VehiclePurpose(){ Name ="Service & Field Work" },
+                    new VehiclePurpose(){ Name ="Executive & Official Use" },
+                    new VehiclePurpose(){ Name ="Utility & Special Purposes" },
+                    new VehiclePurpose(){ Name ="Other" }
+                };
+                await context.VehiclePurposes.AddRangeAsync(vehiclePurposes);
                 await context.SaveChangesAsync();
             }
         }

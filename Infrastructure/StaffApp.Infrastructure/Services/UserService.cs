@@ -9,6 +9,7 @@ using StaffApp.Application.Extensions.Constants;
 using StaffApp.Application.Extensions.Helpers;
 using StaffApp.Application.Services;
 using StaffApp.Domain.Entity.Authentication;
+using StaffApp.Domain.Entity.Master;
 using StaffApp.Domain.Enum;
 using System.Text;
 
@@ -375,7 +376,7 @@ namespace StaffApp.Infrastructure.Services
 
                 if (bankAccount is null)
                 {
-                    bankAccount = new Domain.Entity.EmployeeBankAccount();
+                    bankAccount = new EmployeeBankAccount();
                     bankAccount.EmployeeId = userBankAccount.EmployeeId;
                     bankAccount.AccountName = userBankAccount.AccountName;
                     bankAccount.AccountNumber = userBankAccount.AccountNumber;

@@ -4,8 +4,8 @@ using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.EmploymentLeave;
 using StaffApp.Application.Extensions.Constants;
 using StaffApp.Application.Services;
-using StaffApp.Domain.Entity;
 using StaffApp.Domain.Entity.Authentication;
+using StaffApp.Domain.Entity.Leave;
 using StaffApp.Domain.Enum;
 
 namespace StaffApp.Infrastructure.Services

@@ -10,6 +10,7 @@ using StaffApp.Application.Extensions.Helpers;
 using StaffApp.Application.Extensions.Helpers.OpenXML;
 using StaffApp.Application.Services;
 using StaffApp.Domain.Entity;
+using StaffApp.Domain.Entity.Salary;
 using StaffApp.Domain.Enum;
 using Syncfusion.DocIO;
 using Syncfusion.DocIO.DLS;
@@ -822,7 +823,7 @@ namespace StaffApp.Infrastructure.Services
                 var employeeSalary = await context.EmployeeSalaries.FindAsync(salary.Id);
                 if (employeeSalary == null)
                 {
-                    employeeSalary = new Domain.Entity.EmployeeSalary()
+                    employeeSalary = new EmployeeSalary()
                     {
                         UserId = salary.UserId,
                         BaseSalary = salary.BasicSalary,
@@ -837,7 +838,7 @@ namespace StaffApp.Infrastructure.Services
 
                     foreach (var addon in salary.EmployeeSalaryAddons)
                     {
-                        employeeSalary.EmployeeSalaryAddons.Add(new Domain.Entity.EmployeeSalaryAddon()
+                        employeeSalary.EmployeeSalaryAddons.Add(new EmployeeSalaryAddon()
                         {
                             SalaryAddonId = addon.SalaryAddonId,
                             OriginalValue = addon.OriginalValue,
@@ -897,7 +898,7 @@ namespace StaffApp.Infrastructure.Services
                         //    IsActive = true
                         //});
 
-                        context.EmployeeSalaryAddons.Add(new Domain.Entity.EmployeeSalaryAddon()
+                        context.EmployeeSalaryAddons.Add(new EmployeeSalaryAddon()
                         {
                             EmployeeSalaryId = employeeSalary.Id,
                             SalaryAddonId = addon.SalaryAddonId,

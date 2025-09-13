@@ -3,7 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using StaffApp.Application.Contracts;
 using StaffApp.Domain.Entity;
+using StaffApp.Domain.Entity.Appraisal;
 using StaffApp.Domain.Entity.Authentication;
+using StaffApp.Domain.Entity.Leave;
+using StaffApp.Domain.Entity.Master;
+using StaffApp.Domain.Entity.Salary;
+using StaffApp.Domain.Entity.Transport;
 using StaffApp.Infrastructure.Interceptors;
 using System.Diagnostics;
 using System.Reflection;
@@ -153,5 +158,14 @@ namespace StaffApp.Infrastructure.Data
         public DbSet<UserDisciplinaryAction> UserDisciplinaryActions => Set<UserDisciplinaryAction>();
         public DbSet<UserQualificationDocument> UserQualificationDocuments => Set<UserQualificationDocument>();
         public DbSet<DocumentName> DocumentNames => Set<DocumentName>();
+
+        public DbSet<Vehicle> Vehicles => Set<Vehicle>();
+        public DbSet<Route> Routes => Set<Route>();
+        public DbSet<PredefineRoute> PredefineRoutes => Set<PredefineRoute>();
+        public DbSet<DailyTransportRoute> DailyTransportRoutes => Set<DailyTransportRoute>();
+        public DbSet<DailyTransportRouteSeat> DailyTransportRouteSeats => Set<DailyTransportRouteSeat>();
+        public DbSet<DailyTransportRouteAssignedVehicle> DailyTransportRouteAssignedVehicles => Set<DailyTransportRouteAssignedVehicle>();
+        public DbSet<VehiclePurpose> VehiclePurposes => Set<VehiclePurpose>();
+        public DbSet<VehicleAssignedPurpose> VehicleAssignedPurposes => Set<VehicleAssignedPurpose>();
     }
 }

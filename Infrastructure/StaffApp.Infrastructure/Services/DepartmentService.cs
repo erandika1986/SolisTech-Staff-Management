@@ -3,7 +3,7 @@ using StaffApp.Application.Contracts;
 using StaffApp.Application.DTOs.Common;
 using StaffApp.Application.DTOs.Department;
 using StaffApp.Application.Services;
-using StaffApp.Domain.Entity;
+using StaffApp.Domain.Entity.Master;
 
 namespace StaffApp.Infrastructure.Services
 {
@@ -32,7 +32,7 @@ namespace StaffApp.Infrastructure.Services
             }
             else
             {
-                department = new Domain.Entity.Department
+                department = new Department
                 {
                     Name = model.Name,
                 };

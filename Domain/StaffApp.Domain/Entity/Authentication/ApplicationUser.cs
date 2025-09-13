@@ -1,4 +1,9 @@
 ﻿using Microsoft.AspNetCore.Identity;
+using StaffApp.Domain.Entity.Appraisal;
+using StaffApp.Domain.Entity.Leave;
+using StaffApp.Domain.Entity.Master;
+using StaffApp.Domain.Entity.Salary;
+using StaffApp.Domain.Entity.Transport;
 using StaffApp.Domain.Enum;
 
 namespace StaffApp.Domain.Entity.Authentication
@@ -39,6 +44,8 @@ namespace StaffApp.Domain.Entity.Authentication
         public virtual ICollection<TimeCard> TimeCards { get; set; } = new HashSet<TimeCard>();
         public virtual ICollection<InvoiceDetail> InvoiceDetails { get; set; } = new HashSet<InvoiceDetail>();
         public virtual ICollection<UserQualificationDocument> UserQualificationDocuments { get; set; } = new HashSet<UserQualificationDocument>();
+        public virtual ICollection<DailyTransportRouteSeat> EmployeeDailyTransportRouteSeats { get; set; } = new HashSet<DailyTransportRouteSeat>();
+        public virtual ICollection<DailyTransportRouteSeat> ApprovedDailyTransportRouteSeats { get; set; } = new HashSet<DailyTransportRouteSeat>();
         //public virtual ICollection<EmployeeLeaveRequest> CreatedEmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
         //public virtual ICollection<EmployeeLeaveRequest> UpdatedEmployeeLeaveRequests { get; set; } = new HashSet<EmployeeLeaveRequest>();
 

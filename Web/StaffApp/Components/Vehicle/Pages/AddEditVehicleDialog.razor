@@ -1,0 +1,237 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using StaffApp.Application.DTOs.Common
+@using StaffApp.Application.DTOs.Vehicle
+@using StaffApp.Application.Services
+@inherits MudComponentBase
+@inject IVehicleService VehicleService
+@inject ISnackbar Snackbar
+
+<!-- Add Donation Dialog -->
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">
+            @if (IsViewOnly)
+            {
+                <MudIcon Icon="@Icons.Material.Filled.Visibility" Class="mr-3" />
+                @("Vehicle Detail")
+            }
+            else
+            {
+                <MudIcon Icon="@(IsEdit? Icons.Material.Filled.Edit : Icons.Material.Filled.DirectionsBus)" Class="mr-3" />
+                @(IsEdit ? "Edit Vehicle Detail" : "Add New Vehicle")
+            }
+        </MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudForm @ref="form" @bind-IsValid="@isFormValid">
+            <MudGrid>
+                <!-- VehicleType Registration -->
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudTextField @bind-Value="Vehicle.Registration"
+                                  Label="Vehicle Registration Number"
+                                  Required="true"
+                                  Margin="Margin.Dense"
+                                  RequiredError="Vehicle Registration Number is required"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+
+                <!-- VehicleType Capacity -->
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudNumericField T="int" @bind-Value="Vehicle.Capacity"
+                                     Label="Vehicle Capacity"
+                                     ReadOnly="IsViewOnly"
+                                     Required="true"
+                                     RequiredError="Vehicle Capacity is required!"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     HideSpinButtons="true" />
+                </MudItem>
+
+                <!-- VehicleType ManufactureName -->
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudTextField @bind-Value="Vehicle.ManufactureName"
+                                  Label="Manufacture Name"
+                                  Required="true"
+                                  Margin="Margin.Dense"
+                                  RequiredError="Manufacture Name is required"
+                                  Variant="Variant.Outlined" />
+                </MudItem>
+                <!-- VehicleType Selection -->
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudSelect T="DropDownDTO"
+                               Label="Vehicle Type"
+                               ReadOnly="IsViewOnly"
+                               ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
+                               MultiSelection="false"
+                               @bind-Value="Vehicle.VehicleType"
+                               Required="true"
+                               RequiredError="Vehicle Type is required!"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var vehicleType in VehicleTypes)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@vehicleType">@vehicleType.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- VehicleOwner Selection -->
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudSelect T="DropDownDTO"
+                               Label="Vehicle Owner Type"
+                               ReadOnly="IsViewOnly"
+                               ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
+                               MultiSelection="false"
+                               @bind-Value="Vehicle.VehicleOwner"
+                               Required="true"
+                               RequiredError="Vehicle Owner Type is required!"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var vehicleOwnerType in VehicleOwnerTypes)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@vehicleOwnerType">@vehicleOwnerType.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- AssignedPurposes Selection -->
+                <MudItem xs="12" sm="6" md="6" lg="4">
+@*                     <MudSelect T="DropDownDTO"
+                               Label="Vehicle Purposes"
+                               ReadOnly="IsViewOnly"
+                               ToStringFunc="(item) => item is not null ? item.Name : string.Empty"
+                               MultiSelection="true"
+                               @bind-SelectedValues="Vehicle.AssignedPurposes"
+                               Required="true"
+                               RequiredError="Vehicle Purpose is required!"
+                               Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var assignedPurpose in VehiclePurposes)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@assignedPurpose">@assignedPurpose.Name</MudSelectItem>
+                        }
+                    </MudSelect> *@
+                    <MudSelect T="DropDownDTO" Label="Vehicle Purposes" ToStringFunc="(item) => item is not null ? item.Name : string.Empty" MultiSelection="true" @bind-SelectedValues="Vehicle.AssignedPurposes" Required="true" RequiredError="Department is required!" Variant="Variant.Outlined"
+                               Margin="Margin.Dense">
+                        @foreach (var assignedPurpose in VehiclePurposes)
+                        {
+                            <MudSelectItem T="DropDownDTO" Value="@assignedPurpose">@assignedPurpose.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+
+                <!-- Amount -->
+                <MudItem xs="12" sm="6" md="6" lg="4">
+                    <MudNumericField @bind-Value="Vehicle.MonthlyRent"
+                                     Label="Monthly Rent"
+                                     ReadOnly="IsViewOnly"
+                                     Required="true"
+                                     RequiredError="Monthly Rent is required!"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense"
+                                     Min="0.01m"
+                                     Step="0.01m"
+                                     Format="N2"
+                                     HideSpinButtons="true" />
+                </MudItem>
+
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="CloseDialog" Color="Color.Default">Cancel</MudButton>
+        @if (!IsViewOnly)
+        {
+            <MudButton Color="Color.Success"
+                       Variant="Variant.Filled"
+                       OnClick="Submit"
+                       Disabled="!isFormValid || isSubmitting"
+                       StartIcon="@Icons.Material.Filled.Save">
+                @if (isSubmitting)
+                {
+                    <MudProgressCircular Class="ms-n1" Size="Size.Small" Indeterminate="true" />
+                    <MudText Class="ms-2">Saving...</MudText>
+                }
+                else
+                {
+                    @(IsEdit ? "Update" : "Create")
+                }
+            </MudButton>
+        }
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = null!;
+
+    [Parameter]
+    public bool IsEdit { get; set; }
+
+    [Parameter]
+    public bool IsViewOnly { get; set; }
+
+    [Parameter]
+    public VehicleMasterDataDTO MasterData { get; set; }
+
+    [Parameter]
+    public VehicleDTO Vehicle { get; set; } = new();
+
+
+    private MudForm form = null!;
+    private bool isFormValid = false;
+    private bool isSubmitting = false;
+
+    public IEnumerable<DropDownDTO> VehicleTypes { get; set; } = new List<DropDownDTO>();
+    public IEnumerable<DropDownDTO> VehicleOwnerTypes { get; set; } = new List<DropDownDTO>();
+    public IEnumerable<DropDownDTO> VehiclePurposes { get; set; } = new List<DropDownDTO>();
+
+    private DropDownDTO SelectedVehicleType { get; set; } = new();
+    private DropDownDTO SelectedVehicleOwnerType { get; set; } = new();
+    private List<DropDownDTO> SelectedVehiclePurposes { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        VehicleOwnerTypes = MasterData.VehicleOwnerTypes;
+        VehicleTypes = MasterData.VehicleTypes;
+        VehiclePurposes = MasterData.VehiclePurposes;
+    }
+
+    private bool _rendered = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        _rendered = true;
+        await Task.Yield(); // Wait for rendering to finish
+        await form.Validate(); // Trigger validation
+    }
+
+
+    private void CloseDialog()
+    {
+        MudDialog.Cancel();
+    }
+
+    private async Task Submit()
+    {
+        await form.Validate();
+        if (!isFormValid)
+            return;
+
+        var response = await VehicleService.SaveVehicle(Vehicle);
+        if (response.Flag)
+        {
+            Snackbar.Add(response.Message, Severity.Success);
+            MudDialog.Close(DialogResult.Ok(Vehicle));
+        }
+        else
+        {
+            Snackbar.Add(response.Message, Severity.Error);
+        }
+
+        isSubmitting = true;
+        StateHasChanged();
+
+    }
+}

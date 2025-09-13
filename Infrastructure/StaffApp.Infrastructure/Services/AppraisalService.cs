@@ -10,6 +10,7 @@ using StaffApp.Application.Extensions.Helpers;
 using StaffApp.Application.Extensions.Helpers.OpenXML;
 using StaffApp.Application.Services;
 using StaffApp.Domain.Entity;
+using StaffApp.Domain.Entity.Appraisal;
 using StaffApp.Domain.Entity.Authentication;
 using Syncfusion.DocIO;
 using Syncfusion.DocIO.DLS;
@@ -40,7 +41,7 @@ namespace StaffApp.Infrastructure.Services
                 {
                     if (!existingRecords.Any(er => er.UserId == activeUser.Id))
                     {
-                        var newUserAppraisal = new Domain.Entity.UserAppraisal
+                        var newUserAppraisal = new UserAppraisal
                         {
                             AppraisalPeriodId = appraisalPeriodId,
                             UserId = activeUser.Id,
@@ -57,7 +58,7 @@ namespace StaffApp.Infrastructure.Services
 
                         foreach (var criteria in appraisalCriteria)
                         {
-                            var detail = new Domain.Entity.UserAppraisalDetail
+                            var detail = new UserAppraisalDetail
                             {
                                 CriteriaID = criteria.Id,
                                 Rating = 0,
@@ -106,7 +107,7 @@ namespace StaffApp.Infrastructure.Services
 
                 if (appraisalPeriod is null)
                 {
-                    appraisalPeriod = new Domain.Entity.AppraisalPeriod()
+                    appraisalPeriod = new AppraisalPeriod()
                     {
                         AppraisalPeriodName = $"Annual Appraisal({companyYearId})",
                         AppraisalStatus = Domain.Enum.AppraisalStatus.Pending,
